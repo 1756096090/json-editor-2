@@ -1,0 +1,35 @@
+<div
+  #container
+  [class]="containerClass()"
+  role="group"
+  aria-label="Resizable split panel"
+>
+  <div class="split-pane__panel split-pane__left" [attr.style]="leftStyle()">
+    <ng-content select="[split-start]" />
+  </div>
+
+  <div
+    class="split-pane__gutter"
+    role="separator"
+    [attr.aria-orientation]="direction()"
+    [attr.aria-valuenow]="ratio()"
+    aria-valuemin="20"
+    aria-valuemax="80"
+    tabindex="0"
+    aria-label="Resize panels — use arrow keys or double-click to reset"
+    title="Drag to resize · Double-click to reset · Arrow keys to adjust"
+    (pointerdown)="onGutterPointerDown($event)"
+    (pointermove)="onGutterPointerMove($event)"
+    (pointerup)="onGutterPointerUp($event)"
+    (dblclick)="resetRatio()"
+    (keydown)="onGutterKeydown($event)"
+  >
+    <div class="split-pane__gutter-dot"></div>
+    <div class="split-pane__gutter-dot"></div>
+    <div class="split-pane__gutter-dot"></div>
+  </div>
+
+  <div class="split-pane__panel split-pane__right" [attr.style]="rightStyle()">
+    <ng-content select="[split-end]" />
+  </div>
+</div>

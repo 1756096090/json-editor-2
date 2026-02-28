@@ -1,0 +1,74 @@
+﻿<section
+  class="editor-panel"
+  (dragenter)="onDragEnter($event)"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)"
+>
+  <header class="editor-panel__header">
+    <h2 class="editor-panel__title">{{ panelTitle() }}</h2>
+
+    <app-segmented-control
+      [items]="viewModes"
+      [value]="leftMode()"
+      ariaLabel="Panel view modes"
+      (valueChange)="setMode($event)"
+    />
+  </header>
+
+  @switch (leftMode()) {
+    @case ('text') {
+      <div class="editor-panel__surface">
+        <pre #overlayRef class="editor-panel__overlay" [innerHTML]="highlightedHtml()"></pre>
+        <textarea
+          class="editor-panel__textarea"
+          [value]="rawText()"
+          (input)="onInput($event)"
+          (scroll)="onScroll($event)"
+          spellcheck="false"
+          aria-label="Raw JSON editor"
+        ></textarea>
+
+        @if (draggingFile()) {
+          <div class="editor-panel__drop-overlay">Drop .json file to load</div>
+        }
+      </div>
+
+      <footer class="editor-panel__footer">
+        <span class="editor-panel__hint">Drag &amp; drop a .json file into the editor</span>
+        <span
+          class="editor-panel__mismatch"
+          [class.editor-panel__mismatch--error]="mismatchCount() > 0"
+        >
+          Bracket mismatches: {{ mismatchCount() }}
+        </span>
+      </footer>
+    }
+    @case ('tree') {
+      <div class="editor-panel__view-body">
+        @if (jsonValue()) {
+          <app-json-tree-view [jsonValue]="jsonValue()" />
+        } @else {
+          <app-empty-state
+            icon="🌳"
+            title="No valid JSON to display as tree"
+            description="Fix the JSON syntax in Text mode to see the tree view."
+          />
+        }
+      </div>
+    }
+    @case ('table') {
+      <div class="editor-panel__view-body">
+        @if (jsonValue()) {
+          <app-json-table-view [jsonValue]="jsonValue()" />
+        } @else {
+          <app-empty-state
+            icon="📊"
+            title="No valid JSON to display as table"
+            description="Fix the JSON syntax in Text mode to see the table view."
+          />
+        }
+      </div>
+    }
+  }
+</section>

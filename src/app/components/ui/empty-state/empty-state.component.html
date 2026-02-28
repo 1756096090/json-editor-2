@@ -1,0 +1,10 @@
+<div class="empty-state">
+  @if (icon()) {
+    <span class="empty-state__icon" aria-hidden="true">{{ icon() }}</span>
+  }
+  <p class="empty-state__title">{{ title() }}</p>
+  @if (description()) {
+    <p class="empty-state__desc">{{ description() }}</p>
+  }
+  <ng-content />
+</div>

@@ -1,0 +1,56 @@
+﻿<section class="workbench">
+  <app-toolbar
+    [valid]="store.isValidJson()"
+    [errorMessage]="store.parseErrorMessage()"
+    [themeMode]="store.themeMode()"
+    [diffOpen]="showDiff()"
+    (formatPressed)="onFormatPressed()"
+    (minifyPressed)="onMinifyPressed()"
+    (copyPressed)="onCopyPressed()"
+    (pastePressed)="onPastePressed()"
+    (downloadPrettyPressed)="onDownloadPrettyPressed()"
+    (downloadMinPressed)="onDownloadMinPressed()"
+    (openFilePressed)="onOpenFilePressed()"
+    (toggleThemePressed)="onToggleThemePressed()"
+    (toggleDiffPressed)="onToggleDiffPressed()"
+  />
+
+  <app-toast [message]="store.statusMessage()" />
+
+  <div class="workbench__panels">
+    <app-split-pane direction="horizontal" storageKey="json-we-format:split-ratio">
+      <app-editor-panel
+        split-start
+        [rawText]="store.rawText()"
+        panelTitle="Left editor"
+        [leftMode]="store.leftMode()"
+        [mismatchedIndexes]="store.mismatchedBracketIndexes()"
+        [jsonValue]="store.workingJson()"
+        (rawTextChange)="onRawTextChanged($event)"
+        (fileDropped)="onFileDropped($event)"
+        (modeChange)="onLeftModeChanged($event)"
+      />
+
+      <app-editor-panel
+        split-end
+        [rawText]="store.baselineText()"
+        panelTitle="Right editor"
+        [leftMode]="store.rightMode()"
+        [mismatchedIndexes]="[]"
+        [jsonValue]="store.baselineJson()"
+        (rawTextChange)="onBaselineTextChanged($event)"
+        (fileDropped)="onBaselineFileDropped($event)"
+        (modeChange)="onRightModeChanged($event)"
+      />
+    </app-split-pane>
+  </div>
+
+  @if (showDiff()) {
+    <app-diff-panel
+      [baselineText]="store.rawText()"
+      [workingText]="store.baselineText()"
+      (setBaselinePressed)="onSetBaselinePressed()"
+      (resetBaselinePressed)="onResetBaselinePressed()"
+    />
+  }
+</section>

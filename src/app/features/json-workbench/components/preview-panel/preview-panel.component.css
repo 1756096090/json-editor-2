@@ -1,0 +1,118 @@
+﻿.preview-panel {
+  background: var(--color-panel-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 24rem;
+  overflow: hidden;
+}
+
+.preview-panel__header {
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  padding: 0.7rem 0.85rem;
+}
+
+.preview-panel__title {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.preview-panel__modes {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+
+.preview-panel__mode {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.45rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  text-transform: uppercase;
+}
+
+.preview-panel__mode--active {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.preview-panel__body {
+  background: linear-gradient(180deg, var(--color-panel-bg) 0%, var(--color-panel-bg-soft) 100%);
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.preview-panel__empty {
+  align-items: center;
+  color: var(--color-text-muted);
+  display: flex;
+  font-size: 0.9rem;
+  justify-content: center;
+  padding: 1rem;
+  width: 100%;
+}
+
+.preview-panel__tree {
+  min-height: 0;
+  width: 100%;
+}
+
+.preview-panel__tree .jsoneditor {
+  border: 0;
+  height: 100%;
+}
+
+.preview-panel__tree .jsoneditor-menu {
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.preview-panel__tree .jsoneditor-navigation-bar {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.preview-panel__table-wrap {
+  overflow: auto;
+  width: 100%;
+}
+
+.preview-panel__table {
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  width: 100%;
+}
+
+.preview-panel__table th,
+.preview-panel__table td {
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+}
+
+.preview-panel__table th {
+  background: var(--color-surface);
+  font-family: var(--font-sans);
+  font-size: 0.77rem;
+  font-weight: 700;
+  position: sticky;
+  top: 0;
+}
+
+.preview-panel__text {
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  margin: 0;
+  overflow: auto;
+  padding: 0.9rem;
+  width: 100%;
+}

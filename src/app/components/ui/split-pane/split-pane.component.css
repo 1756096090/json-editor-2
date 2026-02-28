@@ -1,0 +1,96 @@
+/* ── Container ──────────────────────────────────────────────────── */
+.split-pane {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.split-pane--horizontal {
+  flex-direction: row;
+}
+
+.split-pane--vertical {
+  flex-direction: column;
+}
+
+/* ── Panels ─────────────────────────────────────────────────────── */
+.split-pane__panel {
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.split-pane__panel > * {
+  height: 100%;
+  width: 100%;
+}
+
+/* ── Gutter ─────────────────────────────────────────────────────── */
+.split-pane__gutter {
+  align-items: center;
+  background: var(--color-border);
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  touch-action: none;
+  transition: background var(--duration-fast) var(--ease-default);
+  user-select: none;
+  z-index: var(--z-overlay);
+}
+
+.split-pane--horizontal .split-pane__gutter {
+  cursor: col-resize;
+  flex-direction: column;
+  gap: 3px;
+  width: 6px;
+}
+
+.split-pane--vertical .split-pane__gutter {
+  cursor: row-resize;
+  flex-direction: row;
+  gap: 3px;
+  height: 6px;
+}
+
+.split-pane__gutter:hover,
+.split-pane__gutter:active {
+  background: var(--color-accent);
+}
+
+.split-pane__gutter:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-accent);
+  outline: none;
+}
+
+/* ── Dots ───────────────────────────────────────────────────────── */
+.split-pane__gutter-dot {
+  background: var(--color-text-muted);
+  border-radius: var(--radius-full);
+  height: 3px;
+  width: 3px;
+}
+
+.split-pane__gutter:hover .split-pane__gutter-dot,
+.split-pane__gutter:active .split-pane__gutter-dot {
+  background: var(--color-bg);
+}
+
+/* ── Responsive: stack vertically on small screens ─────────────── */
+@media (max-width: 768px) {
+  .split-pane--horizontal {
+    flex-direction: column;
+  }
+
+  .split-pane--horizontal .split-pane__left,
+  .split-pane--horizontal .split-pane__right {
+    height: auto !important;
+    width: 100% !important;
+  }
+
+  .split-pane--horizontal .split-pane__gutter {
+    cursor: row-resize;
+    flex-direction: row;
+    height: 6px;
+    width: 100%;
+  }
+}

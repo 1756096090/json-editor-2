@@ -1,0 +1,47 @@
+<section class="json-editor">
+  <header class="json-editor__header">
+    <div class="json-editor__title-wrap">
+      <h1 class="json-editor__title">json-we-format</h1>
+      <p class="json-editor__subtitle">Editor JSON MVP (RAW + Preview)</p>
+    </div>
+
+    <p
+      class="json-editor__status"
+      [class.json-editor__status--valid]="valid()"
+      [class.json-editor__status--invalid]="!valid()"
+    >
+      {{ statusLabel() }}
+    </p>
+  </header>
+
+  <div class="json-editor__toolbar" role="toolbar" aria-label="Herramientas de JSON">
+    <app-ui-button variant="accent" (pressed)="formatCode()">Formatear</app-ui-button>
+    <app-ui-button variant="default" (pressed)="minifyCode()">Minimizar</app-ui-button>
+    <app-ui-button variant="default" (pressed)="copyToClipboard()">Copiar</app-ui-button>
+    <app-ui-button variant="default" (pressed)="pasteFromClipboard()">Pegar</app-ui-button>
+    <app-ui-button variant="ghost" (pressed)="downloadPretty()">Descargar pretty</app-ui-button>
+    <app-ui-button variant="ghost" (pressed)="downloadMinified()">Descargar min</app-ui-button>
+    <app-ui-button variant="ghost" (pressed)="openJsonFile()">Abrir .json</app-ui-button>
+  </div>
+
+  @if (!valid()) {
+    <p class="json-editor__error">Error de parseo: {{ error() }}</p>
+  }
+
+  @if (actionMessage()) {
+    <p class="json-editor__action">{{ actionMessage() }}</p>
+  }
+
+  <div class="json-editor__panels">
+    <app-json-raw-editor
+      class="json-editor__panel"
+      [value]="code()"
+      (valueChange)="onCodeChange($event)"
+      (formatShortcut)="onFormatShortcut()"
+      (downloadShortcut)="onDownloadShortcut()"
+      (fileLoadError)="onFileLoadError($event)"
+    />
+
+    <app-json-preview class="json-editor__panel" [code]="code()" [valid]="valid()" [error]="error()" />
+  </div>
+</section>

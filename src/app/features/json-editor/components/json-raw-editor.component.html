@@ -1,0 +1,35 @@
+<section
+  class="json-raw-editor"
+  [class.json-raw-editor--drag-active]="dragActive()"
+  (dragenter)="onDragEnter($event)"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)"
+>
+  <div class="json-raw-editor__header">
+    <h2 class="json-raw-editor__title">Editor RAW</h2>
+    <p class="json-raw-editor__hint">Atajos: Ctrl/Cmd+Shift+F y Ctrl/Cmd+S</p>
+  </div>
+
+  <textarea
+    #editor
+    class="json-raw-editor__textarea"
+    [value]="value()"
+    (input)="onInput($event)"
+    spellcheck="false"
+    aria-label="Editor JSON raw"
+    placeholder='{"key":"value"}'
+  ></textarea>
+
+  <input
+    #fileInput
+    class="json-raw-editor__file-input"
+    type="file"
+    accept=".json,application/json"
+    (change)="onFileSelected($event)"
+  />
+
+  @if (dragActive()) {
+    <div class="json-raw-editor__drop-hint">Suelta aqui tu archivo .json</div>
+  }
+</section>

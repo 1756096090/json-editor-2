@@ -1,0 +1,14 @@
+<div class="seg" role="radiogroup" [attr.aria-label]="ariaLabel()">
+  @for (item of items(); track trackByValue($index, item)) {
+    <button
+      type="button"
+      class="seg__item"
+      role="radio"
+      [class.seg__item--active]="item.value === value()"
+      [attr.aria-checked]="item.value === value()"
+      (click)="select(item)"
+    >
+      {{ item.label }}
+    </button>
+  }
+</div>

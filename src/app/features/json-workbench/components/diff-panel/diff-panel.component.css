@@ -1,0 +1,202 @@
+﻿/* ── Wrapper ─────────────────────────────────────────────────────── */
+.diff-panel {
+  background: var(--color-panel-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  min-height: 16rem;
+  overflow: hidden;
+}
+
+/* ── Top header bar ──────────────────────────────────────────────── */
+.diff-panel__header {
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-shrink: 0;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+}
+
+.diff-panel__title-wrap {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2);
+}
+
+.diff-panel__title {
+  font-size: var(--text-md);
+  margin: 0;
+}
+
+.diff-panel__stats {
+  display: inline-flex;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  gap: var(--space-1);
+}
+
+.diff-panel__stats-added {
+  color: var(--color-success);
+}
+
+.diff-panel__stats-removed {
+  color: var(--color-danger);
+}
+
+/* ── Navigation ──────────────────────────────────────────────────── */
+.diff-panel__nav {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--space-1);
+  margin-left: var(--space-2);
+}
+
+.diff-panel__nav-pos {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  min-width: 3rem;
+  text-align: center;
+}
+
+.diff-panel__actions {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+/* ── Side-by-side container ──────────────────────────────────────── */
+.diff-panel__editors {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 1fr 1px 1fr;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.diff-panel__divider {
+  background: var(--color-border);
+}
+
+/* ── Each side ───────────────────────────────────────────────────── */
+.diff-panel__side {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.diff-panel__side-header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  padding: var(--space-1) var(--space-2);
+  text-transform: uppercase;
+}
+
+.diff-panel__code {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  max-height: 32rem;
+  overflow: auto;
+}
+
+/* ── Row ─────────────────────────────────────────────────────────── */
+.diff-panel__row {
+  align-items: stretch;
+  border-left: 3px solid transparent;
+  display: grid;
+  gap: 0;
+  grid-template-columns: 3rem 1.1rem minmax(0, 1fr);
+  min-height: 1.55rem;
+}
+
+.diff-panel__row--removed {
+  background: var(--color-danger-subtle);
+  border-left-color: var(--color-danger);
+}
+
+.diff-panel__row--added {
+  background: var(--color-success-subtle);
+  border-left-color: var(--color-success);
+}
+
+.diff-panel__row--blank {
+  background: color-mix(in srgb, var(--color-border) 20%, transparent);
+  opacity: 0.5;
+}
+
+.diff-panel__row--active-hunk {
+  box-shadow: inset 0 0 0 1px var(--color-accent-muted);
+}
+
+/* ── Line number ─────────────────────────────────────────────────── */
+.diff-panel__ln {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  padding: 0.18rem var(--space-1);
+  text-align: right;
+  user-select: none;
+}
+
+/* ── +/- gutter ──────────────────────────────────────────────────── */
+.diff-panel__gutter {
+  color: var(--color-text-muted);
+  padding: 0.18rem 0;
+  text-align: center;
+  user-select: none;
+}
+
+.diff-panel__row--removed .diff-panel__gutter {
+  color: var(--color-danger);
+  font-weight: var(--weight-bold);
+}
+
+.diff-panel__row--added .diff-panel__gutter {
+  color: var(--color-success);
+  font-weight: var(--weight-bold);
+}
+
+/* ── Code content ─────────────────────────────────────────────────── */
+.diff-panel__content {
+  padding: 0.18rem var(--space-2);
+  white-space: pre;
+  word-break: normal;
+}
+
+/* ── Inline word highlights ──────────────────────────────────────── */
+.diff-panel__seg--added {
+  background: color-mix(in srgb, var(--color-success) 42%, transparent);
+  border-radius: var(--radius-xs);
+}
+
+.diff-panel__seg--removed {
+  background: color-mix(in srgb, var(--color-danger) 42%, transparent);
+  border-radius: var(--radius-xs);
+}
+
+/* ── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 760px) {
+  .diff-panel__header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .diff-panel__editors {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1px 1fr;
+  }
+
+  .diff-panel__divider {
+    height: 1px;
+    width: 100%;
+  }
+}

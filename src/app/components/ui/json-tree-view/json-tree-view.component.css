@@ -1,0 +1,132 @@
+/* ── Container ──────────────────────────────────────────────────── */
+.tree-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.tree-view__toolbar {
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+}
+
+.tree-view__action {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  padding: var(--space-1) var(--space-2);
+  text-transform: uppercase;
+  transition: var(--transition-colors);
+}
+
+.tree-view__action:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.tree-view__action:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.tree-view__content {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-2) 0;
+}
+
+/* ── Node ───────────────────────────────────────────────────────── */
+.tree-node {
+  align-items: baseline;
+  display: flex;
+  gap: var(--space-1);
+  padding-right: var(--space-2);
+  white-space: nowrap;
+}
+
+.tree-node:hover {
+  background: var(--color-accent-subtle);
+}
+
+/* ── Toggle ─────────────────────────────────────────────────────── */
+.tree-node__toggle {
+  align-items: center;
+  background: none;
+  border: 0;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 0.6rem;
+  height: 1.4rem;
+  justify-content: center;
+  padding: 0;
+  width: 1rem;
+}
+
+.tree-node__toggle--leaf {
+  cursor: default;
+}
+
+.tree-node__arrow {
+  display: inline-block;
+  transition: transform var(--duration-fast) var(--ease-default);
+}
+
+.tree-node__arrow--collapsed {
+  transform: rotate(-90deg);
+}
+
+/* ── Key ────────────────────────────────────────────────────────── */
+.tree-node__key {
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+}
+
+/* ── Value types (using semantic tokens) ────────────────────────── */
+.tree-node__value--string {
+  color: var(--color-json-string);
+}
+
+.tree-node__value--number {
+  color: var(--color-json-number);
+}
+
+.tree-node__value--boolean {
+  color: var(--color-json-boolean);
+}
+
+.tree-node__value--null {
+  color: var(--color-json-null);
+  font-style: italic;
+}
+
+/* ── Summary (collapsed) ────────────────────────────────────────── */
+.tree-node__summary {
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-style: italic;
+}
+
+/* ── Brackets ───────────────────────────────────────────────────── */
+.tree-node__bracket {
+  color: var(--color-text-muted);
+}
+
+.tree-node__closing {
+  color: var(--color-text-muted);
+  padding-left: 1rem;
+}

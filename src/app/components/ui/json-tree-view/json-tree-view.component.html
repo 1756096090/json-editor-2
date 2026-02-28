@@ -1,0 +1,65 @@
+<div class="tree-view">
+  <div class="tree-view__toolbar">
+    <button type="button" class="tree-view__action" (click)="expandAll()" aria-label="Expand all nodes">
+      Expand all
+    </button>
+    <button type="button" class="tree-view__action" (click)="collapseAll()" aria-label="Collapse all nodes">
+      Collapse all
+    </button>
+  </div>
+
+  <div class="tree-view__content" role="tree">
+    @for (node of rootNodes(); track trackByPath($index, node)) {
+      <ng-container *ngTemplateOutlet="treeNodeTpl; context: { $implicit: node }" />
+    }
+  </div>
+</div>
+
+<ng-template #treeNodeTpl let-node>
+  <div
+    class="tree-node"
+    [style.padding-left.rem]="node.depth * 1.2"
+    role="treeitem"
+    [attr.aria-expanded]="node.children.length > 0 ? !isCollapsed(node.path) : null"
+  >
+    @if (node.children.length > 0) {
+      <button
+        type="button"
+        class="tree-node__toggle"
+        (click)="toggleNode(node.path)"
+        [attr.aria-label]="isCollapsed(node.path) ? 'Expand ' + node.key : 'Collapse ' + node.key"
+      >
+        <span class="tree-node__arrow" [class.tree-node__arrow--collapsed]="isCollapsed(node.path)">&#9660;</span>
+      </button>
+    } @else {
+      <span class="tree-node__toggle tree-node__toggle--leaf"></span>
+    }
+
+    <span class="tree-node__key">{{ node.key }}:</span>
+
+    @if (node.children.length > 0) {
+      @if (isCollapsed(node.path)) {
+        <span class="tree-node__summary">{{ getCollapsedSummary(node) }}</span>
+      } @else {
+        <span class="tree-node__bracket">
+          {{ node.type === 'object' ? '{' : '[' }}
+        </span>
+      }
+    } @else {
+      <span class="tree-node__value" [class]="getTypeClass(node.type)">
+        {{ formatValue(node) }}
+      </span>
+    }
+  </div>
+
+  @if (node.children.length > 0 && !isCollapsed(node.path)) {
+    <div role="group">
+      @for (child of node.children; track trackByPath($index, child)) {
+        <ng-container *ngTemplateOutlet="treeNodeTpl; context: { $implicit: child }" />
+      }
+      <div class="tree-node__closing" [style.padding-left.rem]="node.depth * 1.2">
+        {{ node.type === 'object' ? '}' : ']' }}
+      </div>
+    </div>
+  }
+</ng-template>

@@ -1,0 +1,52 @@
+.json-preview {
+  background: #fff;
+  border: 1px solid var(--json-border);
+  border-radius: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+  overflow: hidden;
+}
+
+.json-preview__header {
+  border-bottom: 1px solid #e9e9e9;
+  padding: 0.7rem 0.9rem;
+}
+
+.json-preview__title {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.json-preview__content {
+  background: linear-gradient(180deg, #fff 0%, #fcfff8 100%);
+  color: #1f1f1f;
+  flex: 1;
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+  overflow: auto;
+  padding: 0.9rem;
+}
+
+.json-preview__invalid {
+  align-items: flex-start;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.45rem;
+  justify-content: center;
+  padding: 0.95rem;
+}
+
+.json-preview__invalid-title {
+  font-weight: 700;
+  margin: 0;
+}
+
+.json-preview__invalid-message {
+  color: var(--json-error);
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  margin: 0;
+}

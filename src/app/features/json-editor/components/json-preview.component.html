@@ -1,0 +1,14 @@
+<section class="json-preview">
+  <header class="json-preview__header">
+    <h2 class="json-preview__title">Preview</h2>
+  </header>
+
+  @if (valid()) {
+    <pre class="json-preview__content">{{ prettyCode() }}</pre>
+  } @else {
+    <div class="json-preview__invalid">
+      <p class="json-preview__invalid-title">No se puede renderizar el JSON.</p>
+      <p class="json-preview__invalid-message">{{ error() }}</p>
+    </div>
+  }
+</section>

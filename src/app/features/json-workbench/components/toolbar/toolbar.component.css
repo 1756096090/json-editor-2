@@ -1,0 +1,46 @@
+﻿:host {
+  display: block;
+}
+
+.toolbar {
+  align-items: center;
+  display: flex;
+  gap: var(--space-3);
+  justify-content: space-between;
+}
+
+.toolbar__group {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.toolbar__actions {
+  align-items: center;
+  display: flex;
+  gap: var(--space-1);
+}
+
+.toolbar__divider {
+  background: var(--color-border);
+  height: 1.4rem;
+  width: 1px;
+}
+
+.toolbar__meta {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2);
+}
+
+@media (max-width: 940px) {
+  .toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .toolbar__meta {
+    width: 100%;
+  }
+}

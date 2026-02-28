@@ -1,0 +1,14 @@
+<div class="error-banner" role="alert">
+  <span class="error-banner__icon" aria-hidden="true">&#x26A0;</span>
+  <span class="error-banner__message">{{ message() }}</span>
+  @if (dismissible()) {
+    <button
+      type="button"
+      class="error-banner__close"
+      aria-label="Dismiss error"
+      (click)="onDismiss()"
+    >
+      &#x2715;
+    </button>
+  }
+</div>

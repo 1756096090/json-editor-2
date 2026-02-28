@@ -1,0 +1,118 @@
+﻿<section class="diff-panel">
+  <header class="diff-panel__header">
+    <div class="diff-panel__title-wrap">
+      <h2 class="diff-panel__title">Diff (left vs right)</h2>
+      @if (hasBaseline() && hasChanges()) {
+        <span class="diff-panel__stats">
+          <span class="diff-panel__stats-added">+{{ addedCount() }}</span>
+          <span class="diff-panel__stats-removed">-{{ removedCount() }}</span>
+        </span>
+        <span class="diff-panel__nav">
+          <app-ui-button
+            size="sm"
+            variant="ghost"
+            ariaLabel="Previous difference"
+            tooltipText="Previous difference"
+            (pressed)="goToPrevHunk()"
+          >▲ Prev</app-ui-button>
+          <span class="diff-panel__nav-pos">
+            {{ currentHunkIndex() >= 0 ? currentHunkIndex() + 1 : '–' }} / {{ hunkCount() }}
+          </span>
+          <app-ui-button
+            size="sm"
+            variant="ghost"
+            ariaLabel="Next difference"
+            tooltipText="Next difference"
+            (pressed)="goToNextHunk()"
+          >Next ▼</app-ui-button>
+        </span>
+      }
+    </div>
+    <div class="diff-panel__actions">
+      <app-ui-button size="sm" (pressed)="setBaselinePressed.emit()">
+        Copy left → right
+      </app-ui-button>
+      <app-ui-button size="sm" (pressed)="resetBaselinePressed.emit()">
+        Copy right → left
+      </app-ui-button>
+    </div>
+  </header>
+
+  @if (!hasBaseline()) {
+    <app-empty-state
+      icon="📝"
+      title="Both editors are empty"
+      description="Start typing in either editor to see the diff."
+    />
+  } @else if (!hasChanges()) {
+    <app-empty-state
+      icon="✓"
+      title="No differences"
+      description="Left and right editors are identical."
+    />
+  } @else {
+    <div class="diff-panel__editors" aria-label="Side by side diff">
+      <!-- ── Baseline (left) ── -->
+      <div class="diff-panel__side">
+        <div class="diff-panel__side-header">Left editor</div>
+        <div
+          class="diff-panel__code"
+          #leftPane
+          (scroll)="onLeftScroll($event)"
+          aria-label="Baseline JSON"
+        >
+          @for (row of rows(); track $index) {
+            <div
+              class="diff-panel__row"
+              [class.diff-panel__row--removed]="row.left.kind === 'removed'"
+              [class.diff-panel__row--blank]="row.left.kind === 'blank'"
+              [class.diff-panel__row--active-hunk]="isActiveHunkRow($index)"
+            >
+              <span class="diff-panel__ln" aria-hidden="true">{{ row.left.lineNumber ?? '' }}</span>
+              <span class="diff-panel__gutter" aria-hidden="true">{{
+                row.left.kind === 'removed' ? '-' : ' '
+              }}</span>
+              <code class="diff-panel__content">
+                @for (seg of row.left.segments; track $index) {
+                  <span [class.diff-panel__seg--removed]="seg.highlight">{{ seg.text }}</span>
+                }
+              </code>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="diff-panel__divider" aria-hidden="true"></div>
+
+      <!-- ── Working (right) ── -->
+      <div class="diff-panel__side">
+        <div class="diff-panel__side-header">Right editor</div>
+        <div
+          class="diff-panel__code"
+          #rightPane
+          (scroll)="onRightScroll($event)"
+          aria-label="Working JSON"
+        >
+          @for (row of rows(); track $index) {
+            <div
+              class="diff-panel__row"
+              [class.diff-panel__row--added]="row.right.kind === 'added'"
+              [class.diff-panel__row--blank]="row.right.kind === 'blank'"
+              [class.diff-panel__row--active-hunk]="isActiveHunkRow($index)"
+            >
+              <span class="diff-panel__ln" aria-hidden="true">{{ row.right.lineNumber ?? '' }}</span>
+              <span class="diff-panel__gutter" aria-hidden="true">{{
+                row.right.kind === 'added' ? '+' : ' '
+              }}</span>
+              <code class="diff-panel__content">
+                @for (seg of row.right.segments; track $index) {
+                  <span [class.diff-panel__seg--added]="seg.highlight">{{ seg.text }}</span>
+                }
+              </code>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</section>

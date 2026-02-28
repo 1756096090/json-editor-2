@@ -1,1 +1,230 @@
-/* You can add global styles to this file, and also import other style files */
+﻿@import 'jsoneditor/dist/jsoneditor.min.css';
+
+/* ═══════════════════════════════════════════════════════════════════
+   DESIGN TOKENS  —  json-we-format Design System
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Typography ──────────────────────────────────────────────── */
+  --font-sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+  --text-xs: 0.7rem;
+  --text-sm: 0.78rem;
+  --text-base: 0.87rem;
+  --text-md: 0.95rem;
+  --text-lg: 1.12rem;
+  --text-xl: 1.3rem;
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ── Spacing scale ───────────────────────────────────────────── */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* ── Radius ──────────────────────────────────────────────────── */
+  --radius-xs: 0.2rem;
+  --radius-sm: 0.35rem;
+  --radius-md: 0.55rem;
+  --radius-lg: 0.8rem;
+  --radius-xl: 1rem;
+  --radius-full: 999px;
+
+  /* ── Shadows ─────────────────────────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.06);
+  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-md: 0 4px 6px rgb(0 0 0 / 0.07), 0 2px 4px rgb(0 0 0 / 0.04);
+  --shadow-lg: 0 10px 15px rgb(0 0 0 / 0.08), 0 4px 6px rgb(0 0 0 / 0.04);
+
+  /* ── Z-index scale ───────────────────────────────────────────── */
+  --z-base: 0;
+  --z-overlay: 10;
+  --z-dropdown: 20;
+  --z-sticky: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+
+  /* ── Transitions ─────────────────────────────────────────────── */
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 320ms;
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-colors: background-color var(--duration-fast) var(--ease-default),
+    border-color var(--duration-fast) var(--ease-default),
+    color var(--duration-fast) var(--ease-default);
+  --transition-transform: transform var(--duration-fast) var(--ease-default);
+
+  /* ── Focus ring ──────────────────────────────────────────────── */
+  --focus-ring: 2px solid var(--color-accent);
+  --focus-ring-offset: 2px;
+
+  /* ── Brand accent ────────────────────────────────────────────── */
+  --color-accent: #39ff14;
+  --color-accent-muted: color-mix(in srgb, var(--color-accent) 50%, transparent);
+  --color-accent-subtle: color-mix(in srgb, var(--color-accent) 15%, transparent);
+
+  /* ── JSON type colors (semantic) ─────────────────────────────── */
+  --color-json-string: #22863a;
+  --color-json-number: #005cc5;
+  --color-json-boolean: #d73a49;
+  --color-json-null: var(--color-text-muted);
+}
+
+/* ── Light theme ─────────────────────────────────────────────────── */
+:root,
+[data-theme='light'] {
+  --color-bg: #ffffff;
+  --color-text: #151515;
+  --color-text-muted: #5f5f5f;
+  --color-border: #d8d8d8;
+  --color-border-strong: #b0b0b0;
+  --color-panel-bg: #ffffff;
+  --color-panel-bg-soft: #f7fff0;
+  --color-surface: #f5f9ef;
+  --color-surface-hover: #eef4e7;
+  --color-surface-active: #e6eddf;
+  --color-danger: #b42318;
+  --color-danger-subtle: color-mix(in srgb, #b42318 12%, transparent);
+  --color-success: #1f6f2a;
+  --color-success-subtle: color-mix(in srgb, #1f6f2a 14%, transparent);
+  --color-warning: #b45309;
+  --color-warning-subtle: color-mix(in srgb, #b45309 12%, transparent);
+  color-scheme: light;
+}
+
+/* ── Dark theme ──────────────────────────────────────────────────── */
+[data-theme='dark'] {
+  --color-bg: #121712;
+  --color-text: #eff6ea;
+  --color-text-muted: #9ba59b;
+  --color-border: #314034;
+  --color-border-strong: #4a5f4e;
+  --color-panel-bg: #161f18;
+  --color-panel-bg-soft: #1a251c;
+  --color-surface: #223026;
+  --color-surface-hover: #2a3d30;
+  --color-surface-active: #334a3a;
+  --color-danger: #ff8b8b;
+  --color-danger-subtle: color-mix(in srgb, #ff8b8b 14%, transparent);
+  --color-success: #8cff84;
+  --color-success-subtle: color-mix(in srgb, #8cff84 14%, transparent);
+  --color-warning: #fbbf24;
+  --color-warning-subtle: color-mix(in srgb, #fbbf24 14%, transparent);
+  color-scheme: dark;
+
+  --color-json-string: #85e89d;
+  --color-json-number: #79b8ff;
+  --color-json-boolean: #f97583;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   GLOBAL RESET & BASE STYLES
+   ═══════════════════════════════════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at 8% 2%, color-mix(in srgb, var(--color-accent) 18%, transparent) 0%,
+      transparent 32%),
+    var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+textarea,
+input,
+select {
+  font: inherit;
+}
+
+/* ── Global focus-visible reset ──────────────────────────────────── */
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* ── Scrollbar styling ───────────────────────────────────────────── */
+::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-strong);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   THIRD-PARTY OVERRIDES  —  jsoneditor dark theme
+   ═══════════════════════════════════════════════════════════════════ */
+
+[data-theme='dark'] .jsoneditor {
+  border-color: var(--color-border);
+}
+
+[data-theme='dark'] .jsoneditor,
+[data-theme='dark'] .jsoneditor-tree,
+[data-theme='dark'] .jsoneditor textarea,
+[data-theme='dark'] .jsoneditor input {
+  background-color: var(--color-panel-bg);
+  color: var(--color-text);
+}
+
+[data-theme='dark'] .jsoneditor-menu,
+[data-theme='dark'] .jsoneditor-navigation-bar {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+[data-theme='dark'] .jsoneditor-field,
+[data-theme='dark'] .jsoneditor-value,
+[data-theme='dark'] .jsoneditor-readonly,
+[data-theme='dark'] .jsoneditor-schema-error {
+  color: var(--color-text);
+}
+
+[data-theme='dark'] .jsoneditor-statusbar {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}

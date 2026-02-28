@@ -1,0 +1,30 @@
+<div class="table-view">
+  @if (isEmpty() || emptyMessage()) {
+    <div class="table-view__empty">{{ emptyMessage() || 'No data to display' }}</div>
+  } @else {
+    <div class="table-view__wrap">
+      <table class="table-view__table">
+        <thead>
+          <tr>
+            <th class="table-view__th table-view__th--index">#</th>
+            @for (col of columns(); track trackByKey($index, col)) {
+              <th class="table-view__th">{{ col.label }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track trackByIndex($index)) {
+            <tr class="table-view__tr">
+              <td class="table-view__td table-view__td--index">{{ row['__index__'] }}</td>
+              @for (col of columns(); track trackByKey($index, col)) {
+                <td class="table-view__td" [class]="getCellTypeClass(row[col.key])">
+                  {{ formatCell(row[col.key]) }}
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

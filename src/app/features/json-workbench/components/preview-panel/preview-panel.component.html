@@ -1,0 +1,63 @@
+﻿<section class="preview-panel">
+  <header class="preview-panel__header">
+    <h2 class="preview-panel__title">Preview</h2>
+
+    <div class="preview-panel__modes" aria-label="Preview modes">
+      <button
+        type="button"
+        class="preview-panel__mode"
+        [class.preview-panel__mode--active]="previewMode() === 'tree'"
+        (click)="setMode('tree')"
+      >
+        tree
+      </button>
+      <button
+        type="button"
+        class="preview-panel__mode"
+        [class.preview-panel__mode--active]="previewMode() === 'table'"
+        (click)="setMode('table')"
+      >
+        table
+      </button>
+      <button
+        type="button"
+        class="preview-panel__mode"
+        [class.preview-panel__mode--active]="previewMode() === 'text'"
+        (click)="setMode('text')"
+      >
+        text
+      </button>
+    </div>
+  </header>
+
+  <div class="preview-panel__body">
+    @if (!hasData()) {
+      <div class="preview-panel__empty">No valid JSON available for preview.</div>
+    } @else if (previewMode() === 'tree') {
+      <div #jsonEditorHost class="preview-panel__tree"></div>
+    } @else if (previewMode() === 'table') {
+      <div class="preview-panel__table-wrap">
+        <table class="preview-panel__table">
+          <thead>
+            <tr>
+              <th>Path</th>
+              <th>Type</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of tableRows(); track row.path + row.type + row.value) {
+              <tr>
+                <td>{{ row.path }}</td>
+                <td>{{ row.type }}</td>
+                <td>{{ row.value }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <pre class="preview-panel__text">{{ prettyText() }}</pre>
+    }
+  </div>
+</section>
