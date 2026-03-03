@@ -3,11 +3,10 @@ import { ThemeMode } from '../../state/workbench.store';
 import { ButtonComponent } from '../../../../components/ui/button/button.component';
 import { StatusBadgeComponent } from '../../../../components/ui/status-badge/status-badge.component';
 import { ErrorBannerComponent } from '../../../../components/ui/error-banner/error-banner.component';
-import { ShortcutHintComponent } from '../../../../components/ui/shortcut-hint/shortcut-hint.component';
 
 @Component({
   selector: 'app-toolbar',
-  imports: [ButtonComponent, StatusBadgeComponent, ErrorBannerComponent, ShortcutHintComponent],
+  imports: [ButtonComponent, StatusBadgeComponent, ErrorBannerComponent],
   templateUrl: './toolbar.component.html',
   styleUrl: './toolbar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,6 +29,7 @@ export class ToolbarComponent {
   readonly openFilePressed = output<void>();
   readonly toggleThemePressed = output<void>();
   readonly toggleDiffPressed = output<void>();
+  readonly toggleSettingsPressed = output<void>();
 
   onWindowKeydown(event: KeyboardEvent): void {
     const hasCommand = event.ctrlKey || event.metaKey;
@@ -54,6 +54,12 @@ export class ToolbarComponent {
     if (!event.shiftKey && key === 's') {
       event.preventDefault();
       this.downloadPrettyPressed.emit(undefined);
+      return;
+    }
+
+    if (event.shiftKey && key === 'd') {
+      event.preventDefault();
+      this.toggleDiffPressed.emit(undefined);
     }
   }
 }

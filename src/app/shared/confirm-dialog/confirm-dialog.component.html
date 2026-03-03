@@ -1,0 +1,60 @@
+<dialog
+  #dialogRef
+  class="cdlg"
+  aria-modal="true"
+  [attr.aria-label]="title()"
+  (click)="onBackdropClick($event)"
+>
+  <div class="cdlg__panel" role="document">
+    <!-- Header -->
+    <header class="cdlg__header">
+      <h2 class="cdlg__title" id="cdlg-title">{{ title() }}</h2>
+      <button
+        type="button"
+        class="cdlg__close"
+        aria-label="Cerrar diálogo"
+        (click)="cancel()"
+      >✕</button>
+    </header>
+
+    <!-- Body -->
+    <div class="cdlg__body">
+      <p class="cdlg__message">{{ message() }}</p>
+
+      @if (warningText()) {
+        <p class="cdlg__warning" role="alert">
+          <span aria-hidden="true">⚠</span> {{ warningText() }}
+        </p>
+      }
+
+      @if (showDontAsk()) {
+        <label class="cdlg__dontask">
+          <input
+            type="checkbox"
+            [checked]="dontAskAgain()"
+            (change)="toggleDontAsk()"
+          />
+          No volver a preguntar
+        </label>
+      }
+    </div>
+
+    <!-- Footer -->
+    <footer class="cdlg__footer">
+      <button
+        type="button"
+        class="cdlg__btn cdlg__btn--cancel"
+        (click)="cancel()"
+      >{{ cancelText() }}</button>
+
+      <button
+        #confirmBtnRef
+        type="button"
+        class="cdlg__btn cdlg__btn--confirm"
+        [disabled]="confirmDisabled()"
+        [attr.aria-disabled]="confirmDisabled()"
+        (click)="confirm()"
+      >{{ confirmText() }}</button>
+    </footer>
+  </div>
+</dialog>

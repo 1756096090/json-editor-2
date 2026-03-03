@@ -1,50 +1,50 @@
 ﻿<header class="toolbar" role="toolbar" aria-label="JSON editor actions">
   <div class="toolbar__group">
-    <div class="toolbar__actions">
-      <app-ui-button variant="accent" size="sm" tooltipText="Format JSON (Ctrl+Shift+F)" (pressed)="formatPressed.emit(undefined)">
-        Format <app-shortcut-hint keys="Ctrl+Shift+F" />
-      </app-ui-button>
-      <app-ui-button size="sm" tooltipText="Minify JSON (Ctrl+M)" (pressed)="minifyPressed.emit(undefined)">
-        Minify <app-shortcut-hint keys="Ctrl+M" />
-      </app-ui-button>
-    </div>
 
-    <span class="toolbar__divider" aria-hidden="true"></span>
-
-    <div class="toolbar__actions">
+    <!-- File group: Open / Copy / Paste / Download -->
+    <div class="toolbar__actions" role="group" aria-label="File actions">
+      <app-ui-button size="sm" tooltipText="Open .json file" (pressed)="openFilePressed.emit(undefined)">
+        Open
+      </app-ui-button>
       <app-ui-button size="sm" tooltipText="Copy to clipboard" (pressed)="copyPressed.emit(undefined)">
         Copy
       </app-ui-button>
       <app-ui-button size="sm" tooltipText="Paste from clipboard" (pressed)="pastePressed.emit(undefined)">
         Paste
       </app-ui-button>
-    </div>
-
-    <span class="toolbar__divider" aria-hidden="true"></span>
-
-    <div class="toolbar__actions">
-      <app-ui-button size="sm" tooltipText="Download pretty (Ctrl+S)" (pressed)="downloadPrettyPressed.emit(undefined)">
-        &#x2193; Pretty <app-shortcut-hint keys="Ctrl+S" />
+      <app-ui-button size="sm" tooltipText="Download pretty-printed (Ctrl+S)" (pressed)="downloadPrettyPressed.emit(undefined)">
+        &#x2193; Pretty
       </app-ui-button>
       <app-ui-button size="sm" tooltipText="Download minified" (pressed)="downloadMinPressed.emit(undefined)">
         &#x2193; Min
       </app-ui-button>
-      <app-ui-button size="sm" tooltipText="Open .json file" (pressed)="openFilePressed.emit(undefined)">
-        Open
+    </div>
+
+    <span class="toolbar__divider" aria-hidden="true"></span>
+
+    <!-- Format group -->
+    <div class="toolbar__actions" role="group" aria-label="Format actions">
+      <app-ui-button variant="accent" size="sm" tooltipText="Format JSON (Ctrl+Shift+F)" (pressed)="formatPressed.emit(undefined)">
+        Format
+      </app-ui-button>
+      <app-ui-button size="sm" tooltipText="Minify JSON (Ctrl+M)" (pressed)="minifyPressed.emit(undefined)">
+        Minify
       </app-ui-button>
     </div>
 
     <span class="toolbar__divider" aria-hidden="true"></span>
 
+    <!-- Diff toggle -->
     <app-ui-button
       size="sm"
       [variant]="diffOpen() ? 'active' : 'default'"
       [ariaPressed]="diffOpen()"
-      tooltipText="Toggle diff panel"
+      tooltipText="Toggle diff mode (Ctrl+Shift+D)"
       (pressed)="toggleDiffPressed.emit(undefined)"
     >
       Diff
     </app-ui-button>
+
   </div>
 
   <div class="toolbar__meta">
@@ -61,9 +61,18 @@
     >
       {{ themeMode() === 'light' ? '☾ Dark' : '☀ Light' }}
     </app-ui-button>
+
+    <app-ui-button
+      size="sm"
+      variant="ghost"
+      ariaLabel="Abrir configuración"
+      tooltipText="Configuración"
+      (pressed)="toggleSettingsPressed.emit(undefined)"
+    >⚙</app-ui-button>
   </div>
 </header>
 
 @if (!valid() && errorMessage()) {
   <app-error-banner [message]="'Parse error: ' + errorMessage()" />
 }
+

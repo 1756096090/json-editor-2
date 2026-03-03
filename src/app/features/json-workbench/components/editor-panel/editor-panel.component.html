@@ -19,23 +19,113 @@
   @switch (leftMode()) {
     @case ('text') {
       <div class="editor-panel__surface">
-        <pre #overlayRef class="editor-panel__overlay" [innerHTML]="highlightedHtml()"></pre>
-        <textarea
-          class="editor-panel__textarea"
-          [value]="rawText()"
-          (input)="onInput($event)"
-          (scroll)="onScroll($event)"
-          spellcheck="false"
-          aria-label="Raw JSON editor"
-        ></textarea>
 
-        @if (draggingFile()) {
-          <div class="editor-panel__drop-overlay">Drop .json file to load</div>
+        @if (showDiff()) {
+          <!-- ── Gutter column (flex sibling, not overlay) ─────── -->
+          <div
+            #diffGutterRef
+            class="ep-diff-gutter"
+            aria-hidden="true"
+          >
+            @for (line of diffGutterLines(); track $index) {
+              <div
+                class="ep-diff-gutter__line"
+                [class.ep-diff-gutter__line--added]="line.kind === 'added'"
+                [class.ep-diff-gutter__line--removed]="line.kind === 'removed'"
+                [class.ep-diff-gutter__line--modified-old]="line.kind === 'modified-old'"
+                [class.ep-diff-gutter__line--modified-new]="line.kind === 'modified-new'"
+                [class.ep-diff-gutter__line--active]="line.active"
+              >
+                <span class="ep-diff-gutter__num">{{ line.lineNum }}</span>
+                <span class="ep-diff-gutter__sym">{{
+                  line.kind === 'removed' ? '-' :
+                  line.kind === 'added' ? '+' :
+                  (line.kind === 'modified-old' || line.kind === 'modified-new') ? '~' : ' '
+                }}</span>
+              </div>
+            }
+          </div>
         }
+
+        <!-- ── Edit area (flex sibling of gutter) ────────────────── -->
+        <div class="ep-edit-area">
+
+          @if (showDiff()) {
+            <!-- ── Line background colors ──────────────────────── -->
+            <div
+              #diffBgRef
+              class="ep-diff-bg"
+              aria-hidden="true"
+            >
+              @for (row of diffBgLines(); track $index) {
+                <div
+                  class="ep-diff-bg__line"
+                  [class.ep-diff-bg__line--added]="row.kind === 'added'"
+                  [class.ep-diff-bg__line--removed]="row.kind === 'removed'"
+                  [class.ep-diff-bg__line--modified-old]="row.kind === 'modified-old'"
+                  [class.ep-diff-bg__line--modified-new]="row.kind === 'modified-new'"
+                  [class.ep-diff-bg__line--active]="row.active"
+                ></div>
+              }
+            </div>
+          }
+
+          <!-- ── Bracket highlight overlay ─────────────────────── -->
+          <pre
+            #overlayRef
+            class="editor-panel__overlay"
+            [class.editor-panel__overlay--diff]="showDiff()"
+            [innerHTML]="highlightedHtml()"
+          ></pre>
+
+          <!-- ── Editable textarea ──────────────────────────────── -->
+          <textarea
+            #textareaRef
+            class="editor-panel__textarea"
+            [value]="rawText()"
+            (input)="onInput($event)"
+            (scroll)="onScroll($event)"
+            (click)="onTextareaClick($event)"            (paste)="onPaste($event)"            spellcheck="false"
+            [attr.aria-label]="formatOnAltClick() ? 'JSON editor (Alt+Click para formatear)' : 'RAW JSON editor'"
+          ></textarea>
+
+          @if (draggingFile()) {
+            <div class="editor-panel__drop-overlay">Drop .json file to load</div>
+          }
+        </div>
       </div>
 
       <footer class="editor-panel__footer">
         <span class="editor-panel__hint">Drag &amp; drop a .json file into the editor</span>
+
+        <!-- Validity badge (clickable if formatOnBadgeClick is enabled) -->
+        <button
+          type="button"
+          class="editor-panel__valid-badge"
+          [class.editor-panel__valid-badge--valid]="isValid()"
+          [class.editor-panel__valid-badge--invalid]="!isValid()"
+          [class.editor-panel__valid-badge--clickable]="formatOnBadgeClick()"
+          [disabled]="!formatOnBadgeClick()"
+          [attr.title]="formatOnBadgeClick() ? 'Click para formatear' : null"
+          [attr.aria-label]="formatOnBadgeClick() ? (isValid() ? 'Válido - click para formatear' : 'Inválido') : null"
+          (click)="onBadgeClick()"
+        >
+          {{ isValid() ? '✓ Válido' : '✗ Inválido' }}
+        </button>
+
+        <!-- Repair button: visible when invalid + autofix enabled -->
+        @if (!isValid() && autoFixEnabled()) {
+          <button
+            type="button"
+            class="editor-panel__repair-btn"
+            title="Intentar reparar el JSON automáticamente"
+            aria-label="Reparar JSON"
+            (click)="onRepairPressed()"
+          >
+            🔧 Reparar
+          </button>
+        }
+
         <span
           class="editor-panel__mismatch"
           [class.editor-panel__mismatch--error]="mismatchCount() > 0"
@@ -71,4 +161,26 @@
       </div>
     }
   }
+
+  <!-- ── AutoFix modal (accept-mode: fix proposal) ──────────────────── -->
+  @if (autoFixProposal(); as proposal) {
+    <app-auto-fix-modal
+      mode="accept"
+      [originalText]="pastedText"
+      [fixedText]="proposal.fixedText"
+      [appliedFixes]="proposal.appliedFixes"
+      (closed)="onAutoFixClosed($event)"
+    />
+  }
+
+  <!-- ── AutoFix modal (failure-mode: could not fix) ────────────────── -->
+  @if (autoFixFailureMsg(); as errMsg) {
+    <app-auto-fix-modal
+      mode="failure"
+      [errorMessage]="errMsg"
+      (closed)="onAutoFixClosed($event)"
+    />
+  }
+
 </section>
+

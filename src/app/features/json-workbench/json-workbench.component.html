@@ -3,7 +3,7 @@
     [valid]="store.isValidJson()"
     [errorMessage]="store.parseErrorMessage()"
     [themeMode]="store.themeMode()"
-    [diffOpen]="showDiff()"
+    [diffOpen]="store.showDiff()"
     (formatPressed)="onFormatPressed()"
     (minifyPressed)="onMinifyPressed()"
     (copyPressed)="onCopyPressed()"
@@ -13,7 +13,22 @@
     (openFilePressed)="onOpenFilePressed()"
     (toggleThemePressed)="onToggleThemePressed()"
     (toggleDiffPressed)="onToggleDiffPressed()"
+    (toggleSettingsPressed)="onToggleSettingsPressed()"
   />
+
+  @if (store.showDiff()) {
+    <app-diff-bar
+      [diffResult]="diffService.result()"
+      [computing]="diffService.computing()"
+      [currentHunkIndex]="currentHunkIndex()"
+      [syncScroll]="store.syncScroll()"
+      [showOnlyDiffs]="store.showOnlyDiffs()"
+      (prevHunk)="goToPrevHunk()"
+      (nextHunk)="goToNextHunk()"
+      (toggleSyncScroll)="store.toggleSyncScroll()"
+      (toggleShowOnlyDiffs)="store.toggleShowOnlyDiffs()"
+    />
+  }
 
   <app-toast [message]="store.statusMessage()" />
 
@@ -22,35 +37,69 @@
       <app-editor-panel
         split-start
         [rawText]="store.rawText()"
-        panelTitle="Left editor"
+        [panelTitle]="store.showDiff() ? 'Baseline' : 'Input'"
         [leftMode]="store.leftMode()"
         [mismatchedIndexes]="store.mismatchedBracketIndexes()"
         [jsonValue]="store.workingJson()"
+        [showDiff]="store.showDiff()"
+        diffSide="left"
+        [diffRows]="diffService.result()?.rows ?? []"
+        [activeHunkStart]="activeHunkStart()"
+        [activeHunkEnd]="activeHunkEnd()"
+        [showOnlyDiffs]="store.showOnlyDiffs()"
+        [syncScroll]="store.syncScroll()"
+        [externalScrollTop]="leftScrollTop()"
+        [formatOnAltClick]="settings.formatOnAltClick()"
+        [formatOnBadgeClick]="settings.formatOnBadgeClick()"
+        [autoFixEnabled]="settings.autoFixOnPasteEnabled()"
         (rawTextChange)="onRawTextChanged($event)"
         (fileDropped)="onFileDropped($event)"
         (modeChange)="onLeftModeChanged($event)"
+        (diffScrolled)="onLeftDiffScrolled($event)"
+        (formatRequested)="onFormatPressed()"
       />
 
       <app-editor-panel
         split-end
         [rawText]="store.baselineText()"
-        panelTitle="Right editor"
+        [panelTitle]="store.showDiff() ? 'Working' : 'Output'"
         [leftMode]="store.rightMode()"
         [mismatchedIndexes]="[]"
         [jsonValue]="store.baselineJson()"
+        [showDiff]="store.showDiff()"
+        diffSide="right"
+        [diffRows]="diffService.result()?.rows ?? []"
+        [activeHunkStart]="activeHunkStart()"
+        [activeHunkEnd]="activeHunkEnd()"
+        [showOnlyDiffs]="store.showOnlyDiffs()"
+        [syncScroll]="store.syncScroll()"
+        [externalScrollTop]="rightScrollTop()"
+        [formatOnAltClick]="false"
+        [formatOnBadgeClick]="false"
         (rawTextChange)="onBaselineTextChanged($event)"
         (fileDropped)="onBaselineFileDropped($event)"
         (modeChange)="onRightModeChanged($event)"
+        (diffScrolled)="onRightDiffScrolled($event)"
       />
     </app-split-pane>
   </div>
-
-  @if (showDiff()) {
-    <app-diff-panel
-      [baselineText]="store.rawText()"
-      [workingText]="store.baselineText()"
-      (setBaselinePressed)="onSetBaselinePressed()"
-      (resetBaselinePressed)="onResetBaselinePressed()"
-    />
-  }
 </section>
+
+<!-- ── Download confirmation dialog ─────────────────────────────── -->
+@if (showConfirmDownload()) {
+  <app-confirm-dialog
+    title="Confirmar descarga"
+    [message]="store.isValidJson() ? '¿Deseas descargar el archivo JSON?' : ''"
+    confirmText="Descargar"
+    cancelText="Cancelar"
+    [showDontAsk]="true"
+    [confirmDisabled]="!store.isValidJson()"
+    [warningText]="store.isValidJson() ? '' : 'El JSON actual no es válido. Corrígelo antes de descargar.'"
+    (closed)="onDownloadConfirmClosed($event)"
+  />
+}
+
+<!-- ── Settings side-panel ───────────────────────────────────────── -->
+@if (showSettings()) {
+  <app-settings-panel (closed)="showSettings.set(false)" />
+}

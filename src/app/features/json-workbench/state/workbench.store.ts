@@ -1,5 +1,6 @@
-﻿import { Injectable, computed, effect, signal } from '@angular/core';
+﻿import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { findMismatchedBracketIndexes } from '../utils/bracket-utils';
+import { SettingsStore, type ThemeMode } from '../../settings/settings.store';
 
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
@@ -12,7 +13,9 @@ export type JsonArray = JsonValue[];
 
 export type PreviewMode = 'tree' | 'table' | 'text';
 export type LeftPanelMode = 'text' | 'tree' | 'table';
-export type ThemeMode = 'light' | 'dark';
+// Re-export so existing imports from workbench.store still work
+export type { ThemeMode } from '../../settings/settings.store';
+export type DiffViewMode = 'text' | 'tree' | 'table';
 
 type ParseState =
   | {
@@ -25,20 +28,29 @@ type ParseState =
     };
 
 const DEFAULT_JSON = '{\n  "name": "json-we-format-angular",\n  "version": 1\n}';
-const DRAFT_STORAGE_KEY = 'json-we-format:draft';
-const THEME_STORAGE_KEY = 'json-we-format:theme';
-const BASELINE_STORAGE_KEY = 'json-we-format:baseline';
+const DRAFT_STORAGE_KEY     = 'json-we-format:draft';
+const BASELINE_STORAGE_KEY  = 'json-we-format:baseline';
+const SHOW_DIFF_STORAGE_KEY = 'json-we-format:show-diff';
+const DIFF_VIEW_MODE_KEY    = 'json-we-format:diff-view-mode';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WorkbenchStore {
+  private readonly settingsStore = inject(SettingsStore);
+
   readonly rawText = signal<string>(DEFAULT_JSON);
   readonly leftMode = signal<LeftPanelMode>('text');
   readonly rightMode = signal<LeftPanelMode>('text');
   readonly previewMode = signal<PreviewMode>('tree');
-  readonly themeMode = signal<ThemeMode>('light');
   readonly statusMessage = signal<string>('');
+  readonly showDiff = signal<boolean>(false);
+  readonly diffViewMode = signal<DiffViewMode>('text');
+
+  // Delegated to SettingsStore
+  readonly themeMode    = this.settingsStore.themeMode;
+  readonly syncScroll   = this.settingsStore.syncScroll;
+  readonly showOnlyDiffs = this.settingsStore.showOnlyDiffs;
 
   readonly baselineText = signal<string>(DEFAULT_JSON);
 
@@ -102,13 +114,15 @@ export class WorkbenchStore {
     });
 
     effect(() => {
-      const theme = this.themeMode();
-      this.applyTheme(theme);
-      this.saveStorage(THEME_STORAGE_KEY, theme);
+      this.saveStorage(BASELINE_STORAGE_KEY, this.baselineText());
     });
 
     effect(() => {
-      this.saveStorage(BASELINE_STORAGE_KEY, this.baselineText());
+      this.saveStorage(SHOW_DIFF_STORAGE_KEY, this.showDiff() ? '1' : '');
+    });
+
+    effect(() => {
+      this.saveStorage(DIFF_VIEW_MODE_KEY, this.diffViewMode());
     });
   }
 
@@ -133,11 +147,27 @@ export class WorkbenchStore {
   }
 
   setTheme(mode: ThemeMode): void {
-    this.themeMode.set(mode);
+    this.settingsStore.setThemeMode(mode);
   }
 
   toggleTheme(): void {
-    this.themeMode.update((theme) => (theme === 'light' ? 'dark' : 'light'));
+    this.settingsStore.toggleThemeMode();
+  }
+
+  toggleDiff(): void {
+    this.showDiff.update((v) => !v);
+  }
+
+  setDiffViewMode(mode: DiffViewMode): void {
+    this.diffViewMode.set(mode);
+  }
+
+  toggleSyncScroll(): void {
+    this.settingsStore.toggleSyncScroll();
+  }
+
+  toggleShowOnlyDiffs(): void {
+    this.settingsStore.toggleShowOnlyDiffs();
   }
 
   formatJson(): boolean {
@@ -194,11 +224,6 @@ export class WorkbenchStore {
       this.rawText.set(draft);
     }
 
-    const theme = this.readStorage(THEME_STORAGE_KEY);
-    if (theme === 'dark' || theme === 'light') {
-      this.themeMode.set(theme);
-    }
-
     const baseline = this.readStorage(BASELINE_STORAGE_KEY);
     if (baseline) {
       const parsedBaseline = parseJson(baseline);
@@ -206,6 +231,17 @@ export class WorkbenchStore {
         this.baselineText.set(stringifyJson(parsedBaseline.value, 2));
       }
     }
+
+    const showDiff = this.readStorage(SHOW_DIFF_STORAGE_KEY);
+    if (showDiff === '1') {
+      this.showDiff.set(true);
+    }
+
+    const diffViewMode = this.readStorage(DIFF_VIEW_MODE_KEY);
+    if (diffViewMode === 'text' || diffViewMode === 'tree' || diffViewMode === 'table') {
+      this.diffViewMode.set(diffViewMode);
+    }
+
   }
 
   private saveStorage(key: string, value: string): void {
@@ -237,13 +273,6 @@ export class WorkbenchStore {
     }
   }
 
-  private applyTheme(theme: ThemeMode): void {
-    if (typeof document === 'undefined') {
-      return;
-    }
-
-    document.documentElement.setAttribute('data-theme', theme);
-  }
 }
 
 function parseJson(source: string): ParseState {

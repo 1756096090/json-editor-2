@@ -1,0 +1,97 @@
+<dialog
+  #dialogRef
+  class="afm"
+  aria-modal="true"
+  [attr.aria-label]="mode() === 'accept' ? 'Propuesta de corrección automática' : 'Error al interpretar JSON'"
+  (click)="onBackdropClick($event)"
+>
+  <div class="afm__panel" role="document">
+
+    <!-- ── Header ──────────────────────────────────────────────────── -->
+    <header class="afm__header">
+      @if (mode() === 'accept') {
+        <span class="afm__icon" aria-hidden="true">✨</span>
+        <h2 class="afm__title">Corrección automática detectada</h2>
+      } @else {
+        <span class="afm__icon afm__icon--error" aria-hidden="true">⚠</span>
+        <h2 class="afm__title">JSON inválido</h2>
+      }
+    </header>
+
+    <!-- ── Body ────────────────────────────────────────────────────── -->
+    <div class="afm__body">
+      @if (mode() === 'accept') {
+
+        <!-- Fix chips -->
+        <p class="afm__desc">Se encontraron y corrigieron los siguientes problemas:</p>
+        <ul class="afm__chips" aria-label="Correcciones aplicadas">
+          @for (fix of appliedFixes(); track fix) {
+            <li class="afm__chip">{{ fixLabelNames[fix] }}</li>
+          }
+        </ul>
+
+        <!-- Side-by-side comparison -->
+        <div class="afm__diff" role="region" aria-label="Comparación original versus corregido">
+          <div class="afm__diff-col">
+            <div class="afm__diff-col-label" aria-hidden="true">Original (pegado)</div>
+            <pre class="afm__diff-pre afm__diff-pre--original" tabindex="0" aria-label="Texto original">{{ originalText() }}</pre>
+          </div>
+          <div class="afm__diff-col">
+            <div class="afm__diff-col-label" aria-hidden="true">Corregido</div>
+            <pre class="afm__diff-pre afm__diff-pre--fixed" tabindex="0" aria-label="Texto corregido">{{ fixedText() }}</pre>
+          </div>
+        </div>
+
+      } @else {
+
+        <!-- Failure mode -->
+        <p class="afm__desc">
+          No fue posible corregir el JSON automáticamente.
+          ¿Qué deseas hacer?
+        </p>
+        @if (errorMessage()) {
+          <pre class="afm__error-detail" role="note" aria-label="Detalle del error">{{ errorMessage() }}</pre>
+        }
+
+      }
+    </div>
+
+    <!-- ── Footer ──────────────────────────────────────────────────── -->
+    <footer class="afm__footer">
+      @if (mode() === 'accept') {
+        <button
+          type="button"
+          class="afm__btn afm__btn--secondary"
+          (click)="keep()"
+        >
+          Mantener original
+        </button>
+        <button
+          type="button"
+          class="afm__btn afm__btn--primary"
+          (click)="accept()"
+          cdkFocusInitial
+        >
+          Aplicar corrección
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="afm__btn afm__btn--secondary"
+          (click)="revert()"
+        >
+          Revertir pegado
+        </button>
+        <button
+          type="button"
+          class="afm__btn afm__btn--primary"
+          (click)="keep()"
+          cdkFocusInitial
+        >
+          Mantener pegado
+        </button>
+      }
+    </footer>
+
+  </div>
+</dialog>

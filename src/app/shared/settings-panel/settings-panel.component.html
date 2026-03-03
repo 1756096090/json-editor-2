@@ -1,0 +1,142 @@
+<div class="sp-backdrop" aria-hidden="true" (click)="close()"></div>
+
+<aside class="sp" role="dialog" aria-modal="true" aria-label="Configuración">
+  <header class="sp__header">
+    <h2 class="sp__title">Configuración</h2>
+    <button
+      type="button"
+      class="sp__close"
+      aria-label="Cerrar configuración"
+      (click)="close()"
+    >✕</button>
+  </header>
+
+  <div class="sp__body">
+
+    <!-- 1 — Downloads -->
+    <section class="sp__section" aria-labelledby="sp-downloads">
+      <h3 class="sp__section-title" id="sp-downloads">Descargas</h3>
+
+      <div class="sp__toggle">
+        <span class="sp__toggle-label">
+          Confirmar antes de descargar
+          <span class="sp__toggle-hint">Muestra un diálogo al hacer click en ↓ Pretty o ↓ Min.</span>
+        </span>
+        <button
+          type="button" role="switch"
+          class="sp__switch"
+          [class.sp__switch--on]="settings.confirmDownloads()"
+          [attr.aria-checked]="settings.confirmDownloads()"
+          (click)="settings.setConfirmDownloads(!settings.confirmDownloads())"
+        ><span class="sp__switch-thumb"></span></button>
+      </div>
+    </section>
+
+    <!-- 2 — Editor -->
+    <section class="sp__section" aria-labelledby="sp-editor">
+      <h3 class="sp__section-title" id="sp-editor">Editor</h3>
+
+      <div class="sp__toggle">
+        <span class="sp__toggle-label">
+          Alt+Click para formatear
+          <span class="sp__toggle-hint">Formatea el JSON al hacer Alt+Click en el área de texto.</span>
+        </span>
+        <button
+          type="button" role="switch"
+          class="sp__switch"
+          [class.sp__switch--on]="settings.formatOnAltClick()"
+          [attr.aria-checked]="settings.formatOnAltClick()"
+          (click)="settings.setFormatOnAltClick(!settings.formatOnAltClick())"
+        ><span class="sp__switch-thumb"></span></button>
+      </div>
+
+      <div class="sp__toggle">
+        <span class="sp__toggle-label">
+          Click en badge para formatear
+          <span class="sp__toggle-hint">Formatea al hacer click en el badge Válido/Inválido.</span>
+        </span>
+        <button
+          type="button" role="switch"
+          class="sp__switch"
+          [class.sp__switch--on]="settings.formatOnBadgeClick()"
+          [attr.aria-checked]="settings.formatOnBadgeClick()"
+          (click)="settings.setFormatOnBadgeClick(!settings.formatOnBadgeClick())"
+        ><span class="sp__switch-thumb"></span></button>
+      </div>
+
+      <div class="sp__toggle">
+        <span class="sp__toggle-label">
+          AutoFix al pegar
+          <span class="sp__toggle-hint">Sugiere correcciones cuando se pega JSON inválido.</span>
+        </span>
+        <button
+          type="button" role="switch"
+          class="sp__switch"
+          [class.sp__switch--on]="settings.autoFixOnPasteEnabled()"
+          [attr.aria-checked]="settings.autoFixOnPasteEnabled()"
+          (click)="settings.setAutoFixOnPasteEnabled(!settings.autoFixOnPasteEnabled())"
+        ><span class="sp__switch-thumb"></span></button>
+      </div>
+    </section>
+
+    <!-- 3 — Apariencia -->
+    <section class="sp__section" aria-labelledby="sp-appearance">
+      <h3 class="sp__section-title" id="sp-appearance">Apariencia</h3>
+
+      <div class="sp__toggle">
+        <span class="sp__toggle-label">
+          Modo oscuro
+          <span class="sp__toggle-hint">Alterna entre tema claro y oscuro.</span>
+        </span>
+        <button
+          type="button" role="switch"
+          class="sp__switch"
+          [class.sp__switch--on]="settings.themeMode() === 'dark'"
+          [attr.aria-checked]="settings.themeMode() === 'dark'"
+          (click)="settings.toggleThemeMode()"
+        ><span class="sp__switch-thumb"></span></button>
+      </div>
+    </section>
+
+    <!-- 4 — Diff -->
+    <section class="sp__section" aria-labelledby="sp-diff">
+      <h3 class="sp__section-title" id="sp-diff">Diff</h3>
+
+      <div class="sp__toggle">
+        <span class="sp__toggle-label">
+          Solo mostrar diferencias
+          <span class="sp__toggle-hint">Oculta las líneas sin cambios en el modo diff.</span>
+        </span>
+        <button
+          type="button" role="switch"
+          class="sp__switch"
+          [class.sp__switch--on]="settings.showOnlyDiffs()"
+          [attr.aria-checked]="settings.showOnlyDiffs()"
+          (click)="settings.toggleShowOnlyDiffs()"
+        ><span class="sp__switch-thumb"></span></button>
+      </div>
+
+      <div class="sp__toggle">
+        <span class="sp__toggle-label">
+          Sincronizar scroll
+          <span class="sp__toggle-hint">Mantiene los dos paneles en la misma posición de scroll.</span>
+        </span>
+        <button
+          type="button" role="switch"
+          class="sp__switch"
+          [class.sp__switch--on]="settings.syncScroll()"
+          [attr.aria-checked]="settings.syncScroll()"
+          (click)="settings.toggleSyncScroll()"
+        ><span class="sp__switch-thumb"></span></button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- 5 — Reset -->
+  <footer class="sp__footer">
+    <button type="button" class="sp__reset" (click)="reset()">
+      Restaurar valores por defecto
+    </button>
+  </footer>
+</aside>

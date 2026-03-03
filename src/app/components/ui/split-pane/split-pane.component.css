@@ -21,6 +21,8 @@
 }
 
 .split-pane__panel > * {
+  /* custom elements default to inline — force block so height:100% resolves */
+  display: block;
   height: 100%;
   width: 100%;
 }
@@ -32,6 +34,8 @@
   display: flex;
   flex-shrink: 0;
   justify-content: center;
+  /* position:relative needed for z-index to participate in stacking context */
+  position: relative;
   touch-action: none;
   transition: background var(--duration-fast) var(--ease-default);
   user-select: none;

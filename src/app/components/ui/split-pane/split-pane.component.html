@@ -4,7 +4,7 @@
   role="group"
   aria-label="Resizable split panel"
 >
-  <div class="split-pane__panel split-pane__left" [attr.style]="leftStyle()">
+  <div class="split-pane__panel split-pane__left" [style]="leftStyle()">
     <ng-content select="[split-start]" />
   </div>
 
@@ -29,7 +29,7 @@
     <div class="split-pane__gutter-dot"></div>
   </div>
 
-  <div class="split-pane__panel split-pane__right" [attr.style]="rightStyle()">
+  <div class="split-pane__panel split-pane__right" [style]="rightStyle()">
     <ng-content select="[split-end]" />
   </div>
 </div>

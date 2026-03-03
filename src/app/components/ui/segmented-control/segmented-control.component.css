@@ -18,7 +18,7 @@
   font-weight: var(--weight-semibold);
   letter-spacing: 0.04em;
   line-height: 1;
-  padding: var(--space-1) var(--space-2);
+  padding: 0.4rem var(--space-3);
   text-transform: uppercase;
   transition: var(--transition-colors);
 }

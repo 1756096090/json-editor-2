@@ -1,0 +1,63 @@
+<div class="diff-bar" role="toolbar" aria-label="Diff controls">
+
+  <!-- Stats -->
+  <div class="diff-bar__stats" aria-live="polite" aria-atomic="true">
+    @if (computing()) {
+      <span class="diff-bar__computing" aria-label="Computing diff…">…</span>
+    } @else {
+      <span class="diff-bar__stat diff-bar__stat--added"
+            aria-label="{{ addedCount() }} lines added">
+        +{{ addedCount() }}
+      </span>
+      <span class="diff-bar__stat diff-bar__stat--removed"
+            aria-label="{{ removedCount() }} lines removed">
+        −{{ removedCount() }}
+      </span>
+    }
+  </div>
+
+  <span class="diff-bar__sep" aria-hidden="true"></span>
+
+  <!-- Navigation -->
+  <div class="diff-bar__nav" role="group" aria-label="Navigate differences">
+    <app-ui-button
+      size="sm"
+      variant="ghost"
+      ariaLabel="Previous difference (Alt+↑)"
+      tooltipText="Previous difference (Alt+↑)"
+      (pressed)="prevHunk.emit()"
+    >▲ Prev</app-ui-button>
+
+    <span class="diff-bar__counter" aria-live="polite">{{ navLabel() }}</span>
+
+    <app-ui-button
+      size="sm"
+      variant="ghost"
+      ariaLabel="Next difference (Alt+↓)"
+      tooltipText="Next difference (Alt+↓)"
+      (pressed)="nextHunk.emit()"
+    >Next ▼</app-ui-button>
+  </div>
+
+  <span class="diff-bar__sep" aria-hidden="true"></span>
+
+  <!-- Toggles -->
+  <app-ui-button
+    size="sm"
+    [variant]="showOnlyDiffs() ? 'active' : 'ghost'"
+    [ariaPressed]="showOnlyDiffs()"
+    ariaLabel="Show only changed lines"
+    tooltipText="Show only changed lines"
+    (pressed)="toggleShowOnlyDiffs.emit()"
+  >Only diffs</app-ui-button>
+
+  <app-ui-button
+    size="sm"
+    [variant]="syncScroll() ? 'active' : 'ghost'"
+    [ariaPressed]="syncScroll()"
+    ariaLabel="Synchronize scroll between panels"
+    tooltipText="Synchronize scroll between panels"
+    (pressed)="toggleSyncScroll.emit()"
+  >Sync scroll</app-ui-button>
+
+</div>
