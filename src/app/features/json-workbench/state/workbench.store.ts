@@ -76,7 +76,10 @@ export class WorkbenchStore {
     const parsed = this.parseResult();
     return parsed.ok ? '' : parsed.error;
   });
-  readonly leftError = computed<JsonErrorPosition | null>(() => getJsonError(this.rawText()));
+  readonly leftError = computed<JsonErrorPosition | null>(() => {
+    const text = this.rawText().trim();
+    return text.length === 0 ? null : getJsonError(this.rawText());
+  });
 
   // ── Right panel parse state ─────────────────────────────
   readonly isBaselineValid = computed<boolean>(() => this.baselineParseResult().ok);
@@ -84,7 +87,10 @@ export class WorkbenchStore {
     const parsed = this.baselineParseResult();
     return parsed.ok ? '' : parsed.error;
   });
-  readonly rightError = computed<JsonErrorPosition | null>(() => getJsonError(this.baselineText()));
+  readonly rightError = computed<JsonErrorPosition | null>(() => {
+    const text = this.baselineText().trim();
+    return text.length === 0 ? null : getJsonError(this.baselineText());
+  });
 
   readonly currentJson = computed<JsonValue | null>(() => {
     const parsed = this.parseResult();
