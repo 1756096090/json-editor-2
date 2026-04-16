@@ -10,10 +10,7 @@
 } from '@angular/core';
 import { JsonTreeViewComponent } from '../../../../components/ui/json-tree-view/json-tree-view.component';
 import { JsonTableViewComponent } from '../../../../components/ui/json-table-view/json-table-view.component';
-import {
-  SegmentedControlComponent,
-  SegmentItem,
-} from '../../../../components/ui/segmented-control/segmented-control.component';
+import { SegmentItem } from '../../../../components/ui/segmented-control/segmented-control.component';
 import { EmptyStateComponent } from '../../../../components/ui/empty-state/empty-state.component';
 import { LeftPanelMode } from '../../state/workbench.store';
 import {
@@ -45,7 +42,6 @@ const VIEW_MODES: SegmentItem[] = [
   imports: [
     JsonTreeViewComponent,
     JsonTableViewComponent,
-    SegmentedControlComponent,
     EmptyStateComponent,
     AutoFixModalComponent,
     EditorTextComponent,
