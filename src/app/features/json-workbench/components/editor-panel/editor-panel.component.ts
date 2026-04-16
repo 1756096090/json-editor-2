@@ -99,15 +99,9 @@ export class EditorPanelComponent {
   /** YAML representation of the current valid JSON. Empty when JSON is invalid. */
   readonly yamlText = computed(() => {
     const v = this.jsonValue();
-    console.log('[YAML] yamlText computed called, jsonValue:', v);
-    if (!v) {
-      console.log('[YAML] jsonValue is null/undefined, returning empty');
-      return '';
-    }
+    if (!v) return '';
     try {
-      const result = jsonToYaml(v as any);
-      console.log('[YAML] converted successfully, length:', result.length, 'content:', result.substring(0, 100));
-      return result;
+      return jsonToYaml(v as any);
     } catch (e) {
       console.error('[YAML] conversion error:', e);
       return '';
@@ -141,9 +135,7 @@ export class EditorPanelComponent {
   /** Indicates if there's valid JSON to convert to other formats. */
   readonly hasValidJsonForConversion = computed(() => {
     const v = this.jsonValue();
-    const hasValid = v !== null && v !== undefined;
-    console.log('[YAML] hasValidJsonForConversion computed:', hasValid, 'jsonValue:', v);
-    return hasValid;
+    return v !== null && v !== undefined;
   });
 
   /** Monaco language ID based on the current view mode. */

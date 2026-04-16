@@ -79,21 +79,9 @@ export class EditorTextComponent implements OnInit {
     effect(() => {
       const isReady = this.ready();
       const val = this.value();
-      console.log('[EditorText] value effect triggered, ready:', isReady, 'value length:', val.length);
-      
-      if (!isReady) {
-        console.log('[EditorText] Editor not ready yet, skipping value update');
-        return;
-      }
-      
-      if (!this.editor) {
-        console.log('[EditorText] Editor instance missing, skipping');
-        return;
-      }
-      
+      if (!isReady || !this.editor) return;
       const model = this.editor.getModel();
       if (model && model.getValue() !== val) {
-        console.log('[EditorText] Updating editor model with new value, length:', val.length);
         this.ignoreNextChange = true;
         model.setValue(val);
         this.ignoreNextChange = false;
@@ -139,13 +127,10 @@ export class EditorTextComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('[EditorText] ngOnInit, initial value:', this.value(), 'language:', this.language(), 'readOnly:', this.readOnly());
     this.loader.load().then((monaco) => {
-      console.log('[EditorText] Monaco loaded');
       this.monaco = monaco;
       this.createEditor(monaco);
       this.ready.set(true);
-      console.log('[EditorText] Editor created, setting initial value from signal');
     });
 
     this.destroyRef.onDestroy(() => {
