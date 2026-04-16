@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { EditorTextComponent } from '../editor-text/editor-text.component';
 import { EmptyStateComponent } from '../../../../components/ui/empty-state/empty-state.component';
 
@@ -7,7 +7,7 @@ import { EmptyStateComponent } from '../../../../components/ui/empty-state/empty
   imports: [EditorTextComponent, EmptyStateComponent],
   template: `
     <div class="editor-panel__surface">
-      @if (hasValidInput()) {
+      @if (shouldShowContent()) {
         <app-editor-text
           [value]="content()"
           [language]="language()"
@@ -35,4 +35,11 @@ export class ConvertedViewComponent {
   readonly emptyDescription = input<string>(
     'Switch to Text mode, paste valid JSON, then come back to this view.'
   );
+
+  readonly shouldShowContent = computed(() => {
+    const hasValid = this.hasValidInput();
+    const contentValue = this.content();
+    console.log('[ConvertedView] shouldShowContent:', hasValid, 'content length:', contentValue.length, 'content:', contentValue.substring(0, 50));
+    return hasValid;
+  });
 }
