@@ -108,7 +108,7 @@ export class EditorPanelComponent {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return jsonToYaml(v as any);
     } catch (e) {
-      console.error('YAML conversion error:', e);
+      console.error('[YAML] conversion error:', e);
       return '';
     }
   });
@@ -120,7 +120,7 @@ export class EditorPanelComponent {
     try {
       return jsonToCsv(v as Parameters<typeof jsonToCsv>[0]);
     } catch (e) {
-      console.error('CSV conversion error:', e);
+      console.error('[CSV] conversion error:', e);
       return '';
     }
   });
@@ -132,40 +132,12 @@ export class EditorPanelComponent {
     try {
       return jsonToXml(v as Parameters<typeof jsonToXml>[0]);
     } catch (e) {
-      console.error('XML conversion error:', e);
+      console.error('[XML] conversion error:', e);
       return '';
     }
   });
 
-  private readonly convertedViewConfig = {
-    yaml: {
-      content: this.yamlText,
-      fileName: 'output.yaml',
-      mimeType: 'text/yaml',
-      language: 'yaml',
-      ariaLabel: 'YAML output (read-only)',
-      emptyTitle: 'No valid JSON to convert',
-      emptyDescription: 'Switch to Text mode, paste valid JSON, then come back to YAML view.',
-    },
-    csv: {
-      content: this.csvText,
-      fileName: 'output.csv',
-      mimeType: 'text/csv',
-      language: 'plaintext',
-      ariaLabel: 'CSV output (read-only)',
-      emptyTitle: 'No valid JSON to convert',
-      emptyDescription: 'Switch to Text mode, paste valid JSON, then come back to CSV view.',
-    },
-    xml: {
-      content: this.xmlText,
-      fileName: 'output.xml',
-      mimeType: 'application/xml',
-      language: 'xml',
-      ariaLabel: 'XML output (read-only)',
-      emptyTitle: 'No valid JSON to convert',
-      emptyDescription: 'Switch to Text mode, paste valid JSON, then come back to XML view.',
-    },
-  } as const;
+
 
   /** Monaco language ID based on the current view mode. */
   readonly monacoLanguage = computed(() => {
@@ -174,6 +146,12 @@ export class EditorPanelComponent {
     if (m === 'xml')  return 'xml';
     return 'json';
   });
+
+  private readonly exportConfig = {
+    yaml: { fileName: 'output.yaml', mimeType: 'text/yaml' },
+    csv: { fileName: 'output.csv', mimeType: 'text/csv' },
+    xml: { fileName: 'output.xml', mimeType: 'application/xml' },
+  } as const;
 
   /** Pending fix proposal for the accept-mode modal. Null = modal hidden. */
   readonly autoFixProposal = signal<AutoFixSuccess | null>(null);
@@ -276,10 +254,6 @@ export class EditorPanelComponent {
     this.modeChange.emit(mode as LeftPanelMode);
   }
 
-  getConvertedView(mode: 'yaml' | 'csv' | 'xml') {
-    return this.convertedViewConfig[mode];
-  }
-
   onDragEnter(event: DragEvent): void {
     event.preventDefault();
     this.draggingFile.set(true);
@@ -306,8 +280,16 @@ export class EditorPanelComponent {
   /** Copy: uses converted text for yaml/csv/xml modes, otherwise bubbles up. */
   handleCopy(): void {
     const mode = this.leftMode();
-    if (mode === 'yaml' || mode === 'csv' || mode === 'xml') {
-      void copyTextToClipboard(this.getConvertedView(mode).content());
+    if (mode === 'yaml') {
+      void copyTextToClipboard(this.yamlText());
+      return;
+    }
+    if (mode === 'csv') {
+      void copyTextToClipboard(this.csvText());
+      return;
+    }
+    if (mode === 'xml') {
+      void copyTextToClipboard(this.xmlText());
       return;
     }
     this.copyRequested.emit();
@@ -316,9 +298,19 @@ export class EditorPanelComponent {
   /** Download the current view as a file in its native format. */
   exportCurrentView(): void {
     const mode = this.leftMode();
-    if (mode === 'yaml' || mode === 'csv' || mode === 'xml') {
-      const view = this.getConvertedView(mode);
-      downloadTextFile(view.fileName, view.content(), view.mimeType);
+    if (mode === 'yaml') {
+      const config = this.exportConfig.yaml;
+      downloadTextFile(config.fileName, this.yamlText(), config.mimeType);
+      return;
+    }
+    if (mode === 'csv') {
+      const config = this.exportConfig.csv;
+      downloadTextFile(config.fileName, this.csvText(), config.mimeType);
+      return;
+    }
+    if (mode === 'xml') {
+      const config = this.exportConfig.xml;
+      downloadTextFile(config.fileName, this.xmlText(), config.mimeType);
       return;
     }
     downloadTextFile('output.json', this.rawText(), 'application/json');

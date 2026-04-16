@@ -141,32 +141,32 @@
     }
     @case ('yaml') {
       <app-converted-view
-        [content]="getConvertedView('yaml').content()"
-        [language]="getConvertedView('yaml').language"
+        [content]="yamlText()"
+        language="yaml"
         [theme]="theme()"
-        [ariaLabel]="getConvertedView('yaml').ariaLabel"
-        [emptyTitle]="getConvertedView('yaml').emptyTitle"
-        [emptyDescription]="getConvertedView('yaml').emptyDescription"
+        ariaLabel="YAML output (read-only)"
+        emptyTitle="No valid JSON to convert"
+        emptyDescription="Switch to Text mode, paste valid JSON, then come back to YAML view."
       />
     }
     @case ('csv') {
       <app-converted-view
-        [content]="getConvertedView('csv').content()"
-        [language]="getConvertedView('csv').language"
+        [content]="csvText()"
+        language="plaintext"
         [theme]="theme()"
-        [ariaLabel]="getConvertedView('csv').ariaLabel"
-        [emptyTitle]="getConvertedView('csv').emptyTitle"
-        [emptyDescription]="getConvertedView('csv').emptyDescription"
+        ariaLabel="CSV output (read-only)"
+        emptyTitle="No valid JSON to convert"
+        emptyDescription="Switch to Text mode, paste valid JSON, then come back to CSV view."
       />
     }
     @case ('xml') {
       <app-converted-view
-        [content]="getConvertedView('xml').content()"
-        [language]="getConvertedView('xml').language"
+        [content]="xmlText()"
+        language="xml"
         [theme]="theme()"
-        [ariaLabel]="getConvertedView('xml').ariaLabel"
-        [emptyTitle]="getConvertedView('xml').emptyTitle"
-        [emptyDescription]="getConvertedView('xml').emptyDescription"
+        ariaLabel="XML output (read-only)"
+        emptyTitle="No valid JSON to convert"
+        emptyDescription="Switch to Text mode, paste valid JSON, then come back to XML view."
       />
     }
   }
