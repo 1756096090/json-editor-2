@@ -115,7 +115,7 @@
   height: 1.375rem;
   padding: 0;
   position: relative;
-  transition: background 0.2s;
+  transition: background var(--duration-normal) var(--ease-default);
   width: 2.5rem;
 }
 .sp__switch--on {
@@ -124,7 +124,7 @@
 .sp__switch:focus-visible { outline: var(--focus-ring); }
 
 .sp__switch-thumb {
-  background: #fff;
+  background: var(--color-panel-bg);
   border-radius: 50%;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   height: 1rem;
@@ -132,7 +132,7 @@
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  transition: left 0.2s;
+  transition: left var(--duration-normal) var(--ease-default);
   width: 1rem;
 }
 .sp__switch--on .sp__switch-thumb {

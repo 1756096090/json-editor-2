@@ -74,6 +74,10 @@
   --focus-ring: 2px solid var(--color-accent);
   --focus-ring-offset: 2px;
 
+  /* ── Surfaces (semantic naming) ─────────────────────────────── */
+  --surface-hover: var(--color-surface-hover);
+  --surface-active: var(--color-surface-active);
+
   /* ── Brand accent (VS Code blue) ─────────────────────────────── */
   --color-accent: #569cd6;
   --color-accent-muted: color-mix(in srgb, var(--color-accent) 50%, transparent);

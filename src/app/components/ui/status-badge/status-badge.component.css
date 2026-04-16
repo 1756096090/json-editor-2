@@ -11,8 +11,8 @@
 }
 
 .badge--success {
-  background: var(--color-accent-subtle);
-  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+  background: var(--color-success-subtle);
+  border-color: color-mix(in srgb, var(--color-success) 45%, var(--color-border));
   color: var(--color-success);
 }
 
@@ -24,7 +24,7 @@
 
 .badge--warning {
   background: var(--color-warning-subtle);
-  border-color: color-mix(in srgb, var(--color-danger) 35%, var(--color-border));
+  border-color: color-mix(in srgb, var(--color-warning) 45%, var(--color-border));
   color: var(--color-warning);
 }
 

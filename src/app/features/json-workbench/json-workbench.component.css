@@ -56,7 +56,7 @@
 }
 
 .url-import-bar__label {
-  color: var(--color-text-secondary);
+  color: var(--color-text-muted);
   font-size: var(--text-sm);
   font-weight: 500;
   white-space: nowrap;
@@ -79,26 +79,26 @@
   line-height: 1;
   padding: 0 var(--space-2);
   height: 2rem;
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--duration-fast) var(--ease-default), color var(--duration-fast) var(--ease-default);
 }
 
 .url-import-bar__target-btn--active {
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-bg);
 }
 
 .url-import-bar__input {
-  background: var(--color-input-bg, var(--color-surface-2));
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  color: var(--color-text-primary);
+  color: var(--color-text);
   flex: 1;
   font-size: var(--text-sm);
   height: 2rem;
   min-width: 0;
   outline: none;
   padding: 0 var(--space-2);
-  transition: border-color 0.15s;
+  transition: border-color var(--duration-fast);
 }
 
 .url-import-bar__input:focus {
@@ -139,11 +139,11 @@
   line-height: 1;
   margin-left: var(--space-1);
   padding: 0 6px;
-  transition: background var(--duration-fast), color var(--duration-fast);
+  transition: background var(--duration-fast) var(--ease-default), color var(--duration-fast) var(--ease-default);
 }
 
 .workbench__toolbar-expand:hover {
-  background: var(--color-surface-raised);
+  background: var(--color-surface-hover);
   color: var(--color-text);
 }
 

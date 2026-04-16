@@ -173,7 +173,7 @@
   font-size: 0.875rem;
   font-weight: 500;
   padding: 8px 18px;
-  transition: background 0.15s, opacity 0.15s;
+  transition: background var(--duration-fast) var(--ease-default), opacity var(--duration-fast) var(--ease-default);
   outline: none;
 }
 
@@ -193,7 +193,7 @@
 
 .afm__btn--primary {
   background: var(--color-accent, #4c8ffd);
-  color: #fff;
+  color: var(--color-bg);
   border: 1px solid transparent;
 }
 
@@ -203,7 +203,7 @@
 
 /* ── Light theme overrides ──────────────────────────────────────────────────── */
 [data-theme='light'] .afm__panel {
-  background: var(--color-surface-overlay, #ffffff);
+  background: var(--color-panel-bg);
   border-color: var(--color-border, #dde0e8);
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
 }
