@@ -6,20 +6,26 @@ import { EmptyStateComponent } from '../../../../components/ui/empty-state/empty
   selector: 'app-converted-view',
   imports: [EditorTextComponent, EmptyStateComponent],
   template: `
-    <div class="editor-panel__surface">
+    <div class="editor-panel__surface" style="border: 2px solid red; background: rgba(255, 0, 0, 0.05);">
       @if (shouldShowContent()) {
-        <app-editor-text
-          [value]="content()"
-          [language]="language()"
-          [theme]="theme()"
-          [readOnly]="true"
-          [ariaLabel]="ariaLabel()"
-        />
+        <div style="border: 2px solid blue; flex: 1;">
+          SHOWING EDITOR
+          <app-editor-text
+            [value]="content()"
+            [language]="language()"
+            [theme]="theme()"
+            [readOnly]="true"
+            [ariaLabel]="ariaLabel()"
+          />
+        </div>
       } @else {
-        <app-empty-state
-          [title]="emptyTitle()"
-          [description]="emptyDescription()"
-        />
+        <div style="border: 2px solid green;">
+          SHOWING EMPTY STATE
+          <app-empty-state
+            [title]="emptyTitle()"
+            [description]="emptyDescription()"
+          />
+        </div>
       }
     </div>
   `,
@@ -39,7 +45,13 @@ export class ConvertedViewComponent {
   readonly shouldShowContent = computed(() => {
     const hasValid = this.hasValidInput();
     const contentValue = this.content();
-    console.log('[ConvertedView] shouldShowContent:', hasValid, 'content length:', contentValue.length, 'content:', contentValue.substring(0, 50));
+    const lang = this.language();
+    console.log('[ConvertedView] shouldShowContent computed:', {
+      hasValid,
+      contentLength: contentValue.length,
+      language: lang,
+      contentPreview: contentValue.substring(0, 50)
+    });
     return hasValid;
   });
 }

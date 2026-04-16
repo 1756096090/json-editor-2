@@ -78,9 +78,14 @@ export class EditorTextComponent implements OnInit {
     // React to external value changes
     effect(() => {
       const val = this.value();
-      if (!this.editor) return;
+      console.log('[EditorText] value effect triggered, new value length:', val.length, 'editor exists:', !!this.editor);
+      if (!this.editor) {
+        console.log('[EditorText] Editor not ready yet, skipping value update');
+        return;
+      }
       const model = this.editor.getModel();
       if (model && model.getValue() !== val) {
+        console.log('[EditorText] Updating editor model with new value');
         this.ignoreNextChange = true;
         model.setValue(val);
         this.ignoreNextChange = false;
@@ -126,10 +131,13 @@ export class EditorTextComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    console.log('[EditorText] ngOnInit, initial value:', this.value(), 'language:', this.language(), 'readOnly:', this.readOnly());
     this.loader.load().then((monaco) => {
+      console.log('[EditorText] Monaco loaded');
       this.monaco = monaco;
       this.createEditor(monaco);
       this.ready.set(true);
+      console.log('[EditorText] Editor created, setting initial value from signal');
     });
 
     this.destroyRef.onDestroy(() => {
