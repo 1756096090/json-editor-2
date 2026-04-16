@@ -28,6 +28,14 @@
   min-height: 42px;
 }
 
+.editor-panel__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .editor-panel__header-start {
   align-items: center;
   display: flex;

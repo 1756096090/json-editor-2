@@ -54,20 +54,21 @@
     </div>
   </header>
 
-  @switch (leftMode()) {
-    @case ('text') {
-      <!-- ── Inline error bar ──────────────────────────────────── -->
-      @if (errorPosition(); as err) {
-        <app-inline-error-bar
-          [error]="err"
-          [autoFixEnabled]="autoFixEnabled()"
-          (showMe)="onShowMePressed()"
-          (autoRepair)="onRepairPressed()"
-        />
-      }
+  <div class="editor-panel__body">
+    @switch (leftMode()) {
+      @case ('text') {
+        <!-- ── Inline error bar ──────────────────────────────────── -->
+        @if (errorPosition(); as err) {
+          <app-inline-error-bar
+            [error]="err"
+            [autoFixEnabled]="autoFixEnabled()"
+            (showMe)="onShowMePressed()"
+            (autoRepair)="onRepairPressed()"
+          />
+        }
 
-      <!-- ── Monaco editor surface ────────────────────────────── -->
-      <div class="editor-panel__surface">
+        <!-- ── Monaco editor surface ────────────────────────────── -->
+        <div class="editor-panel__surface">
         <app-editor-text
           #monacoEditor
           [value]="rawText()"
@@ -154,6 +155,7 @@
       />
     }
   }
+  </div>
 
   <!-- ── AutoFix modal (accept-mode: fix proposal) ──────────────────── -->
   @if (autoFixProposal(); as proposal) {
