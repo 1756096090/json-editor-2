@@ -75,17 +75,25 @@ export class EditorTextComponent implements OnInit {
   );
 
   constructor() {
-    // React to external value changes
+    // React to external value changes — but only if editor is ready
     effect(() => {
+      const isReady = this.ready();
       const val = this.value();
-      console.log('[EditorText] value effect triggered, new value length:', val.length, 'editor exists:', !!this.editor);
-      if (!this.editor) {
+      console.log('[EditorText] value effect triggered, ready:', isReady, 'value length:', val.length);
+      
+      if (!isReady) {
         console.log('[EditorText] Editor not ready yet, skipping value update');
         return;
       }
+      
+      if (!this.editor) {
+        console.log('[EditorText] Editor instance missing, skipping');
+        return;
+      }
+      
       const model = this.editor.getModel();
       if (model && model.getValue() !== val) {
-        console.log('[EditorText] Updating editor model with new value');
+        console.log('[EditorText] Updating editor model with new value, length:', val.length);
         this.ignoreNextChange = true;
         model.setValue(val);
         this.ignoreNextChange = false;
