@@ -7,50 +7,33 @@
   (drop)="onDrop($event)"
 >
   <header class="editor-panel__header">
-    <div class="editor-panel__header-start">
-      <h2 class="editor-panel__title">{{ panelTitle() }}</h2>
-      @if (isActive()) {
-        <span class="editor-panel__active-indicator" aria-label="Active panel">&#9679;</span>
-      }
-    </div>
-
-    <div class="editor-panel__modes">
-      <app-segmented-control
-        [items]="viewModes"
-        [value]="leftMode()"
-        ariaLabel="Panel view modes"
-        (valueChange)="setMode($event)"
-      />
-    </div>
-
-    <div class="editor-panel__meta">
-      <div class="editor-panel__actions" role="group" aria-label="Panel actions">
-        @if (leftMode() === 'text') {
-          <app-ui-button
-            size="sm"
-            variant="ghost"
-            ariaLabel="Format JSON"
-            tooltipText="Format (pretty-print)"
-            (pressed)="formatRequested.emit()"
-          >Format</app-ui-button>
-
-          <app-ui-button
-            size="sm"
-            variant="ghost"
-            ariaLabel="Minify JSON"
-            tooltipText="Minify"
-            (pressed)="minifyRequested.emit()"
-          >Minify</app-ui-button>
+    <div class="editor-panel__header-title">
+      <h2 class="editor-panel__title">
+        {{ panelTitle() }}
+        @if (isActive()) {
+          <span class="editor-panel__active-indicator" aria-label="Active panel"></span>
         }
+      </h2>
+    </div>
 
-        <app-ui-button
-          size="sm"
-          variant="ghost"
-          ariaLabel="Copy to clipboard"
-          tooltipText="Copy"
-          (pressed)="handleCopy()"
-        >Copy</app-ui-button>
+    <div class="editor-panel__header-controls">
+      <div class="editor-panel__mode-selector">
+        <select
+          [value]="leftMode()"
+          (change)="setMode($any($event.target).value)"
+          class="editor-panel__mode-select"
+          aria-label="Panel view mode"
+        >
+          <option value="text">TEXT</option>
+          <option value="yaml">YAML</option>
+          <option value="csv">CSV</option>
+          <option value="xml">XML</option>
+          <option value="tree">TREE</option>
+          <option value="table">TABLE</option>
+        </select>
+      </div>
 
+      <div class="editor-panel__header-actions" role="group" aria-label="Panel actions">
         @if (leftMode() === 'yaml' || leftMode() === 'csv' || leftMode() === 'xml') {
           <app-ui-button
             size="sm"
@@ -58,18 +41,17 @@
             ariaLabel="Export as {{ leftMode().toUpperCase() }}"
             [tooltipText]="'Download as .' + leftMode()"
             (pressed)="exportCurrentView()"
-          >&#8595; Export</app-ui-button>
+          >↓</app-ui-button>
         }
       </div>
 
       <span
-        class="editor-panel__valid-badge"
-        [class.editor-panel__valid-badge--valid]="isValid()"
-        [class.editor-panel__valid-badge--invalid]="!isValid()"
+        class="editor-panel__validation-state"
+        [class.editor-panel__validation-state--valid]="isValid()"
+        [class.editor-panel__validation-state--invalid]="!isValid()"
+        [attr.aria-label]="isValid() ? 'Valid JSON' : 'Invalid JSON'"
         [style.visibility]="leftMode() === 'text' ? 'visible' : 'hidden'"
-      >
-        {{ isValid() ? '&#x2713; Valid' : '&#x2717; Invalid' }}
-      </span>
+      ></span>
     </div>
   </header>
 

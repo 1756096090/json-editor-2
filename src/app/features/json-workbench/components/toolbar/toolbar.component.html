@@ -2,100 +2,60 @@
   <div class="toolbar__body">
     <div class="toolbar__group">
 
-    <!-- PRIMARY: Open file ─── high frequency, high consequence -->
-    <div class="toolbar__actions" role="group" aria-label="File actions">
-      <app-ui-button
-        size="sm"
-        variant="default"
-        tooltipText="Open a .json file from disk"
-        (pressed)="openFilePressed.emit()"
-      >
-        Open
-      </app-ui-button>
-      <app-ui-button
-        size="sm"
-        variant="ghost"
-        tooltipText="Import JSON from a URL"
-        (pressed)="importUrlPressed.emit()"
-      >
-        From URL
-      </app-ui-button>
+      <!-- Group 1: File I/O -->
+      <div class="toolbar__section" role="group" aria-label="File actions">
+        <app-ui-button
+          size="sm"
+          variant="default"
+          tooltipText="Open a .json file from disk"
+          (pressed)="openFilePressed.emit()"
+        >
+          Open
+        </app-ui-button>
+        <app-ui-button
+          size="sm"
+          variant="ghost"
+          tooltipText="Import JSON from a URL"
+          (pressed)="importUrlPressed.emit()"
+        >
+          URL
+        </app-ui-button>
+      </div>
+
+      <!-- Group 2: Core transformations (primary actions) -->
+      <div class="toolbar__section" role="group" aria-label="Transform actions">
+        <app-ui-button
+          size="sm"
+          variant="accent"
+          tooltipText="Format JSON (Ctrl+Shift+F)"
+          (pressed)="formatPressed.emit()"
+        >
+          Format
+        </app-ui-button>
+        <app-ui-button
+          size="sm"
+          variant="ghost"
+          tooltipText="Minify JSON (Ctrl+M)"
+          (pressed)="minifyPressed.emit()"
+        >
+          Minify
+        </app-ui-button>
+      </div>
+
+      <!-- Group 3: Compare -->
+      <div class="toolbar__section" role="group" aria-label="Compare">
+        <app-ui-button
+          size="sm"
+          [variant]="diffOpen() ? 'active' : 'ghost'"
+          [ariaPressed]="diffOpen()"
+          tooltipText="Toggle diff mode (Ctrl+Shift+D)"
+          (pressed)="toggleDiffPressed.emit()"
+        >
+          Compare
+        </app-ui-button>
+      </div>
+
     </div>
-
-    <span class="toolbar__divider" aria-hidden="true"></span>
-
-    <!-- PRIMARY: Format + Minify ─── core transformations -->
-    <div class="toolbar__actions" role="group" aria-label="Format actions">
-      <app-ui-button
-        size="sm"
-        variant="accent"
-        tooltipText="Format JSON (Ctrl+Shift+F)"
-        (pressed)="formatPressed.emit()"
-      >
-        Format
-      </app-ui-button>
-      <app-ui-button
-        size="sm"
-        variant="default"
-        tooltipText="Minify JSON (Ctrl+M)"
-        (pressed)="minifyPressed.emit()"
-      >
-        Minify
-      </app-ui-button>
-    </div>
-
-    <span class="toolbar__divider" aria-hidden="true"></span>
-
-    <!-- SECONDARY: Clipboard + Downloads ─── support actions -->
-    <div class="toolbar__actions" role="group" aria-label="Clipboard and download actions">
-      <app-ui-button
-        size="sm"
-        variant="ghost"
-        tooltipText="Copy active panel to clipboard"
-        (pressed)="copyPressed.emit()"
-      >
-        Copy
-      </app-ui-button>
-      <app-ui-button
-        size="sm"
-        variant="ghost"
-        tooltipText="Paste from clipboard"
-        (pressed)="pastePressed.emit()"
-      >
-        Paste
-      </app-ui-button>
-      <app-ui-button
-        size="sm"
-        variant="ghost"
-        tooltipText="Download formatted JSON (Ctrl+S)"
-        (pressed)="downloadPrettyPressed.emit()"
-      >
-        &#x2193; Formatted
-      </app-ui-button>
-      <app-ui-button
-        size="sm"
-        variant="ghost"
-        tooltipText="Download minified JSON"
-        (pressed)="downloadMinPressed.emit()"
-      >
-        &#x2193; Minified
-      </app-ui-button>
-    </div>
-
-    <span class="toolbar__divider" aria-hidden="true"></span>
-
-    <!-- EXPLORATORY: Diff toggle ─── mode switch -->
-    <app-ui-button
-      size="sm"
-      [variant]="diffOpen() ? 'active' : 'ghost'"
-      [ariaPressed]="diffOpen()"
-      tooltipText="Toggle diff mode (Ctrl+Shift+D)"
-      (pressed)="toggleDiffPressed.emit()"
-    >
-      Diff
-    </app-ui-button>
-
-  </div>
   </div>
 
   <!-- Meta: validation status + settings + collapse toggle -->

@@ -7,10 +7,10 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1-5);
   height: 100%;
   overflow: hidden;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) var(--space-3);
 }
 
 .workbench__panels {
@@ -20,45 +20,53 @@
   position: relative;
 }
 
-/* ── Transfer bar — lives inside split-pane gutter, centered vertically ── */
+/* ── Transfer bar — premium design ─────────────────────────── */
 .workbench__transfer {
   align-items: center;
   background: var(--color-panel-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  padding: var(--space-1);
+  padding: var(--space-2);
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: var(--z-dropdown, 10);
   pointer-events: auto;
+  transition: box-shadow var(--duration-fast), border-color var(--duration-fast);
+}
+
+.workbench__transfer:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  border-color: var(--color-border-strong);
 }
 
 @media (max-width: 680px) {
   .workbench {
-    padding: var(--space-2);
+    padding: var(--space-1-5) var(--space-2);
   }
 }
 
 /* ── URL import bar ──────────────────────────────────────────── */
 .url-import-bar {
   align-items: center;
-  background: var(--color-panel-bg);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   display: flex;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-1-5) var(--space-2);
 }
 
 .url-import-bar__label {
   color: var(--color-text-muted);
-  font-size: var(--text-sm);
-  font-weight: 500;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -75,11 +83,12 @@
   border: none;
   color: var(--color-text-muted);
   cursor: pointer;
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
   line-height: 1;
-  padding: 0 var(--space-2);
-  height: 2rem;
-  transition: background var(--duration-fast) var(--ease-default), color var(--duration-fast) var(--ease-default);
+  padding: 4px var(--space-2);
+  height: 28px;
+  transition: background var(--duration-fast), color var(--duration-fast);
 }
 
 .url-import-bar__target-btn--active {
@@ -88,13 +97,13 @@
 }
 
 .url-import-bar__input {
-  background: var(--color-surface);
+  background: var(--color-panel-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   color: var(--color-text);
   flex: 1;
   font-size: var(--text-sm);
-  height: 2rem;
+  height: 28px;
   min-width: 0;
   outline: none;
   padding: 0 var(--space-2);
@@ -103,16 +112,19 @@
 
 .url-import-bar__input:focus {
   border-color: var(--color-accent);
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
 }
 
 /* ── Dual tab bar ────────────────────────────────────────────── */
 .workbench__dual-tabs {
   display: flex;
   align-items: stretch;
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
   flex-shrink: 0;
+  gap: 1px;
 }
 
 .workbench__tab-section {
@@ -122,7 +134,7 @@
 }
 
 .workbench__tab-section--right {
-  border-left: 2px solid var(--color-border-strong, var(--color-accent));
+  border-left: 1px solid var(--color-border);
 }
 
 /* ── Toolbar expand button (shown when toolbar is hidden) ── */
@@ -134,21 +146,33 @@
   color: var(--color-text-muted);
   cursor: pointer;
   flex-shrink: 0;
-  font-size: 0.75rem;
-  height: 26px;
+  font-size: 0.7rem;
+  height: 24px;
   line-height: 1;
-  margin-left: var(--space-1);
-  padding: 0 6px;
-  transition: background var(--duration-fast) var(--ease-default), color var(--duration-fast) var(--ease-default);
+  margin-right: var(--space-1);
+  padding: 0 5px;
+  transition: background var(--duration-fast), color var(--duration-fast);
 }
 
 .workbench__toolbar-expand:hover {
   background: var(--color-surface-hover);
   color: var(--color-text);
+  border-color: var(--color-border-strong);
 }
 
 .workbench__toolbar-expand:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: 2px;
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
+}
+
+@media (max-width: 720px) {
+  .workbench__dual-tabs {
+    flex-direction: column;
+  }
+
+  .workbench__tab-section--right {
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+  }
 }
 
