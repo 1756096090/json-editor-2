@@ -32,6 +32,14 @@ const AVAILABLE_TOOLS: ToolDef[] = [
     ctaLabel: 'Open Validator',
   },
   {
+    name: 'JSON Error Finder',
+    description: 'Find and fix JSON syntax errors with precise line/column references.',
+    icon: '⚠️',
+    route: '/tools/json-error-finder',
+    state: 'new',
+    ctaLabel: 'Open Error Finder',
+  },
+  {
     name: 'JSON Viewer',
     description: 'Explore JSON as an interactive tree or table.',
     icon: '⎇',

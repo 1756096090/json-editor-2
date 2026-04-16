@@ -34,6 +34,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'tools/json-error-finder',
+    loadComponent: () =>
+      import('./features/tools/json-error-finder/json-error-finder.component').then(
+        (m) => m.JsonErrorFinderComponent
+      ),
+  },
+  {
     path: 'tools/json-viewer',
     loadComponent: () =>
       import('./features/tools/json-viewer/json-viewer.component').then(
