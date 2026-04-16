@@ -104,22 +104,37 @@ export class EditorPanelComponent {
   readonly yamlText = computed(() => {
     const v = this.jsonValue();
     if (v === null || v === undefined) return '';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    try { return jsonToYaml(v as any); } catch { return ''; }
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return jsonToYaml(v as any);
+    } catch (e) {
+      console.error('YAML conversion error:', e);
+      return '';
+    }
   });
 
   /** CSV representation of the current valid JSON. */
   readonly csvText = computed(() => {
     const v = this.jsonValue();
     if (v === null || v === undefined) return '';
-    try { return jsonToCsv(v as Parameters<typeof jsonToCsv>[0]); } catch { return ''; }
+    try {
+      return jsonToCsv(v as Parameters<typeof jsonToCsv>[0]);
+    } catch (e) {
+      console.error('CSV conversion error:', e);
+      return '';
+    }
   });
 
   /** XML representation of the current valid JSON. */
   readonly xmlText = computed(() => {
     const v = this.jsonValue();
     if (v === null || v === undefined) return '';
-    try { return jsonToXml(v as Parameters<typeof jsonToXml>[0]); } catch { return ''; }
+    try {
+      return jsonToXml(v as Parameters<typeof jsonToXml>[0]);
+    } catch (e) {
+      console.error('XML conversion error:', e);
+      return '';
+    }
   });
 
   private readonly convertedViewConfig = {
