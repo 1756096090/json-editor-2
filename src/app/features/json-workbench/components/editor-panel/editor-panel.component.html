@@ -123,6 +123,7 @@
     @case ('yaml') {
       <app-converted-view
         [content]="yamlText()"
+        [hasValidInput]="hasValidJsonForConversion()"
         language="yaml"
         [theme]="theme()"
         ariaLabel="YAML output (read-only)"
@@ -133,6 +134,7 @@
     @case ('csv') {
       <app-converted-view
         [content]="csvText()"
+        [hasValidInput]="hasValidJsonForConversion()"
         language="plaintext"
         [theme]="theme()"
         ariaLabel="CSV output (read-only)"
@@ -143,6 +145,7 @@
     @case ('xml') {
       <app-converted-view
         [content]="xmlText()"
+        [hasValidInput]="hasValidJsonForConversion()"
         language="xml"
         [theme]="theme()"
         ariaLabel="XML output (read-only)"

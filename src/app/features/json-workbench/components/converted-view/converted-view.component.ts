@@ -7,7 +7,7 @@ import { EmptyStateComponent } from '../../../../components/ui/empty-state/empty
   imports: [EditorTextComponent, EmptyStateComponent],
   template: `
     <div class="editor-panel__surface">
-      @if (content()) {
+      @if (hasValidInput()) {
         <app-editor-text
           [value]="content()"
           [language]="language()"
@@ -27,6 +27,7 @@ import { EmptyStateComponent } from '../../../../components/ui/empty-state/empty
 })
 export class ConvertedViewComponent {
   readonly content = input<string>('');
+  readonly hasValidInput = input<boolean>(false);
   readonly language = input<string>('plaintext');
   readonly theme = input<'dark' | 'light'>('dark');
   readonly ariaLabel = input<string>('Converted output (read-only)');

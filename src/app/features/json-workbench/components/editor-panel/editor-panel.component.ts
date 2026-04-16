@@ -141,7 +141,11 @@ export class EditorPanelComponent {
     }
   });
 
-
+  /** Indicates if there's valid JSON to convert to other formats. */
+  readonly hasValidJsonForConversion = computed(() => {
+    const v = this.jsonValue();
+    return v !== null && v !== undefined;
+  });
 
   /** Monaco language ID based on the current view mode. */
   readonly monacoLanguage = computed(() => {
