@@ -1,0 +1,67 @@
+.module-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  padding: 0.1rem 0.5rem;
+  white-space: nowrap;
+  text-transform: lowercase;
+  line-height: 1.5;
+}
+
+/* ── Active: no badge shown ─────────────────────────────────────── */
+.module-badge--active {
+  display: none;
+}
+
+/* ── Most used ──────────────────────────────────────────────────── */
+.module-badge--most-used {
+  background: var(--color-badge-popular-bg);
+  color: var(--color-badge-popular-text);
+  border-color: var(--color-badge-popular-border);
+}
+
+/* ── Recommended ────────────────────────────────────────────────── */
+.module-badge--recommended {
+  background: var(--color-badge-recommended-bg);
+  color: var(--color-badge-recommended-text);
+  border-color: var(--color-badge-recommended-border);
+}
+
+/* ── New ────────────────────────────────────────────────────────── */
+.module-badge--new {
+  background: var(--color-badge-new-bg);
+  color: var(--color-badge-new-text);
+  border-color: var(--color-badge-new-border);
+}
+
+/* ── Coming soon ────────────────────────────────────────────────── */
+.module-badge--coming-soon {
+  background: var(--color-badge-soon-bg);
+  color: var(--color-badge-soon-text);
+  border-color: var(--color-badge-soon-border);
+}
+
+/* ── Premium / Pro ──────────────────────────────────────────────── */
+.module-badge--premium {
+  background: var(--color-badge-pro-bg);
+  color: var(--color-badge-pro-text);
+  border-color: var(--color-badge-pro-border);
+}
+
+/* ── Experimental / Beta ────────────────────────────────────────── */
+.module-badge--experimental {
+  background: var(--color-badge-beta-bg);
+  color: var(--color-badge-beta-text);
+  border-color: var(--color-badge-beta-border);
+}
+
+/* ── Locked ─────────────────────────────────────────────────────── */
+.module-badge--locked {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+}

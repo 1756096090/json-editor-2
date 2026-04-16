@@ -2,11 +2,10 @@
 import { ThemeMode } from '../../state/workbench.store';
 import { ButtonComponent } from '../../../../components/ui/button/button.component';
 import { StatusBadgeComponent } from '../../../../components/ui/status-badge/status-badge.component';
-import { ErrorBannerComponent } from '../../../../components/ui/error-banner/error-banner.component';
 
 @Component({
   selector: 'app-toolbar',
-  imports: [ButtonComponent, StatusBadgeComponent, ErrorBannerComponent],
+  imports: [ButtonComponent, StatusBadgeComponent],
   templateUrl: './toolbar.component.html',
   styleUrl: './toolbar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -19,6 +18,8 @@ export class ToolbarComponent {
   readonly errorMessage = input<string>('');
   readonly themeMode = input<ThemeMode>('light');
   readonly diffOpen = input<boolean>(false);
+  readonly autosavedLabel = input<string>('');
+  readonly collapsed = input<boolean>(false);
 
   readonly formatPressed = output<void>();
   readonly minifyPressed = output<void>();
@@ -27,9 +28,11 @@ export class ToolbarComponent {
   readonly downloadPrettyPressed = output<void>();
   readonly downloadMinPressed = output<void>();
   readonly openFilePressed = output<void>();
+  readonly importUrlPressed = output<void>();
   readonly toggleThemePressed = output<void>();
   readonly toggleDiffPressed = output<void>();
   readonly toggleSettingsPressed = output<void>();
+  readonly toggleCollapse = output<void>();
 
   onWindowKeydown(event: KeyboardEvent): void {
     const hasCommand = event.ctrlKey || event.metaKey;

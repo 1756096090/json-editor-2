@@ -10,6 +10,7 @@
 
   <div
     class="split-pane__gutter"
+    [class.split-pane__gutter--hidden]="hideEnd()"
     role="separator"
     [attr.aria-orientation]="direction()"
     [attr.aria-valuenow]="ratio()"
@@ -27,9 +28,10 @@
     <div class="split-pane__gutter-dot"></div>
     <div class="split-pane__gutter-dot"></div>
     <div class="split-pane__gutter-dot"></div>
+    <ng-content select="[split-gutter]" />
   </div>
 
-  <div class="split-pane__panel split-pane__right" [style]="rightStyle()">
+  <div class="split-pane__panel split-pane__right" [style]="rightStyle()" [class.split-pane__panel--hidden]="hideEnd()">
     <ng-content select="[split-end]" />
   </div>
 </div>

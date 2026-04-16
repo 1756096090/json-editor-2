@@ -41,23 +41,13 @@
 
   <span class="diff-bar__sep" aria-hidden="true"></span>
 
-  <!-- Toggles -->
+  <!-- Close diff -->
   <app-ui-button
     size="sm"
-    [variant]="showOnlyDiffs() ? 'active' : 'ghost'"
-    [ariaPressed]="showOnlyDiffs()"
-    ariaLabel="Show only changed lines"
-    tooltipText="Show only changed lines"
-    (pressed)="toggleShowOnlyDiffs.emit()"
-  >Only diffs</app-ui-button>
-
-  <app-ui-button
-    size="sm"
-    [variant]="syncScroll() ? 'active' : 'ghost'"
-    [ariaPressed]="syncScroll()"
-    ariaLabel="Synchronize scroll between panels"
-    tooltipText="Synchronize scroll between panels"
-    (pressed)="toggleSyncScroll.emit()"
-  >Sync scroll</app-ui-button>
+    variant="ghost"
+    ariaLabel="Close diff view"
+    tooltipText="Close comparison"
+    (pressed)="closeDiff.emit()"
+  >✕ Close</app-ui-button>
 
 </div>

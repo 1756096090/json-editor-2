@@ -1,6 +1,8 @@
 ﻿import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { findMismatchedBracketIndexes } from '../utils/bracket-utils';
 import { SettingsStore, type ThemeMode } from '../../settings/settings.store';
+import { getJsonError, type JsonErrorPosition } from '../../../core/json-error.utils';
+import { StorageService } from '../../../core/storage.service';
 
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
@@ -12,10 +14,11 @@ export interface JsonObject {
 export type JsonArray = JsonValue[];
 
 export type PreviewMode = 'tree' | 'table' | 'text';
-export type LeftPanelMode = 'text' | 'tree' | 'table';
+export type LeftPanelMode = 'text' | 'tree' | 'table' | 'yaml' | 'csv' | 'xml';
 // Re-export so existing imports from workbench.store still work
 export type { ThemeMode } from '../../settings/settings.store';
 export type DiffViewMode = 'text' | 'tree' | 'table';
+export type ActivePanel = 'left' | 'right';
 
 type ParseState =
   | {
@@ -38,6 +41,7 @@ const DIFF_VIEW_MODE_KEY    = 'json-we-format:diff-view-mode';
 })
 export class WorkbenchStore {
   private readonly settingsStore = inject(SettingsStore);
+  private readonly storage = inject(StorageService);
 
   readonly rawText = signal<string>(DEFAULT_JSON);
   readonly leftMode = signal<LeftPanelMode>('text');
@@ -46,6 +50,7 @@ export class WorkbenchStore {
   readonly statusMessage = signal<string>('');
   readonly showDiff = signal<boolean>(false);
   readonly diffViewMode = signal<DiffViewMode>('text');
+  readonly activePanel = signal<ActivePanel>('left');
 
   // Delegated to SettingsStore
   readonly themeMode    = this.settingsStore.themeMode;
@@ -55,14 +60,31 @@ export class WorkbenchStore {
   readonly baselineText = signal<string>(DEFAULT_JSON);
 
   private readonly lastValidJsonWritable = signal<JsonValue | null>(null);
+  private readonly lastValidBaselineJsonWritable = signal<JsonValue | null>(null);
+
+  /** Last valid left text (for revert in autofix failure). */
+  readonly lastValidLeftText = signal<string>(DEFAULT_JSON);
+  /** Last valid right text (for revert in autofix failure). */
+  readonly lastValidRightText = signal<string>(DEFAULT_JSON);
 
   private readonly parseResult = computed<ParseState>(() => parseJson(this.rawText()));
+  private readonly baselineParseResult = computed<ParseState>(() => parseJson(this.baselineText()));
 
+  // ── Left panel parse state ─────────────────────────────
   readonly isValidJson = computed<boolean>(() => this.parseResult().ok);
   readonly parseErrorMessage = computed<string>(() => {
     const parsed = this.parseResult();
     return parsed.ok ? '' : parsed.error;
   });
+  readonly leftError = computed<JsonErrorPosition | null>(() => getJsonError(this.rawText()));
+
+  // ── Right panel parse state ─────────────────────────────
+  readonly isBaselineValid = computed<boolean>(() => this.baselineParseResult().ok);
+  readonly baselineParseErrorMessage = computed<string>(() => {
+    const parsed = this.baselineParseResult();
+    return parsed.ok ? '' : parsed.error;
+  });
+  readonly rightError = computed<JsonErrorPosition | null>(() => getJsonError(this.baselineText()));
 
   readonly currentJson = computed<JsonValue | null>(() => {
     const parsed = this.parseResult();
@@ -99,31 +121,28 @@ export class WorkbenchStore {
   constructor() {
     this.restoreStateFromStorage();
 
-    effect(
-      () => {
+    effect(() => {
         const parsed = this.parseResult();
         if (parsed.ok) {
           this.lastValidJsonWritable.set(parsed.value);
+          this.lastValidLeftText.set(this.rawText());
         }
-      },
-      { allowSignalWrites: true }
+      }
     );
 
     effect(() => {
-      this.saveStorage(DRAFT_STORAGE_KEY, this.rawText());
-    });
+        const parsed = this.baselineParseResult();
+        if (parsed.ok) {
+          this.lastValidBaselineJsonWritable.set(parsed.value);
+          this.lastValidRightText.set(this.baselineText());
+        }
+      }
+    );
 
-    effect(() => {
-      this.saveStorage(BASELINE_STORAGE_KEY, this.baselineText());
-    });
-
-    effect(() => {
-      this.saveStorage(SHOW_DIFF_STORAGE_KEY, this.showDiff() ? '1' : '');
-    });
-
-    effect(() => {
-      this.saveStorage(DIFF_VIEW_MODE_KEY, this.diffViewMode());
-    });
+    effect(() => { this.storage.write(DRAFT_STORAGE_KEY,     this.rawText()); });
+    effect(() => { this.storage.write(BASELINE_STORAGE_KEY,  this.baselineText()); });
+    effect(() => { this.storage.write(SHOW_DIFF_STORAGE_KEY, this.showDiff() ? '1' : ''); });
+    effect(() => { this.storage.write(DIFF_VIEW_MODE_KEY,    this.diffViewMode()); });
   }
 
   setRawText(nextRawText: string): void {
@@ -132,6 +151,10 @@ export class WorkbenchStore {
 
   setBaselineText(text: string): void {
     this.baselineText.set(text);
+  }
+
+  setActivePanel(panel: ActivePanel): void {
+    this.activePanel.set(panel);
   }
 
   setLeftMode(mode: LeftPanelMode): void {
@@ -144,10 +167,6 @@ export class WorkbenchStore {
 
   setPreviewMode(mode: PreviewMode): void {
     this.previewMode.set(mode);
-  }
-
-  setTheme(mode: ThemeMode): void {
-    this.settingsStore.setThemeMode(mode);
   }
 
   toggleTheme(): void {
@@ -170,24 +189,25 @@ export class WorkbenchStore {
     this.settingsStore.toggleShowOnlyDiffs();
   }
 
-  formatJson(): boolean {
-    const parsed = this.parseResult();
-    if (!parsed.ok) {
-      return false;
-    }
+  formatJson():         boolean { return this.applyTransform(this.parseResult(),         (v) => this.rawText.set(v),      2); }
+  minifyJson():         boolean { return this.applyTransform(this.parseResult(),         (v) => this.rawText.set(v),      0); }
+  formatBaselineJson(): boolean { return this.applyTransform(this.baselineParseResult(), (v) => this.baselineText.set(v), 2); }
+  minifyBaselineJson(): boolean { return this.applyTransform(this.baselineParseResult(), (v) => this.baselineText.set(v), 0); }
 
-    this.rawText.set(stringifyJson(parsed.value, 2));
+  private applyTransform(result: ParseState, setter: (v: string) => void, spaces: number): boolean {
+    if (!result.ok) return false;
+    setter(stringifyJson(result.value, spaces));
     return true;
   }
 
-  minifyJson(): boolean {
-    const parsed = this.parseResult();
-    if (!parsed.ok) {
-      return false;
-    }
+  /** Format JSON in the active panel. */
+  formatActivePanel(): boolean {
+    return this.activePanel() === 'left' ? this.formatJson() : this.formatBaselineJson();
+  }
 
-    this.rawText.set(stringifyJson(parsed.value, 0));
-    return true;
+  /** Minify JSON in the active panel. */
+  minifyActivePanel(): boolean {
+    return this.activePanel() === 'left' ? this.minifyJson() : this.minifyBaselineJson();
   }
 
   setBaselineFromWorking(): boolean {
@@ -219,57 +239,20 @@ export class WorkbenchStore {
   }
 
   private restoreStateFromStorage(): void {
-    const draft = this.readStorage(DRAFT_STORAGE_KEY);
-    if (draft) {
-      this.rawText.set(draft);
-    }
+    const draft = this.storage.read(DRAFT_STORAGE_KEY);
+    if (draft) this.rawText.set(draft);
 
-    const baseline = this.readStorage(BASELINE_STORAGE_KEY);
+    const baseline = this.storage.read(BASELINE_STORAGE_KEY);
     if (baseline) {
-      const parsedBaseline = parseJson(baseline);
-      if (parsedBaseline.ok) {
-        this.baselineText.set(stringifyJson(parsedBaseline.value, 2));
-      }
+      const parsed = parseJson(baseline);
+      if (parsed.ok) this.baselineText.set(stringifyJson(parsed.value, 2));
     }
 
-    const showDiff = this.readStorage(SHOW_DIFF_STORAGE_KEY);
-    if (showDiff === '1') {
-      this.showDiff.set(true);
-    }
+    if (this.storage.read(SHOW_DIFF_STORAGE_KEY) === '1') this.showDiff.set(true);
 
-    const diffViewMode = this.readStorage(DIFF_VIEW_MODE_KEY);
+    const diffViewMode = this.storage.read(DIFF_VIEW_MODE_KEY);
     if (diffViewMode === 'text' || diffViewMode === 'tree' || diffViewMode === 'table') {
       this.diffViewMode.set(diffViewMode);
-    }
-
-  }
-
-  private saveStorage(key: string, value: string): void {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    try {
-      if (!value) {
-        window.localStorage.removeItem(key);
-        return;
-      }
-
-      window.localStorage.setItem(key, value);
-    } catch {
-      // Ignore storage write errors.
-    }
-  }
-
-  private readStorage(key: string): string {
-    if (typeof window === 'undefined') {
-      return '';
-    }
-
-    try {
-      return window.localStorage.getItem(key) ?? '';
-    } catch {
-      return '';
     }
   }
 

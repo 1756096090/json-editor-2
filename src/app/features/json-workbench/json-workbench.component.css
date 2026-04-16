@@ -1,29 +1,154 @@
 ﻿:host {
   display: block;
-  height: 100%;
+  height: calc(100dvh - var(--header-height));
 }
 
 .workbench {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  height: 100dvh;
-  margin: 0 auto;
-  max-width: 1600px;
+  gap: var(--space-2);
+  height: 100%;
   overflow: hidden;
-  padding: var(--space-4);
+  padding: var(--space-3) var(--space-4);
 }
 
 .workbench__panels {
   flex: 1;
-  height: 100%;
   min-height: 0;
   overflow: hidden;
+  position: relative;
 }
 
-@media (max-width: 768px) {
+/* ── Transfer bar — lives inside split-pane gutter, centered vertically ── */
+.workbench__transfer {
+  align-items: center;
+  background: var(--color-panel-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: var(--z-dropdown, 10);
+  pointer-events: auto;
+}
+
+@media (max-width: 680px) {
   .workbench {
     padding: var(--space-2);
   }
 }
+
+/* ── URL import bar ──────────────────────────────────────────── */
+.url-import-bar {
+  align-items: center;
+  background: var(--color-panel-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+}
+
+.url-import-bar__label {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.url-import-bar__target {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.url-import-bar__target-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  line-height: 1;
+  padding: 0 var(--space-2);
+  height: 2rem;
+  transition: background 0.15s, color 0.15s;
+}
+
+.url-import-bar__target-btn--active {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.url-import-bar__input {
+  background: var(--color-input-bg, var(--color-surface-2));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  flex: 1;
+  font-size: var(--text-sm);
+  height: 2rem;
+  min-width: 0;
+  outline: none;
+  padding: 0 var(--space-2);
+  transition: border-color 0.15s;
+}
+
+.url-import-bar__input:focus {
+  border-color: var(--color-accent);
+}
+
+/* ── Dual tab bar ────────────────────────────────────────────── */
+.workbench__dual-tabs {
+  display: flex;
+  align-items: stretch;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+
+.workbench__tab-section {
+  flex: 0 0 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.workbench__tab-section--right {
+  border-left: 2px solid var(--color-border-strong, var(--color-accent));
+}
+
+/* ── Toolbar expand button (shown when toolbar is hidden) ── */
+.workbench__toolbar-expand {
+  align-self: center;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  height: 26px;
+  line-height: 1;
+  margin-left: var(--space-1);
+  padding: 0 6px;
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+
+.workbench__toolbar-expand:hover {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.workbench__toolbar-expand:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+

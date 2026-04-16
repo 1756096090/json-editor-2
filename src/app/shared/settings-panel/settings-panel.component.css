@@ -119,7 +119,7 @@
   width: 2.5rem;
 }
 .sp__switch--on {
-  background: var(--color-accent, #39ff14);
+  background: var(--color-accent, #569cd6);
 }
 .sp__switch:focus-visible { outline: var(--focus-ring); }
 

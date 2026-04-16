@@ -1,47 +1,45 @@
 import { Injectable } from '@angular/core';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class StorageService {
-  private readonly draftKey = 'json-we-format:draft';
-
-  loadDraft(): string {
+  read(key: string): string {
     const storage = this.getStorage();
-    if (!storage) {
-      return '';
-    }
-
+    if (!storage) return '';
     try {
-      return storage.getItem(this.draftKey) ?? '';
+      return storage.getItem(key) ?? '';
     } catch {
       return '';
     }
   }
 
-  saveDraft(value: string): void {
+  write(key: string, value: string): void {
     const storage = this.getStorage();
-    if (!storage) {
-      return;
-    }
-
+    if (!storage) return;
     try {
-      if (value) {
-        storage.setItem(this.draftKey, value);
-        return;
-      }
-
-      storage.removeItem(this.draftKey);
+      if (value) storage.setItem(key, value);
+      else storage.removeItem(key);
     } catch {
-      // localStorage can fail in private mode or restricted environments.
+      // localStorage unavailable in private mode or restricted environments.
     }
+  }
+
+  readJson<T>(key: string): T | null {
+    const raw = this.read(key);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return null;
+    }
+  }
+
+  writeJson<T>(key: string, value: T): void {
+    this.write(key, JSON.stringify(value));
   }
 
   private getStorage(): Storage | null {
-    if (typeof window === 'undefined') {
-      return null;
-    }
-
-    return window.localStorage;
+    return typeof window === 'undefined' ? null : window.localStorage;
   }
 }

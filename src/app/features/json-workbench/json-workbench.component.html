@@ -1,86 +1,189 @@
 ﻿<section class="workbench">
-  <app-toolbar
-    [valid]="store.isValidJson()"
-    [errorMessage]="store.parseErrorMessage()"
-    [themeMode]="store.themeMode()"
-    [diffOpen]="store.showDiff()"
-    (formatPressed)="onFormatPressed()"
-    (minifyPressed)="onMinifyPressed()"
-    (copyPressed)="onCopyPressed()"
-    (pastePressed)="onPastePressed()"
-    (downloadPrettyPressed)="onDownloadPrettyPressed()"
-    (downloadMinPressed)="onDownloadMinPressed()"
-    (openFilePressed)="onOpenFilePressed()"
-    (toggleThemePressed)="onToggleThemePressed()"
-    (toggleDiffPressed)="onToggleDiffPressed()"
-    (toggleSettingsPressed)="onToggleSettingsPressed()"
-  />
+  @if (!toolbarCollapsed()) {
+    <app-toolbar
+      [valid]="store.isValidJson()"
+      [errorMessage]="store.parseErrorMessage()"
+      [themeMode]="store.themeMode()"
+      [diffOpen]="store.showDiff()"
+      [autosavedLabel]="autosavedLabel()"
+      [collapsed]="false"
+      (formatPressed)="onFormatPressed()"
+      (minifyPressed)="onMinifyPressed()"
+      (copyPressed)="onCopyPressed()"
+      (pastePressed)="onPastePressed()"
+      (downloadPrettyPressed)="onDownloadPrettyPressed()"
+      (downloadMinPressed)="onDownloadMinPressed()"
+      (openFilePressed)="onOpenFilePressed()"
+      (importUrlPressed)="onImportUrlPressed()"
+      (toggleDiffPressed)="onToggleDiffPressed()"
+      (toggleSettingsPressed)="onToggleSettingsPressed()"
+      (toggleCollapse)="toolbarCollapsed.set(true)"
+    />
+  }
+
+  @if (showUrlImport()) {
+    <div class="url-import-bar" role="search" aria-label="Import JSON from URL">
+      <label class="url-import-bar__label" for="url-import-input">URL</label>
+      <div class="url-import-bar__target" role="group" aria-label="Target panel">
+        <button
+          class="url-import-bar__target-btn"
+          [class.url-import-bar__target-btn--active]="urlImportTarget() === 'left'"
+          (click)="urlImportTarget.set('left')"
+        >Input</button>
+        <button
+          class="url-import-bar__target-btn"
+          [class.url-import-bar__target-btn--active]="urlImportTarget() === 'right'"
+          (click)="urlImportTarget.set('right')"
+        >Output</button>
+      </div>
+      <input
+        id="url-import-input"
+        class="url-import-bar__input"
+        type="url"
+        placeholder="https://api.example.com/data.json"
+        [value]="urlImportValue()"
+        (input)="urlImportValue.set($any($event.target).value)"
+        (keydown.enter)="onUrlImportSubmit()"
+        (keydown.escape)="onUrlImportCancel()"
+        autocomplete="off"
+        aria-required="true"
+      />
+      <app-ui-button
+        size="sm"
+        variant="accent"
+        [disabled]="urlImportLoading()"
+        (pressed)="onUrlImportSubmit()"
+      >
+        {{ urlImportLoading() ? 'Loading…' : 'Load' }}
+      </app-ui-button>
+      <app-ui-button size="sm" variant="ghost" (pressed)="onUrlImportCancel()">
+        Cancel
+      </app-ui-button>
+    </div>
+  }
 
   @if (store.showDiff()) {
     <app-diff-bar
       [diffResult]="diffService.result()"
       [computing]="diffService.computing()"
       [currentHunkIndex]="currentHunkIndex()"
-      [syncScroll]="store.syncScroll()"
-      [showOnlyDiffs]="store.showOnlyDiffs()"
       (prevHunk)="goToPrevHunk()"
       (nextHunk)="goToNextHunk()"
-      (toggleSyncScroll)="store.toggleSyncScroll()"
-      (toggleShowOnlyDiffs)="store.toggleShowOnlyDiffs()"
+      (closeDiff)="onToggleDiffPressed()"
     />
   }
 
   <app-toast [message]="store.statusMessage()" />
 
+  <div class="workbench__dual-tabs">
+    @if (toolbarCollapsed()) {
+      <button
+        class="workbench__toolbar-expand"
+        type="button"
+        title="Show toolbar"
+        aria-label="Show toolbar"
+        (click)="toolbarCollapsed.set(false)"
+      >▾</button>
+    }
+    <div class="workbench__tab-section" [style.flex-basis]="splitRatio() + '%'" [style.max-width]="splitRatio() + '%'">
+      <app-tab-bar
+        panelLabel="Input"
+        [tabs]="tabs.leftTabs()"
+        [activeTabId]="tabs.leftActiveId()"
+        (tabClicked)="onLeftTabSwitch($event)"
+        (tabClosed)="onLeftTabClose($event)"
+        (addTab)="onAddLeftTab()"
+      />
+    </div>
+    @if (!isMobileLayout()) {
+      <div class="workbench__tab-section workbench__tab-section--right" [style.flex-basis]="(100 - splitRatio()) + '%'" [style.max-width]="(100 - splitRatio()) + '%'">
+        <app-tab-bar
+          panelLabel="Output"
+          [tabs]="tabs.rightTabs()"
+          [activeTabId]="tabs.rightActiveId()"
+          (tabClicked)="onRightTabSwitch($event)"
+          (tabClosed)="onRightTabClose($event)"
+          (addTab)="onAddRightTab()"
+        />
+      </div>
+    }
+  </div>
+
   <div class="workbench__panels">
-    <app-split-pane direction="horizontal" storageKey="json-we-format:split-ratio">
+    <!-- ── Side-by-side Editor Panels (always visible) ─────── -->
+    <app-split-pane direction="horizontal" storageKey="json-we-format:split-ratio" [hideEnd]="isMobileLayout()" (ratioChange)="splitRatio.set($event)">
       <app-editor-panel
+        #leftPanel
         split-start
         [rawText]="store.rawText()"
-        [panelTitle]="store.showDiff() ? 'Baseline' : 'Input'"
+        [panelTitle]="'Input'"
         [leftMode]="store.leftMode()"
-        [mismatchedIndexes]="store.mismatchedBracketIndexes()"
         [jsonValue]="store.workingJson()"
-        [showDiff]="store.showDiff()"
-        diffSide="left"
-        [diffRows]="diffService.result()?.rows ?? []"
-        [activeHunkStart]="activeHunkStart()"
-        [activeHunkEnd]="activeHunkEnd()"
-        [showOnlyDiffs]="store.showOnlyDiffs()"
-        [syncScroll]="store.syncScroll()"
-        [externalScrollTop]="leftScrollTop()"
-        [formatOnAltClick]="settings.formatOnAltClick()"
-        [formatOnBadgeClick]="settings.formatOnBadgeClick()"
+        [theme]="monacoTheme()"
+        [isActive]="store.activePanel() === 'left'"
+        [errorPosition]="store.leftError()"
+        [lastValidText]="store.lastValidLeftText()"
         [autoFixEnabled]="settings.autoFixOnPasteEnabled()"
+        [diffDecorations]="leftDiffDecorations()"
         (rawTextChange)="onRawTextChanged($event)"
         (fileDropped)="onFileDropped($event)"
         (modeChange)="onLeftModeChanged($event)"
-        (diffScrolled)="onLeftDiffScrolled($event)"
-        (formatRequested)="onFormatPressed()"
+        (focused)="onLeftPanelFocused()"
+        (formatRequested)="onFormatLeft()"
+        (minifyRequested)="onMinifyLeft()"
+        (copyRequested)="onCopyLeft()"
       />
 
       <app-editor-panel
+        #rightPanel
         split-end
         [rawText]="store.baselineText()"
-        [panelTitle]="store.showDiff() ? 'Working' : 'Output'"
+        [panelTitle]="'Output'"
         [leftMode]="store.rightMode()"
-        [mismatchedIndexes]="[]"
         [jsonValue]="store.baselineJson()"
-        [showDiff]="store.showDiff()"
-        diffSide="right"
-        [diffRows]="diffService.result()?.rows ?? []"
-        [activeHunkStart]="activeHunkStart()"
-        [activeHunkEnd]="activeHunkEnd()"
-        [showOnlyDiffs]="store.showOnlyDiffs()"
-        [syncScroll]="store.syncScroll()"
-        [externalScrollTop]="rightScrollTop()"
-        [formatOnAltClick]="false"
-        [formatOnBadgeClick]="false"
+        [theme]="monacoTheme()"
+        [isActive]="store.activePanel() === 'right'"
+        [errorPosition]="store.rightError()"
+        [lastValidText]="store.lastValidRightText()"
+        [autoFixEnabled]="false"
+        [diffDecorations]="rightDiffDecorations()"
         (rawTextChange)="onBaselineTextChanged($event)"
         (fileDropped)="onBaselineFileDropped($event)"
         (modeChange)="onRightModeChanged($event)"
-        (diffScrolled)="onRightDiffScrolled($event)"
+        (focused)="onRightPanelFocused()"
+        (formatRequested)="onFormatRight()"
+        (minifyRequested)="onMinifyRight()"
+        (copyRequested)="onCopyRight()"
       />
+      @if (!isMobileLayout()) {
+        <div split-gutter class="workbench__transfer" role="group" aria-label="Transfer actions">
+          <app-ui-button
+            size="sm"
+            variant="ghost"
+            ariaLabel="Copy Input to Output"
+            tooltipText="Copy Input → Output"
+            (pressed)="onCopyLeftToRight()"
+          >→</app-ui-button>
+
+          <app-ui-button
+            size="sm"
+            variant="ghost"
+            ariaLabel="Copy Output to Input"
+            tooltipText="Copy Output → Input"
+            (pressed)="onCopyRightToLeft()"
+          >←</app-ui-button>
+
+          <app-ui-button
+            size="sm"
+            [variant]="store.showDiff() ? 'active' : 'ghost'"
+            [ariaPressed]="store.showDiff()"
+            [disabled]="isMobileLayout()"
+            ariaLabel="Compare (toggle diff)"
+            tooltipText="Compare (Ctrl+Shift+D)"
+            (pressed)="onToggleDiffPressed()"
+          >⇄</app-ui-button>
+        </div>
+      }
     </app-split-pane>
   </div>
 </section>
@@ -89,12 +192,12 @@
 @if (showConfirmDownload()) {
   <app-confirm-dialog
     title="Confirmar descarga"
-    [message]="store.isValidJson() ? '¿Deseas descargar el archivo JSON?' : ''"
+    [message]="store.isValidJson() ? '&#191;Deseas descargar el archivo JSON?' : ''"
     confirmText="Descargar"
     cancelText="Cancelar"
     [showDontAsk]="true"
     [confirmDisabled]="!store.isValidJson()"
-    [warningText]="store.isValidJson() ? '' : 'El JSON actual no es válido. Corrígelo antes de descargar.'"
+    [warningText]="store.isValidJson() ? '' : 'El JSON actual no es v&#225;lido. Corr&#237;gelo antes de descargar.'"
     (closed)="onDownloadConfirmClosed($event)"
   />
 }

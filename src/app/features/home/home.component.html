@@ -1,0 +1,159 @@
+<main class="home">
+
+  <!-- ── Hero ──────────────────────────────────────────────────── -->
+  <section class="home__hero" aria-labelledby="hero-heading">
+    <div class="home__hero-inner">
+      <div class="home__hero-badge" aria-hidden="true">
+        <span class="home__hero-badge-dot"></span>
+        Professional JSON workspace
+      </div>
+
+      <h1 id="hero-heading" class="home__hero-title">
+        The JSON workspace<br>
+        <span class="home__hero-title--accent">developers actually use</span>
+      </h1>
+
+      <p class="home__hero-subtitle">
+        Format, validate, compare and convert JSON.
+        A full workspace and a curated suite of tools — fast, clean and distraction-free.
+      </p>
+
+      <div class="home__hero-ctas">
+        <button
+          type="button"
+          class="home__cta home__cta--primary"
+          (click)="goToWorkbench()"
+          aria-label="Open the JSON Workspace"
+        >
+          Open Workspace
+        </button>
+        <button
+          type="button"
+          class="home__cta home__cta--secondary"
+          (click)="goToFormatter()"
+          aria-label="Try the JSON Formatter tool"
+        >
+          Try JSON Formatter
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Recent documents ──────────────────────────────────────── -->
+  @if (recentDocs().length > 0) {
+    <section class="home__section home__section--recent" aria-labelledby="recent-heading">
+      <header class="home__section-header">
+        <h2 id="recent-heading" class="home__section-title">Recent documents</h2>
+      </header>
+      <ul class="home__recent-list" role="list">
+        @for (doc of recentDocs(); track doc.id) {
+          <li class="home__recent-item">
+            <span class="home__recent-icon" aria-hidden="true">&#123;&#125;</span>
+            <span class="home__recent-label" [title]="doc.label">{{ doc.label }}</span>
+            <span class="home__recent-size">{{ formatSize(doc.sizeBytes) }}</span>
+            <button
+              type="button"
+              class="home__recent-action home__recent-action--open"
+              (click)="openRecentDoc(doc)"
+              [attr.aria-label]="'Open ' + doc.label"
+            >
+              Open
+            </button>
+            <button
+              type="button"
+              class="home__recent-action home__recent-action--remove"
+              (click)="removeRecentDoc(doc)"
+              [attr.aria-label]="'Remove ' + doc.label + ' from history'"
+            >
+              ✕
+            </button>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  <!-- ── Feature highlights ────────────────────────────────────── -->
+  <section class="home__features" aria-labelledby="features-heading">
+    <h2 id="features-heading" class="sr-only">Key features</h2>
+    <div class="home__features-grid">
+
+      <div class="home__feature">
+        <span class="home__feature-icon" aria-hidden="true">⚡</span>
+        <h3 class="home__feature-title">Instant validation</h3>
+        <p class="home__feature-desc">
+          Detects and highlights JSON errors as you type, with precise line and column info.
+        </p>
+      </div>
+
+      <div class="home__feature">
+        <span class="home__feature-icon" aria-hidden="true">⟷</span>
+        <h3 class="home__feature-title">Visual diff</h3>
+        <p class="home__feature-desc">
+          Compare two JSON documents side by side with line-level change highlighting.
+        </p>
+      </div>
+
+      <div class="home__feature">
+        <span class="home__feature-icon" aria-hidden="true">⇄</span>
+        <h3 class="home__feature-title">One-click convert</h3>
+        <p class="home__feature-desc">
+          Convert JSON to YAML, CSV or XML without leaving the workspace.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Available tools grid ──────────────────────────────────── -->
+  <section class="home__section" aria-labelledby="tools-heading">
+    <header class="home__section-header">
+      <h2 id="tools-heading" class="home__section-title">Tools available now</h2>
+      <p class="home__section-subtitle">
+        Ready to use. No signup required.
+      </p>
+    </header>
+
+    <div class="home__tools-grid">
+      @for (tool of availableTools; track tool.route) {
+        <app-tool-card
+          [name]="tool.name"
+          [description]="tool.description"
+          [icon]="tool.icon"
+          [state]="tool.state"
+          [route]="tool.route"
+          [ctaLabel]="tool.ctaLabel"
+        />
+      }
+    </div>
+  </section>
+
+  <!-- ── Coming soon (hidden when empty) ──────────────────── -->
+  @if (comingSoonTools.length > 0) {
+    <section class="home__section home__section--soon" aria-labelledby="soon-heading">
+      <header class="home__section-header">
+        <h2 id="soon-heading" class="home__section-title home__section-title--muted">
+          What's next
+        </h2>
+        <p class="home__section-subtitle">
+          In development. Get notified when ready.
+        </p>
+      </header>
+
+      <div class="home__tools-grid home__tools-grid--soon">
+        @for (tool of comingSoonTools; track tool.name) {
+          <app-tool-card
+            [name]="tool.name"
+            [description]="tool.description"
+            [icon]="tool.icon"
+            state="coming-soon"
+            [route]="null"
+            [ctaLabel]="tool.ctaLabel"
+            (notifyClicked)="onNotify($event)"
+          />
+        }
+      </div>
+    </section>
+  }
+
+</main>

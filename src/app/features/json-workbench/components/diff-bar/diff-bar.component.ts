@@ -13,13 +13,10 @@ export class DiffBarComponent {
   readonly diffResult  = input<DiffResult | null>(null);
   readonly computing   = input<boolean>(false);
   readonly currentHunkIndex = input<number>(-1);
-  readonly syncScroll  = input<boolean>(true);
-  readonly showOnlyDiffs = input<boolean>(false);
 
   readonly prevHunk            = output<void>();
   readonly nextHunk            = output<void>();
-  readonly toggleSyncScroll    = output<void>();
-  readonly toggleShowOnlyDiffs = output<void>();
+  readonly closeDiff           = output<void>();
 
   readonly hunkCount    = computed(() => this.diffResult()?.hunks.length ?? 0);
   readonly addedCount   = computed(() => this.diffResult()?.addedCount ?? 0);

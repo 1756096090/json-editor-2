@@ -6,6 +6,7 @@ import {
   computed,
   effect,
   input,
+  output,
   signal,
   viewChild
 } from '@angular/core';
@@ -19,7 +20,13 @@ const STORAGE_KEY = 'json-we-format:split-ratio';
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   templateUrl: './split-pane.component.html',
-  styleUrl: './split-pane.component.css'
+  styleUrl: './split-pane.component.css',
+  host: {
+    // Absolute fill of .workbench__panels (position:relative).
+    // This gives the split-pane a DEFINITE size without relying on
+    // percentage-height resolution against a flex-only parent.
+    style: 'position: absolute; inset: 0; display: block;'
+  }
 })
 export class SplitPaneComponent {
   /** Direction of split: 'horizontal' splits left/right, 'vertical' splits top/bottom */
@@ -28,23 +35,39 @@ export class SplitPaneComponent {
   /** Persist ratio to localStorage under a custom key */
   readonly storageKey = input<string>(STORAGE_KEY);
 
+  /** When true, hides the gutter and right/bottom panel — left/top panel fills 100%. */
+  readonly hideEnd = input<boolean>(false);
+
+  /** Emits the current left-panel ratio (0–100) whenever it changes. */
+  readonly ratioChange = output<number>();
+
   readonly container = viewChild.required<ElementRef<HTMLElement>>('container');
 
   /** Left/top panel size as percentage */
   readonly ratio = signal(50);
 
+  /** Gutter width in px — must match CSS `.split-pane__gutter { width }` */
+  private readonly gutterPx = 6;
+
   readonly leftStyle = computed(() => {
+    if (this.hideEnd()) {
+      return this.direction() === 'horizontal'
+        ? 'width: 100%; height: 100%'
+        : 'height: 100%; width: 100%';
+    }
     const r = this.ratio();
+    const g = this.gutterPx;
     return this.direction() === 'horizontal'
-      ? `width: ${r}%; height: 100%`
-      : `height: ${r}%; width: 100%`;
+      ? `width: calc(${r}% - ${g / 2}px); height: 100%`
+      : `height: calc(${r}% - ${g / 2}px); width: 100%`;
   });
 
   readonly rightStyle = computed(() => {
     const r = this.ratio();
+    const g = this.gutterPx;
     return this.direction() === 'horizontal'
-      ? `width: ${100 - r}%; height: 100%`
-      : `height: ${100 - r}%; width: 100%`;
+      ? `width: calc(${100 - r}% - ${g / 2}px); height: 100%`
+      : `height: calc(${100 - r}% - ${g / 2}px); width: 100%`;
   });
 
   readonly containerClass = computed(
@@ -60,6 +83,7 @@ export class SplitPaneComponent {
       const key = this.storageKey();
       const r = this.ratio();
       this.saveRatio(key, r);
+      this.ratioChange.emit(r);
     });
   }
 

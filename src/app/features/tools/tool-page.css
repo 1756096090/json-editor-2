@@ -1,0 +1,113 @@
+/* ── Shared styles for all SEO tool pages ───────────────────────── */
+
+.tool-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - var(--header-height));
+  overflow: hidden;
+}
+
+/* ── Intro block (h1 + subtitle) ─────────────────────────────────── */
+.tool-page__intro {
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  padding: var(--space-4) var(--space-5) var(--space-3);
+}
+
+.tool-page__title {
+  color: var(--color-text);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--space-1);
+}
+
+.tool-page__subtitle {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  margin: 0;
+  max-width: 640px;
+}
+
+/* ── Workbench fills the rest ─────────────────────────────────────── */
+.tool-page app-json-workbench {
+  flex: 1;
+  min-height: 0;
+  /* Override :host { height: calc(100dvh - header) } from the component.
+     Specificity (0,1,1) beats :host's compiled [_nghost-xxx] at (0,1,0).
+     height:auto lets the flex algorithm determine the real allocated size
+     so the editors don't overflow and get clipped at the bottom. */
+  height: auto;
+}
+
+/* ── Generic flex-fill for custom workspace blocks ────────────────── */
+.tool-page .yaml-workspace {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .tool-page__intro {
+    padding: var(--space-3);
+  }
+
+  .tool-page__title {
+    font-size: var(--text-md);
+  }
+}
+
+/* ── Intro with action button (Cleaner / Sorter) ─────────────────── */
+.tool-page__intro--with-action {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-6);
+  justify-content: space-between;
+}
+
+.tool-page__intro-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.tool-page__intro-actions {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-3);
+}
+
+.tool-page__action-btn {
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-md);
+  color: #fff;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  padding: var(--space-2) var(--space-4);
+  transition: filter var(--duration-fast) var(--ease-default);
+  white-space: nowrap;
+}
+
+.tool-page__action-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.tool-page__action-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.tool-page__action-btn:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.tool-page__action-status {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+

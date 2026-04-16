@@ -95,7 +95,7 @@
 }
 
 .cdlg__dontask input[type='checkbox'] {
-  accent-color: var(--color-accent, #39ff14);
+  accent-color: var(--color-accent, #569cd6);
   height: 1rem;
   width: 1rem;
 }
@@ -129,7 +129,7 @@
 }
 
 .cdlg__btn--confirm {
-  background: var(--color-accent, #39ff14);
+  background: var(--color-accent, #569cd6);
   border: 1px solid transparent;
   color: #000;
 }

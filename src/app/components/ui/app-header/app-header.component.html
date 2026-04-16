@@ -1,0 +1,87 @@
+<header class="header">
+  <div class="header__inner">
+
+    <!-- Logo -->
+    <a routerLink="/" class="header__logo" aria-label="JSON Hunt — Home">
+      <img class="header__logo-img" src="/logo.svg" alt="JSON Hunt" width="207" height="40">
+    </a>
+
+    <!-- Primary nav -->
+    <nav class="header__nav" aria-label="Main navigation">
+      <a
+        routerLink="/workbench"
+        routerLinkActive="header__nav-link--active"
+        class="header__nav-link"
+      >
+        Workspace
+      </a>
+
+      <!-- Tools dropdown -->
+      <div class="header__tools-wrapper">
+        <button
+          type="button"
+          class="header__nav-link header__nav-link--trigger"
+          [class.header__nav-link--active]="toolsOpen()"
+          data-tools-trigger
+          [attr.aria-expanded]="toolsOpen()"
+          aria-haspopup="true"
+          aria-controls="tools-menu"
+          (click)="toggleTools(); $event.stopPropagation()"
+        >
+          Tools
+          <svg class="header__chevron" [class.header__chevron--open]="toolsOpen()"
+            width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        @if (toolsOpen()) {
+          <div
+            id="tools-menu"
+            class="header__tools-menu"
+            role="menu"
+            aria-label="JSON Tools"
+          >
+            @for (tool of tools; track tool.route) {
+              <a
+                [routerLink]="tool.route"
+                class="header__tool-item"
+                role="menuitem"
+                (click)="closeTools()"
+              >
+                <span class="header__tool-label">{{ tool.label }}</span>
+                @if (tool.badge) {
+                  <span class="header__tool-badge">{{ tool.badge }}</span>
+                }
+              </a>
+            }
+            <div class="header__tools-footer">
+              <a routerLink="/" class="header__tools-all" (click)="closeTools()">
+                View all tools →
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+    </nav>
+
+    <!-- Meta actions -->
+    <div class="header__actions">
+      <button
+        type="button"
+        class="header__icon-btn"
+        [attr.aria-label]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+        [title]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+        (click)="toggleTheme()"
+      >
+        @if (isDark()) {
+          ☀
+        } @else {
+          ☾
+        }
+      </button>
+    </div>
+
+  </div>
+</header>

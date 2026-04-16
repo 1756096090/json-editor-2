@@ -2,6 +2,7 @@
 .split-pane {
   display: flex;
   height: 100%;
+  overflow: hidden;
   width: 100%;
 }
 
@@ -20,6 +21,14 @@
   overflow: hidden;
 }
 
+.split-pane__panel--hidden {
+  display: none;
+}
+
+.split-pane__gutter--hidden {
+  display: none;
+}
+
 .split-pane__panel > * {
   /* custom elements default to inline — force block so height:100% resolves */
   display: block;
@@ -34,7 +43,7 @@
   display: flex;
   flex-shrink: 0;
   justify-content: center;
-  /* position:relative needed for z-index to participate in stacking context */
+  overflow: visible; /* allow projected transfer bar to extend beyond width */
   position: relative;
   touch-action: none;
   transition: background var(--duration-fast) var(--ease-default);
@@ -80,18 +89,18 @@
 }
 
 /* ── Responsive: stack vertically on small screens ─────────────── */
-@media (max-width: 768px) {
+@media (max-width: 680px) {
   .split-pane--horizontal {
     flex-direction: column;
   }
 
   .split-pane--horizontal .split-pane__left,
   .split-pane--horizontal .split-pane__right {
-    height: auto !important;
-    width: 100% !important;
+    width: 100%;
+    min-height: 200px;
   }
 
-  .split-pane--horizontal .split-pane__gutter {
+  .split-pane--horizontal .split-pane__gutter:not(.split-pane__gutter--hidden) {
     cursor: row-resize;
     flex-direction: row;
     height: 6px;

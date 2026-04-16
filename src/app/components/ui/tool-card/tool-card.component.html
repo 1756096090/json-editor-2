@@ -1,0 +1,36 @@
+<article
+  class="tool-card"
+  [class.tool-card--soon]="isComingSoon()"
+  [class.tool-card--locked]="isLocked()"
+  [attr.aria-label]="name()"
+>
+  <div class="tool-card__header">
+    <span class="tool-card__icon" aria-hidden="true">{{ icon() }}</span>
+    <app-module-badge [state]="state()" />
+  </div>
+
+  <h3 class="tool-card__name">{{ name() }}</h3>
+  <p class="tool-card__description">{{ description() }}</p>
+
+  <div class="tool-card__footer">
+    @if (isComingSoon()) {
+      <button
+        type="button"
+        class="tool-card__cta tool-card__cta--soon"
+        (click)="onNotify()"
+        [attr.aria-label]="'Get notified when ' + name() + ' is ready'"
+      >
+        Notify me
+      </button>
+    } @else if (isInteractive() && route()) {
+      <a
+        class="tool-card__cta"
+        [routerLink]="route()"
+        [attr.aria-label]="ctaLabel() + ' — ' + name()"
+      >
+        {{ ctaLabel() }}
+        <span aria-hidden="true">→</span>
+      </a>
+    }
+  </div>
+</article>

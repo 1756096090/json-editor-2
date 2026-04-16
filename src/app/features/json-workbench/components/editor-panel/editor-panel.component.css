@@ -5,17 +5,44 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: 24rem;
+  min-height: 0;
   overflow: hidden;
+  transition: border-color var(--duration-fast) var(--ease-default);
+}
+
+.editor-panel--active {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent-muted);
 }
 
 .editor-panel__header {
   align-items: center;
   border-bottom: 1px solid var(--color-border);
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
-  justify-content: space-between;
   padding: var(--space-2) var(--space-3);
+}
+
+.editor-panel__header-start {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.editor-panel__modes {
+  display: flex;
+  flex: 1 1 18rem;
+  justify-content: center;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.editor-panel__modes app-segmented-control {
+  flex: 0 0 auto;
 }
 
 .editor-panel__title {
@@ -23,19 +50,38 @@
   margin: 0;
 }
 
-/* Flex row: [gutter?] [edit-area] */
+.editor-panel__active-indicator {
+  color: var(--color-accent);
+  font-size: 0.5rem;
+  line-height: 1;
+}
+
+/* ── Per-panel action buttons ──────────────────────────────── */
+.editor-panel__actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  justify-content: flex-end;
+}
+
+.editor-panel__meta {
+  align-items: center;
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  margin-left: auto;
+  min-width: 0;
+}
+
+/* ── Surface: Monaco editor container ──────────────────────── */
 .editor-panel__surface {
   display: flex;
   flex: 1;
-  flex-direction: row;
+  flex-direction: column;
   min-height: 0;
-  overflow: hidden;
-}
-
-/* Edit area: takes remaining width, holds overlay + textarea */
-.ep-edit-area {
-  flex: 1;
-  min-width: 0;
   overflow: hidden;
   position: relative;
 }
@@ -44,47 +90,6 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
-}
-
-.editor-panel__overlay,
-.editor-panel__textarea {
-  font-family: var(--font-mono);
-  font-size: var(--text-base);
-  inset: 0;
-  line-height: var(--leading-relaxed);
-  margin: 0;
-  overflow: auto;
-  padding: var(--space-3);
-  position: absolute;
-  tab-size: 2;
-  white-space: pre;
-  word-break: normal;
-}
-
-.editor-panel__overlay {
-  background: linear-gradient(180deg, var(--color-panel-bg) 0%, var(--color-panel-bg-soft) 100%);
-  color: var(--color-text);
-  pointer-events: none;
-  z-index: 2;
-}
-
-/* En modo diff el overlay no debe tapar los colores de fondo */
-.editor-panel__overlay--diff {
-  background: transparent;
-}
-
-.editor-panel__textarea {
-  background: transparent;
-  border: 0;
-  caret-color: var(--color-text);
-  color: transparent;
-  outline: none;
-  resize: none;
-  z-index: 3;
-}
-
-.editor-panel__textarea::selection {
-  background: color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
 .editor-panel__drop-overlay {
@@ -102,26 +107,34 @@
   z-index: var(--z-overlay);
 }
 
-.editor-panel__footer {
+/* ── Empty hint overlay (shown when editor content is empty) ────── */
+.editor-panel__empty-hint {
   align-items: center;
-  border-top: 1px solid var(--color-border);
-  color: var(--color-text-muted);
   display: flex;
-  font-size: var(--text-xs);
-  justify-content: space-between;
-  padding: var(--space-2) var(--space-3);
+  flex-direction: column;
+  gap: var(--space-3);
+  inset: 0;
+  justify-content: center;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
 }
 
-.editor-panel__hint {
-  opacity: 0.75;
+.editor-panel__empty-hint-icon {
+  color: var(--color-border-strong);
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  opacity: 0.5;
 }
 
-.editor-panel__mismatch {
-  font-weight: var(--weight-semibold);
-}
-
-.editor-panel__mismatch--error {
-  color: var(--color-danger);
+.editor-panel__empty-hint-text {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  margin: 0;
+  opacity: 0.7;
+  text-align: center;
 }
 
 /* ─── Validity badge ─────────────────────────────────────────────── */
@@ -135,176 +148,75 @@
   font-weight: var(--weight-semibold);
   line-height: 1;
   padding: 2px var(--space-2);
+  white-space: nowrap;
 }
 
-.editor-panel__valid-badge--valid   { color: var(--color-success); }
-.editor-panel__valid-badge--invalid { color: var(--color-danger); }
-
-.editor-panel__valid-badge--clickable {
-  border-color: currentColor;
-  cursor: pointer;
-  opacity: 0.85;
+.editor-panel__valid-badge--valid {
+  border-color: var(--color-success);
+  color: var(--color-success);
 }
-.editor-panel__valid-badge--clickable:hover  { opacity: 1; }
-.editor-panel__valid-badge--clickable:focus-visible { outline: var(--focus-ring); }
 
-/* Repair button — shown when JSON is invalid and autofix is enabled */
-.editor-panel__repair-btn {
-  align-items: center;
-  background: var(--color-warning-subtle, rgba(244, 185, 66, 0.12));
-  border: 1px solid var(--color-warning, #f4b942);
-  border-radius: var(--radius-xs, 4px);
-  color: var(--color-warning, #f4b942);
-  cursor: pointer;
-  display: inline-flex;
-  font-size: var(--text-xs, 0.72rem);
-  font-weight: var(--weight-semibold, 600);
-  gap: 4px;
-  line-height: 1;
-  padding: 3px 8px;
-  transition: background 0.15s, opacity 0.15s;
-}
-.editor-panel__repair-btn:hover {
-  background: var(--color-warning-subtle-hover, rgba(244, 185, 66, 0.22));
-}
-.editor-panel__repair-btn:focus-visible { outline: var(--focus-ring); }
-
-.wb-bracket-mismatch {
-  background: var(--color-danger-subtle);
-  border-radius: var(--radius-xs);
+.editor-panel__valid-badge--invalid {
+  border-color: var(--color-danger);
   color: var(--color-danger);
-  font-weight: var(--weight-bold);
 }
 
-.editor-panel__header-start {
-  align-items: center;
-  display: flex;
-  gap: var(--space-2);
-  min-width: 0;
+/* ── Monaco error line decoration ──────────────────────────────── */
+.monaco-error-line {
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent) !important;
 }
 
-.editor-panel__edit-active {
-  color: var(--color-accent);
-  font-weight: var(--weight-semibold);
-}
-
-/* ── Diff gutter column ────────────────────────────────────────────── */
-.ep-diff-gutter {
-  background: color-mix(in srgb, var(--color-surface) 90%, transparent);
-  border-right: 1px solid var(--color-border);
-  flex: 0 0 auto;
-  font-family: var(--font-mono);
-  font-size: var(--text-base);
-  line-height: var(--leading-relaxed);
-  overflow: hidden;
-  padding-top: var(--space-3);
-  pointer-events: none;
-  user-select: none;
-  width: 4.5rem;
-}
-
-.ep-diff-gutter__line {
-  align-items: center;
-  display: flex;
-  height: 1lh;
-  justify-content: flex-end;
-  padding: 0 var(--space-1);
-}
-
-.ep-diff-gutter__line--active {
-  box-shadow: inset 2px 0 0 var(--color-accent);
-}
-
-.ep-diff-gutter__num {
-  color: var(--color-text-muted);
-  font-size: var(--text-xs);
-  min-width: 2.5rem;
-  text-align: right;
-}
-
-.ep-diff-gutter__sym {
-  color: var(--color-text-muted);
-  font-size: var(--text-xs);
-  text-align: center;
-  width: 1.2rem;
-}
-
-.ep-diff-gutter__line--added .ep-diff-gutter__num,
-.ep-diff-gutter__line--added .ep-diff-gutter__sym {
-  color: #22c55e;
-  font-weight: var(--weight-bold);
-}
-
-.ep-diff-gutter__line--modified-new .ep-diff-gutter__num,
-.ep-diff-gutter__line--modified-new .ep-diff-gutter__sym {
-  color: #16a34a;
-  font-weight: var(--weight-bold);
-}
-
-.ep-diff-gutter__line--modified-old .ep-diff-gutter__num,
-.ep-diff-gutter__line--modified-old .ep-diff-gutter__sym {
-  color: #f59e0b;
-  font-weight: var(--weight-bold);
-}
-
-.ep-diff-gutter__line--removed .ep-diff-gutter__num,
-.ep-diff-gutter__line--removed .ep-diff-gutter__sym {
-  color: #ef4444;
-  font-weight: var(--weight-bold);
-}
-
-.ep-diff-bg {
-  bottom: 0;
-  font-size: var(--text-base);
-  inset: 0;
-  line-height: var(--leading-relaxed);
-  overflow: hidden;
-  padding-top: var(--space-3);
-  pointer-events: none;
-  position: absolute;
-  z-index: 0;
-}
-
-.ep-diff-bg__line {
-  height: 1lh;
-}
-
-.ep-diff-bg__line--added {
-  background: color-mix(in srgb, #22c55e 18%, transparent); /* verde claro: línea nueva */
-}
-
-.ep-diff-bg__line--modified-new {
-  background: color-mix(in srgb, #16a34a 28%, transparent); /* verde oscuro: línea modificada (nueva versión) */
-}
-
-.ep-diff-bg__line--modified-old {
-  background: color-mix(in srgb, #f59e0b 22%, transparent); /* ámbar/amarillo: línea modificada (versión vieja) */
-}
-
-.ep-diff-bg__line--removed {
-  background: color-mix(in srgb, #ef4444 22%, transparent); /* rojo: línea borrada */
-}
-
-.ep-diff-bg__line--active {
-  outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
-  outline-offset: -1px;
-}
-
-/* En modo diff el overlay no debe tapar los colores de fondo */
-.editor-panel__overlay--diff {
-  background: transparent;
+.monaco-error-glyph {
+  background: var(--color-danger);
+  border-radius: 50%;
+  height: 8px !important;
+  margin-left: 4px;
+  margin-top: 6px;
+  width: 8px !important;
 }
 
 @media (max-width: 720px) {
   .editor-panel__header {
     align-items: flex-start;
-    flex-direction: column;
     gap: var(--space-1);
   }
 
-  .editor-panel__footer {
+  .editor-panel__header-start,
+  .editor-panel__modes,
+  .editor-panel__meta {
+    width: 100%;
+  }
+
+  .editor-panel__modes {
+    justify-content: flex-start;
+    padding-bottom: 2px;
+  }
+
+  .editor-panel__meta {
+    justify-content: space-between;
+  }
+
+  .editor-panel__actions {
+    flex: 1 1 auto;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .editor-panel__header {
+    padding: var(--space-2);
+  }
+
+  .editor-panel__meta {
     align-items: flex-start;
     flex-direction: column;
-    gap: var(--space-1);
+  }
+
+  .editor-panel__actions {
+    width: 100%;
+  }
+
+  .editor-panel__valid-badge {
+    align-self: flex-start;
   }
 }

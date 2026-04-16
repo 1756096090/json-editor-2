@@ -9,6 +9,16 @@
   justify-content: space-between;
 }
 
+/* ── Collapsible body ───────────────────────────────────── */
+.toolbar__body {
+  display: contents; /* transparent wrapper in normal layout */
+  overflow: hidden;
+}
+
+.toolbar--collapsed .toolbar__body {
+  display: none;
+}
+
 .toolbar__group {
   align-items: center;
   display: flex;
@@ -32,8 +42,45 @@
   align-items: center;
   display: flex;
   gap: var(--space-2);
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
+.toolbar__autosaved {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* ── Collapse toggle button ─────────────────────────────── */
+.toolbar__collapse-btn {
+  align-items: center;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  font-size: 0.75rem;
+  height: 26px;
+  justify-content: center;
+  line-height: 1;
+  padding: 0 6px;
+  transition: background var(--duration-fast), color var(--duration-fast),
+    border-color var(--duration-fast);
+}
+
+.toolbar__collapse-btn:hover {
+  background: var(--color-surface-raised);
+  border-color: var(--color-border-strong, var(--color-accent));
+  color: var(--color-text);
+}
+
+.toolbar__collapse-btn:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
 
 @media (max-width: 940px) {
   .toolbar {
@@ -41,7 +88,16 @@
     flex-direction: column;
   }
 
+  .toolbar--collapsed {
+    flex-direction: row;
+    align-items: center;
+  }
+
   .toolbar__meta {
     width: 100%;
+  }
+
+  .toolbar--collapsed .toolbar__meta {
+    width: auto;
   }
 }

@@ -1,138 +1,119 @@
 ﻿<section
   class="editor-panel"
+  [class.editor-panel--active]="isActive()"
   (dragenter)="onDragEnter($event)"
   (dragover)="onDragOver($event)"
   (dragleave)="onDragLeave($event)"
   (drop)="onDrop($event)"
 >
   <header class="editor-panel__header">
-    <h2 class="editor-panel__title">{{ panelTitle() }}</h2>
+    <div class="editor-panel__header-start">
+      <h2 class="editor-panel__title">{{ panelTitle() }}</h2>
+      @if (isActive()) {
+        <span class="editor-panel__active-indicator" aria-label="Active panel">&#9679;</span>
+      }
+    </div>
 
-    <app-segmented-control
-      [items]="viewModes"
-      [value]="leftMode()"
-      ariaLabel="Panel view modes"
-      (valueChange)="setMode($event)"
-    />
+    <div class="editor-panel__modes">
+      <app-segmented-control
+        [items]="viewModes"
+        [value]="leftMode()"
+        ariaLabel="Panel view modes"
+        (valueChange)="setMode($event)"
+      />
+    </div>
+
+    <div class="editor-panel__meta">
+      <div class="editor-panel__actions" role="group" aria-label="Panel actions">
+        @if (leftMode() === 'text') {
+          <app-ui-button
+            size="sm"
+            variant="ghost"
+            ariaLabel="Format JSON"
+            tooltipText="Format (pretty-print)"
+            (pressed)="formatRequested.emit()"
+          >Format</app-ui-button>
+
+          <app-ui-button
+            size="sm"
+            variant="ghost"
+            ariaLabel="Minify JSON"
+            tooltipText="Minify"
+            (pressed)="minifyRequested.emit()"
+          >Minify</app-ui-button>
+        }
+
+        <app-ui-button
+          size="sm"
+          variant="ghost"
+          ariaLabel="Copy to clipboard"
+          tooltipText="Copy"
+          (pressed)="handleCopy()"
+        >Copy</app-ui-button>
+
+        @if (leftMode() === 'yaml' || leftMode() === 'csv' || leftMode() === 'xml') {
+          <app-ui-button
+            size="sm"
+            variant="ghost"
+            ariaLabel="Export as {{ leftMode().toUpperCase() }}"
+            [tooltipText]="'Download as .' + leftMode()"
+            (pressed)="exportCurrentView()"
+          >&#8595; Export</app-ui-button>
+        }
+      </div>
+
+      <span
+        class="editor-panel__valid-badge"
+        [class.editor-panel__valid-badge--valid]="isValid()"
+        [class.editor-panel__valid-badge--invalid]="!isValid()"
+        [style.visibility]="leftMode() === 'text' ? 'visible' : 'hidden'"
+      >
+        {{ isValid() ? '&#x2713; Valid' : '&#x2717; Invalid' }}
+      </span>
+    </div>
   </header>
 
   @switch (leftMode()) {
     @case ('text') {
-      <div class="editor-panel__surface">
+      <!-- ── Inline error bar ──────────────────────────────────── -->
+      @if (errorPosition(); as err) {
+        <app-inline-error-bar
+          [error]="err"
+          [autoFixEnabled]="autoFixEnabled()"
+          (showMe)="onShowMePressed()"
+          (autoRepair)="onRepairPressed()"
+        />
+      }
 
-        @if (showDiff()) {
-          <!-- ── Gutter column (flex sibling, not overlay) ─────── -->
-          <div
-            #diffGutterRef
-            class="ep-diff-gutter"
-            aria-hidden="true"
-          >
-            @for (line of diffGutterLines(); track $index) {
-              <div
-                class="ep-diff-gutter__line"
-                [class.ep-diff-gutter__line--added]="line.kind === 'added'"
-                [class.ep-diff-gutter__line--removed]="line.kind === 'removed'"
-                [class.ep-diff-gutter__line--modified-old]="line.kind === 'modified-old'"
-                [class.ep-diff-gutter__line--modified-new]="line.kind === 'modified-new'"
-                [class.ep-diff-gutter__line--active]="line.active"
-              >
-                <span class="ep-diff-gutter__num">{{ line.lineNum }}</span>
-                <span class="ep-diff-gutter__sym">{{
-                  line.kind === 'removed' ? '-' :
-                  line.kind === 'added' ? '+' :
-                  (line.kind === 'modified-old' || line.kind === 'modified-new') ? '~' : ' '
-                }}</span>
-              </div>
-            }
+      <!-- ── Monaco editor surface ────────────────────────────── -->
+      <div class="editor-panel__surface">
+        <app-editor-text
+          #monacoEditor
+          [value]="rawText()"
+          [language]="monacoLanguage()"
+          [theme]="theme()"
+          [errorPosition]="errorPosition()"
+          [isActive]="isActive()"
+          [diffDecorations]="diffDecorations()"
+          ariaLabel="JSON editor"
+          (valueChange)="onValueChange($event)"
+          (focused)="onEditorFocused()"
+          (pasted)="onEditorPasted($event)"
+        />
+
+        @if (isEmpty()) {
+          <div class="editor-panel__empty-hint" aria-hidden="true">
+            <span class="editor-panel__empty-hint-icon">&#123;&#125;</span>
+            <p class="editor-panel__empty-hint-text">
+              Paste JSON, drop a file, or start typing
+            </p>
           </div>
         }
 
-        <!-- ── Edit area (flex sibling of gutter) ────────────────── -->
-        <div class="ep-edit-area">
-
-          @if (showDiff()) {
-            <!-- ── Line background colors ──────────────────────── -->
-            <div
-              #diffBgRef
-              class="ep-diff-bg"
-              aria-hidden="true"
-            >
-              @for (row of diffBgLines(); track $index) {
-                <div
-                  class="ep-diff-bg__line"
-                  [class.ep-diff-bg__line--added]="row.kind === 'added'"
-                  [class.ep-diff-bg__line--removed]="row.kind === 'removed'"
-                  [class.ep-diff-bg__line--modified-old]="row.kind === 'modified-old'"
-                  [class.ep-diff-bg__line--modified-new]="row.kind === 'modified-new'"
-                  [class.ep-diff-bg__line--active]="row.active"
-                ></div>
-              }
-            </div>
-          }
-
-          <!-- ── Bracket highlight overlay ─────────────────────── -->
-          <pre
-            #overlayRef
-            class="editor-panel__overlay"
-            [class.editor-panel__overlay--diff]="showDiff()"
-            [innerHTML]="highlightedHtml()"
-          ></pre>
-
-          <!-- ── Editable textarea ──────────────────────────────── -->
-          <textarea
-            #textareaRef
-            class="editor-panel__textarea"
-            [value]="rawText()"
-            (input)="onInput($event)"
-            (scroll)="onScroll($event)"
-            (click)="onTextareaClick($event)"            (paste)="onPaste($event)"            spellcheck="false"
-            [attr.aria-label]="formatOnAltClick() ? 'JSON editor (Alt+Click para formatear)' : 'RAW JSON editor'"
-          ></textarea>
-
-          @if (draggingFile()) {
-            <div class="editor-panel__drop-overlay">Drop .json file to load</div>
-          }
-        </div>
-      </div>
-
-      <footer class="editor-panel__footer">
-        <span class="editor-panel__hint">Drag &amp; drop a .json file into the editor</span>
-
-        <!-- Validity badge (clickable if formatOnBadgeClick is enabled) -->
-        <button
-          type="button"
-          class="editor-panel__valid-badge"
-          [class.editor-panel__valid-badge--valid]="isValid()"
-          [class.editor-panel__valid-badge--invalid]="!isValid()"
-          [class.editor-panel__valid-badge--clickable]="formatOnBadgeClick()"
-          [disabled]="!formatOnBadgeClick()"
-          [attr.title]="formatOnBadgeClick() ? 'Click para formatear' : null"
-          [attr.aria-label]="formatOnBadgeClick() ? (isValid() ? 'Válido - click para formatear' : 'Inválido') : null"
-          (click)="onBadgeClick()"
-        >
-          {{ isValid() ? '✓ Válido' : '✗ Inválido' }}
-        </button>
-
-        <!-- Repair button: visible when invalid + autofix enabled -->
-        @if (!isValid() && autoFixEnabled()) {
-          <button
-            type="button"
-            class="editor-panel__repair-btn"
-            title="Intentar reparar el JSON automáticamente"
-            aria-label="Reparar JSON"
-            (click)="onRepairPressed()"
-          >
-            🔧 Reparar
-          </button>
+        @if (draggingFile()) {
+          <div class="editor-panel__drop-overlay">Drop .json file to load</div>
         }
-
-        <span
-          class="editor-panel__mismatch"
-          [class.editor-panel__mismatch--error]="mismatchCount() > 0"
-        >
-          Bracket mismatches: {{ mismatchCount() }}
-        </span>
-      </footer>
+      </div>
     }
     @case ('tree') {
       <div class="editor-panel__view-body">
@@ -140,9 +121,8 @@
           <app-json-tree-view [jsonValue]="jsonValue()" />
         } @else {
           <app-empty-state
-            icon="🌳"
-            title="No valid JSON to display as tree"
-            description="Fix the JSON syntax in Text mode to see the tree view."
+            title="No valid JSON to display"
+            description="Switch to Text mode, paste or fix your JSON, then come back to tree view."
           />
         }
       </div>
@@ -153,12 +133,41 @@
           <app-json-table-view [jsonValue]="jsonValue()" />
         } @else {
           <app-empty-state
-            icon="📊"
-            title="No valid JSON to display as table"
-            description="Fix the JSON syntax in Text mode to see the table view."
+            title="No valid JSON to display"
+            description="Switch to Text mode, paste or fix your JSON, then come back to table view."
           />
         }
       </div>
+    }
+    @case ('yaml') {
+      <app-converted-view
+        [content]="getConvertedView('yaml').content()"
+        [language]="getConvertedView('yaml').language"
+        [theme]="theme()"
+        [ariaLabel]="getConvertedView('yaml').ariaLabel"
+        [emptyTitle]="getConvertedView('yaml').emptyTitle"
+        [emptyDescription]="getConvertedView('yaml').emptyDescription"
+      />
+    }
+    @case ('csv') {
+      <app-converted-view
+        [content]="getConvertedView('csv').content()"
+        [language]="getConvertedView('csv').language"
+        [theme]="theme()"
+        [ariaLabel]="getConvertedView('csv').ariaLabel"
+        [emptyTitle]="getConvertedView('csv').emptyTitle"
+        [emptyDescription]="getConvertedView('csv').emptyDescription"
+      />
+    }
+    @case ('xml') {
+      <app-converted-view
+        [content]="getConvertedView('xml').content()"
+        [language]="getConvertedView('xml').language"
+        [theme]="theme()"
+        [ariaLabel]="getConvertedView('xml').ariaLabel"
+        [emptyTitle]="getConvertedView('xml').emptyTitle"
+        [emptyDescription]="getConvertedView('xml').emptyDescription"
+      />
     }
   }
 

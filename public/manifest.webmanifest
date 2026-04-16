@@ -1,0 +1,18 @@
+{
+  "name": "JSON Hunt",
+  "short_name": "JSON Hunt",
+  "description": "JSON Hunt — The professional JSON workspace. Format, validate, compare and convert JSON offline.",
+  "theme_color": "#1e1e1e",
+  "background_color": "#1e1e1e",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/workbench",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
