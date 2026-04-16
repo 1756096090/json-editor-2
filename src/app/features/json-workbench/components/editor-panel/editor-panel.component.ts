@@ -103,10 +103,14 @@ export class EditorPanelComponent {
   /** YAML representation of the current valid JSON. Empty when JSON is invalid. */
   readonly yamlText = computed(() => {
     const v = this.jsonValue();
-    if (v === null || v === undefined) return '';
+    if (!v) {
+      console.log('[YAML] jsonValue is null/undefined, returning empty');
+      return '';
+    }
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return jsonToYaml(v as any);
+      const result = jsonToYaml(v as any);
+      console.log('[YAML] converted successfully, length:', result.length);
+      return result;
     } catch (e) {
       console.error('[YAML] conversion error:', e);
       return '';
