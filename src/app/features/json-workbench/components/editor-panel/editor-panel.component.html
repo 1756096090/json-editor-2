@@ -7,16 +7,16 @@
   (drop)="onDrop($event)"
 >
   <header class="editor-panel__header">
-    <div class="editor-panel__header-title">
-      <h2 class="editor-panel__title">
-        {{ panelTitle() }}
-        @if (isActive()) {
-          <span class="editor-panel__active-indicator" aria-label="Active panel"></span>
-        }
-      </h2>
+    <div class="editor-panel__header-start">
+      <h2 class="editor-panel__title">{{ panelTitle() }}</h2>
+      @if (isActive()) {
+        <span class="editor-panel__active-indicator" aria-label="Active panel"></span>
+      }
     </div>
 
-    <div class="editor-panel__header-controls">
+    <div class="editor-panel__header-spacer"></div>
+
+    <div class="editor-panel__header-end">
       <div class="editor-panel__mode-selector">
         <select
           [value]="leftMode()"
@@ -31,19 +31,18 @@
           <option value="tree">TREE</option>
           <option value="table">TABLE</option>
         </select>
+        <span class="editor-panel__mode-icon">▼</span>
       </div>
 
-      <div class="editor-panel__header-actions" role="group" aria-label="Panel actions">
-        @if (leftMode() === 'yaml' || leftMode() === 'csv' || leftMode() === 'xml') {
-          <app-ui-button
-            size="sm"
-            variant="ghost"
-            ariaLabel="Export as {{ leftMode().toUpperCase() }}"
-            [tooltipText]="'Download as .' + leftMode()"
-            (pressed)="exportCurrentView()"
-          >↓</app-ui-button>
-        }
-      </div>
+      @if (leftMode() === 'yaml' || leftMode() === 'csv' || leftMode() === 'xml') {
+        <app-ui-button
+          size="sm"
+          variant="ghost"
+          ariaLabel="Export as {{ leftMode().toUpperCase() }}"
+          [tooltipText]="'Download as .' + leftMode()"
+          (pressed)="exportCurrentView()"
+        >↓</app-ui-button>
+      }
 
       <span
         class="editor-panel__validation-state"
