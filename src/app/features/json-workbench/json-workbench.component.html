@@ -87,23 +87,25 @@
     }
     <div class="workbench__tab-section" [style.flex-basis]="splitRatio() + '%'" [style.max-width]="splitRatio() + '%'">
       <app-tab-bar
-        panelLabel="Input"
+        [panelLabel]="leftPanelLabel()"
         [tabs]="tabs.leftTabs()"
         [activeTabId]="tabs.leftActiveId()"
         (tabClicked)="onLeftTabSwitch($event)"
         (tabClosed)="onLeftTabClose($event)"
         (addTab)="onAddLeftTab()"
+        (panelLabelChanged)="onLeftPanelLabelChanged($event)"
       />
     </div>
     @if (!isMobileLayout()) {
       <div class="workbench__tab-section workbench__tab-section--right" [style.flex-basis]="(100 - splitRatio()) + '%'" [style.max-width]="(100 - splitRatio()) + '%'">
         <app-tab-bar
-          panelLabel="Output"
+          [panelLabel]="rightPanelLabel()"
           [tabs]="tabs.rightTabs()"
           [activeTabId]="tabs.rightActiveId()"
           (tabClicked)="onRightTabSwitch($event)"
           (tabClosed)="onRightTabClose($event)"
           (addTab)="onAddRightTab()"
+          (panelLabelChanged)="onRightPanelLabelChanged($event)"
         />
       </div>
     }
@@ -116,7 +118,7 @@
         #leftPanel
         split-start
         [rawText]="store.rawText()"
-        [panelTitle]="'Input'"
+        [panelTitle]="leftPanelLabel()"
         [leftMode]="store.leftMode()"
         [jsonValue]="store.workingJson()"
         [theme]="monacoTheme()"
@@ -138,7 +140,7 @@
         #rightPanel
         split-end
         [rawText]="store.baselineText()"
-        [panelTitle]="'Output'"
+        [panelTitle]="rightPanelLabel()"
         [leftMode]="store.rightMode()"
         [jsonValue]="store.baselineJson()"
         [theme]="monacoTheme()"
@@ -172,6 +174,14 @@
             tooltipText="Copy Output → Input"
             (pressed)="onCopyRightToLeft()"
           >←</app-ui-button>
+
+          <app-ui-button
+            size="sm"
+            variant="ghost"
+            ariaLabel="Swap Input and Output panels"
+            tooltipText="Swap panels"
+            (pressed)="onSwapPanels()"
+          >⇅</app-ui-button>
 
           <app-ui-button
             size="sm"

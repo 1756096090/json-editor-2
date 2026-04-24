@@ -150,6 +150,35 @@ export class TabsService {
     this._rightTabs.update((ts) => ts.map((t) => (t.id === id ? { ...t, label } : t)));
   }
 
+  // ── Swap ──────────────────────────────────────────────────────────────
+
+  swapTabs(): void {
+    // Swap tabs arrays
+    const tempTabs = this._leftTabs();
+    const tempActiveId = this._leftActiveId();
+
+    this._leftTabs.set(this._rightTabs());
+    this._leftActiveId.set(this._rightActiveId());
+
+    this._rightTabs.set(tempTabs);
+    this._rightActiveId.set(tempActiveId);
+
+    // Also swap all stored contents
+    const leftTabs = this._leftTabs();
+    const rightTabs = this._rightTabs();
+
+    // Save left contents with right keys and vice versa
+    for (const tab of leftTabs) {
+      const content = this.storage.read(rightContentKey(tab.id));
+      this.storage.write(leftContentKey(tab.id), content);
+    }
+
+    for (const tab of rightTabs) {
+      const content = this.storage.read(leftContentKey(tab.id));
+      this.storage.write(rightContentKey(tab.id), content);
+    }
+  }
+
   // ── Restore ──────────────────────────────────────────────────────────────
 
   private restore(): void {

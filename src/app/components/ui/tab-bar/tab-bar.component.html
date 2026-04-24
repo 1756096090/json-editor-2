@@ -1,0 +1,56 @@
+@if (panelLabel()) {
+  @if (isEditingLabel()) {
+    <input
+      #labelInput
+      class="tab-bar__panel-label-input"
+      type="text"
+      [value]="editingLabelValue()"
+      (input)="editingLabelValue.set($any($event.target).value)"
+      (blur)="onLabelEditFinish()"
+      (keydown.enter)="onLabelEditFinish()"
+      (keydown.escape)="isEditingLabel.set(false)"
+      aria-label="Edit panel label"
+    />
+  } @else {
+    <span
+      class="tab-bar__panel-label"
+      (click)="onLabelClick()"
+      title="Double-click to rename"
+      role="button"
+      tabindex="0"
+      (keydown.enter)="startEditingLabel()"
+      (keydown.space)="startEditingLabel()"
+    >{{ panelLabel() }}</span>
+  }
+}
+<div class="tab-bar" role="tablist" [attr.aria-label]="(panelLabel() || 'Document') + ' tabs'">
+  @for (tab of tabs(); track tab.id) {
+    <button
+      role="tab"
+      class="tab-bar__tab"
+      [class.tab-bar__tab--active]="tab.id === activeTabId()"
+      [attr.aria-selected]="tab.id === activeTabId()"
+      [title]="tab.label"
+      (click)="tabClicked.emit(tab.id)"
+    >
+      <span class="tab-bar__label">{{ tab.label }}</span>
+      @if (tabs().length > 1) {
+        <span
+          class="tab-bar__close"
+          role="button"
+          tabindex="0"
+          [attr.aria-label]="'Close ' + tab.label"
+          (click)="$event.stopPropagation(); tabClosed.emit(tab.id)"
+          (keydown.enter)="$event.stopPropagation(); tabClosed.emit(tab.id)"
+          (keydown.space)="$event.stopPropagation(); $event.preventDefault(); tabClosed.emit(tab.id)"
+        >×</span>
+      }
+    </button>
+  }
+  <button
+    class="tab-bar__add"
+    aria-label="New document tab"
+    title="New tab"
+    (click)="addTab.emit()"
+  >＋</button>
+</div>

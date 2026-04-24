@@ -22,16 +22,13 @@ import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/confir
 import { SettingsPanelComponent } from '../../shared/settings-panel/settings-panel.component';
 import { LiveDiffService } from './services/live-diff.service';
 import { DiffLineDecoration } from './utils/diff-engine.types';
-import { RecentDocsService } from '../../core/recent-docs.service';
 import { TabsService } from '../../core/tabs.service';
 import { TabBarComponent } from '../../components/ui/tab-bar/tab-bar.component';
-import {
-  copyTextToClipboard,
-  downloadTextFile,
-  openJsonFilePicker,
-  readFileAsText,
-  readTextFromClipboard
-} from './utils/file-utils';
+
+// Facades
+import { WorkbenchActionsFacade } from './services/workbench-actions.facade';
+import { PanelOperationsFacade } from './services/panel-operations.facade';
+import { KeyboardHandlerService } from './services/keyboard-handler.service';
 
 @Component({
   selector: 'app-json-workbench',
@@ -56,11 +53,15 @@ import {
   }
 })
 export class JsonWorkbenchComponent implements OnDestroy {
+  // ── Core services ────────────────────────────────────────────────────────
   readonly store = inject(WorkbenchStore);
   readonly diffService = inject(LiveDiffService);
   readonly settings = inject(SettingsStore);
-  private readonly recentDocs = inject(RecentDocsService);
-  readonly tabs = inject(TabsService);
+
+  // ── Facades ──────────────────────────────────────────────────────────────
+  private readonly actions = inject(WorkbenchActionsFacade);
+  private readonly operations = inject(PanelOperationsFacade);
+  private readonly keyboardHandler = inject(KeyboardHandlerService);
 
   // ── View children ────────────────────────────────────────────────────────
   private readonly leftPanel = viewChild<EditorPanelComponent>('leftPanel');
@@ -77,6 +78,10 @@ export class JsonWorkbenchComponent implements OnDestroy {
 
   // ── Split pane ratio (synced from SplitPaneComponent) ───────────────────
   readonly splitRatio = signal(50);
+
+  // ── Panel labels (editable) ────────────────────────────────────────────
+  readonly leftPanelLabel = signal('Input');
+  readonly rightPanelLabel = signal('Output');
 
   // ── URL import ───────────────────────────────────────────────────────────
   readonly showUrlImport = signal(false);
@@ -216,76 +221,35 @@ export class JsonWorkbenchComponent implements OnDestroy {
 
   // ── Per-panel format / minify / copy ─────────────────────────────────────────
 
-  onFormatLeft(): void {
-    const success = this.store.formatJson();
-    this.store.setStatusMessage(success ? 'Input formatted.' : 'Cannot format invalid JSON.');
-  }
+  onFormatLeft():  void { this.actions.formatPanel('left');  }
+  onFormatRight(): void { this.actions.formatPanel('right'); }
+  onMinifyLeft():  void { this.actions.minifyPanel('left');  }
+  onMinifyRight(): void { this.actions.minifyPanel('right'); }
 
-  onFormatRight(): void {
-    const success = this.store.formatBaselineJson();
-    this.store.setStatusMessage(success ? 'Output formatted.' : 'Cannot format invalid JSON.');
-  }
-
-  onMinifyLeft(): void {
-    const success = this.store.minifyJson();
-    this.store.setStatusMessage(success ? 'Input minified.' : 'Cannot minify invalid JSON.');
-  }
-
-  onMinifyRight(): void {
-    const success = this.store.minifyBaselineJson();
-    this.store.setStatusMessage(success ? 'Output minified.' : 'Cannot minify invalid JSON.');
-  }
-
-  onCopyLeft  = (): Promise<void> => this.copyPanel('left');
-  onCopyRight = (): Promise<void> => this.copyPanel('right');
-
-  private async copyPanel(panel: 'left' | 'right'): Promise<void> {
-    const text  = panel === 'left' ? this.store.rawText()      : this.store.baselineText();
-    const label = panel === 'left' ? 'Input'                   : 'Output';
-    try {
-      await copyTextToClipboard(text);
-      this.store.setStatusMessage(`${label} copied to clipboard.`);
-    } catch (error) {
-      this.store.setStatusMessage(this.toActionError('Copy failed', error));
-    }
-  }
+  onCopyLeft  = (): Promise<void> => this.actions.copyPanel('left');
+  onCopyRight = (): Promise<void> => this.actions.copyPanel('right');
 
   // ── Transfer between panels ──────────────────────────────────────────────────
 
-  onCopyLeftToRight(): void {
-    this.store.setBaselineText(this.store.rawText());
-    this.store.setStatusMessage('Input copied to Output.');
-  }
-
-  onCopyRightToLeft(): void {
-    this.store.setRawText(this.store.baselineText());
-    this.store.setStatusMessage('Output copied to Input.');
-  }
+  onCopyLeftToRight(): void { this.actions.copyLeftToRight(); }
+  onCopyRightToLeft(): void { this.actions.copyRightToLeft(); }
 
   // ── Global toolbar actions ───────────────────────────────────────────────────
 
   onFormatPressed(): void {
-    const success = this.store.formatActivePanel();
-    this.store.setStatusMessage(success ? 'JSON formatted.' : 'Cannot format invalid JSON.');
+    this.actions.formatActivePanel();
   }
 
   onMinifyPressed(): void {
-    const success = this.store.minifyActivePanel();
-    this.store.setStatusMessage(success ? 'JSON minified.' : 'Cannot minify invalid JSON.');
+    this.actions.minifyActivePanel();
   }
 
   async onCopyPressed(): Promise<void> {
-    await this.copyPanel(this.store.activePanel());
+    await this.actions.copyPanel(this.store.activePanel());
   }
 
   async onPastePressed(): Promise<void> {
-    try {
-      const text = await readTextFromClipboard();
-      this.store.setRawText(text);
-      this.store.setStatusMessage('Pasted from clipboard.');
-    } catch (error) {
-      this.store.setStatusMessage(this.toActionError('Paste failed', error));
-    }
+    await this.actions.pasteFromClipboard();
   }
 
   onDownloadPrettyPressed(): void { this.triggerDownload(true);  }
@@ -308,61 +272,31 @@ export class JsonWorkbenchComponent implements OnDestroy {
   }
 
   private executeDownload(pretty: boolean): void {
-    const text     = pretty ? this.store.workingPrettyText()    : this.store.workingMinifiedText();
-    const fileName = pretty ? 'json-we-format.pretty.json'      : 'json-we-format.min.json';
-    const label    = pretty ? 'Pretty'                          : 'Minified';
-    if (!text) {
-      this.store.setStatusMessage('No valid JSON available to download.');
-      return;
+    try {
+      const fileName = pretty ? 'json-we-format.pretty.json' : 'json-we-format.min.json';
+      const label    = pretty ? 'Pretty' : 'Minified';
+      
+      if (pretty) {
+        this.actions.downloadPrettyJson();
+      } else {
+        this.actions.downloadMinifiedJson();
+      }
+      this.store.setStatusMessage(`${label} JSON download started.`);
+    } catch (error) {
+      this.store.setStatusMessage(this.toActionError('Download failed', error));
     }
-    downloadTextFile(fileName, text);
-    this.store.setStatusMessage(`${label} JSON download started.`);
   }
 
   async onOpenFilePressed(): Promise<void> {
-    try {
-      const file = await openJsonFilePicker();
-      if (this.store.activePanel() === 'right') {
-        this.store.setBaselineText(file.content);
-      } else {
-        this.setLeftPanelContent(file.content, file.fileName);
-      }
-      this.store.setStatusMessage(`Loaded file: ${file.fileName}`);
-    } catch (error) {
-      this.store.setStatusMessage(this.toActionError('Open file failed', error));
-    }
+    await this.operations.openFileIntoActivePanel();
   }
 
-  onFileDropped         = (file: File): Promise<void> => this.loadFileIntoPanel(file, 'left');
-  onBaselineFileDropped = (file: File): Promise<void> => this.loadFileIntoPanel(file, 'right');
-
-  private async loadFileIntoPanel(file: File, target: 'left' | 'right'): Promise<void> {
-    if (!file.name.toLowerCase().endsWith('.json')) {
-      this.store.setStatusMessage('Only .json files are supported.');
-      return;
-    }
-    try {
-      const text = await readFileAsText(file);
-      if (target === 'left') {
-        this.setLeftPanelContent(text, file.name);
-        this.store.setStatusMessage(`Loaded file: ${file.name}`);
-      } else {
-        this.store.setBaselineText(text);
-        this.store.setStatusMessage(`Loaded file into right editor: ${file.name}`);
-      }
-    } catch (error) {
-      this.store.setStatusMessage(this.toActionError('Drop load failed', error));
-    }
-  }
-
-  private setLeftPanelContent(content: string, label: string): void {
-    this.store.setRawText(content);
-    this.recentDocs.push(label, content);
-  }
+  onFileDropped         = (file: File): Promise<void> => this.operations.loadFileIntoPanel(file, 'left');
+  onBaselineFileDropped = (file: File): Promise<void> => this.operations.loadFileIntoPanel(file, 'right');
 
   onBaselineTextChanged(text: string): void { this.store.setBaselineText(text); }
-  onLeftModeChanged(mode: LeftPanelMode):  void { this.store.setLeftMode(mode);  }
-  onRightModeChanged(mode: LeftPanelMode): void { this.store.setRightMode(mode); }
+  onLeftModeChanged(mode: LeftPanelMode):  void { this.operations.setLeftMode(mode);  }
+  onRightModeChanged(mode: LeftPanelMode): void { this.operations.setRightMode(mode); }
 
   onSetBaselinePressed(): void {
     this.store.setBaselineText(this.store.rawText());
@@ -421,46 +355,15 @@ export class JsonWorkbenchComponent implements OnDestroy {
     const rawUrl = this.urlImportValue().trim();
     if (!rawUrl) return;
 
-    const url = this.parseHttpUrl(rawUrl);
-    if (!url) {
-      this.store.setStatusMessage('Invalid URL — must start with http:// or https://');
-      return;
-    }
-
     this.urlImportLoading.set(true);
     try {
-      const response = await fetch(rawUrl);
-      if (!response.ok) {
-        this.store.setStatusMessage(`HTTP ${response.status}: ${response.statusText}`);
-        return;
-      }
-      const text = await response.text();
-      JSON.parse(text); // validate JSON before loading
-      const sizeKb = (new TextEncoder().encode(text).length / 1024).toFixed(1);
-      if (this.urlImportTarget() === 'right') {
-        this.store.setBaselineText(text);
-      } else {
-        this.setLeftPanelContent(text, url.hostname + url.pathname);
-      }
+      await this.operations.loadFromUrl(rawUrl, this.urlImportTarget());
       this.showUrlImport.set(false);
       this.urlImportValue.set('');
-      this.store.setStatusMessage(`Loaded from URL — ${sizeKb} KB`);
     } catch (error) {
-      const msg = error instanceof SyntaxError
-        ? 'Response is not valid JSON.'
-        : this.toActionError('URL import failed', error);
-      this.store.setStatusMessage(msg);
+      this.store.setStatusMessage(this.toActionError('URL import failed', error));
     } finally {
       this.urlImportLoading.set(false);
-    }
-  }
-
-  private parseHttpUrl(rawUrl: string): URL | null {
-    try {
-      const url = new URL(rawUrl);
-      return (url.protocol === 'http:' || url.protocol === 'https:') ? url : null;
-    } catch {
-      return null;
     }
   }
 
@@ -473,33 +376,45 @@ export class JsonWorkbenchComponent implements OnDestroy {
   // ── Tab operations ────────────────────────────────────────────────────────
 
   onLeftTabSwitch(newId: string): void {
-    const content = this.tabs.switchLeft(newId, this.store.rawText());
-    this.store.setRawText(content);
+    this.operations.switchLeftTab(newId);
   }
 
   onRightTabSwitch(newId: string): void {
-    const content = this.tabs.switchRight(newId, this.store.baselineText());
-    this.store.setBaselineText(content);
+    this.operations.switchRightTab(newId);
   }
 
   onAddLeftTab(): void {
-    this.tabs.addLeftTab(this.store.rawText());
-    this.store.setRawText('');
+    this.operations.addLeftTab();
   }
 
   onAddRightTab(): void {
-    this.tabs.addRightTab(this.store.baselineText());
-    this.store.setBaselineText('');
+    this.operations.addRightTab();
   }
 
   onLeftTabClose(id: string): void {
-    const next = this.tabs.closeLeftTab(id, this.store.rawText());
-    if (next !== null) this.store.setRawText(next);
+    this.operations.closeLeftTab(id);
   }
 
   onRightTabClose(id: string): void {
-    const next = this.tabs.closeRightTab(id, this.store.baselineText());
-    if (next !== null) this.store.setBaselineText(next);
+    this.operations.closeRightTab(id);
+  }
+
+  // ── Panel label operations ─────────────────────────────────────────────
+
+  onLeftPanelLabelChanged(newLabel: string): void {
+    console.log('Left panel label changed:', newLabel);
+    this.leftPanelLabel.set(newLabel);
+  }
+
+  onRightPanelLabelChanged(newLabel: string): void {
+    console.log('Right panel label changed:', newLabel);
+    this.rightPanelLabel.set(newLabel);
+  }
+
+  onSwapPanels(): void {
+    const result = this.actions.swapPanels(this.leftPanelLabel(), this.rightPanelLabel());
+    this.leftPanelLabel.set(result.newLeftLabel);
+    this.rightPanelLabel.set(result.newRightLabel);
   }
 
   private toActionError(prefix: string, error: unknown): string {
