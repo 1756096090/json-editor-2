@@ -171,7 +171,7 @@ export class EditorPanelComponent {
     this.focused.emit();
   }
 
-  onEditorPasted(pastedContent: string): void {
+  onEditorPasted(): void {
     if (!this.autoFixEnabled()) return;
 
     // Snapshot current text for potential revert

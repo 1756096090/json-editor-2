@@ -14,7 +14,7 @@ import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
         <span slot="subtitle">Paste any JSON in the left panel and click Generate — a JSON Schema
           (draft-07) that reflects your data structure will appear in the
           right panel. All properties are inferred as required and typed accurately.</span>
-        <div slot="actions" class="tool-intro-actions">
+        <div slot="actions" class="tool-page__actions">
           <button
             type="button"
             class="tool-page__action-btn"

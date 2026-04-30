@@ -77,10 +77,6 @@ export function jsonToCsv(value: JsonValue): string {
 
 // ── XML ─────────────────────────────────────────────────────────────────────
 
-function xmlEscapeAttr(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
 function xmlEscapeText(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

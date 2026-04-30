@@ -212,10 +212,6 @@
     gap: var(--space-3);
   }
 
-  .header__logo-name {
-    display: none;
-  }
-
   .header__nav-link {
     padding: var(--space-1) var(--space-2);
   }

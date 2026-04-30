@@ -170,7 +170,6 @@ export class HomeComponent {
   }
 
   onNotify(toolName: string): void {
-    // Future: open a modal or inline waitlist form
-    console.info('Waitlist requested for:', toolName);
+    void toolName;
   }
 }

@@ -73,12 +73,6 @@ function serializeScalar(v: JsonPrimitive): string {
   return v; // string handled separately
 }
 
-function isScalar(v: JsonValue): boolean {
-  return v === null || typeof v !== 'object' || Array.isArray(v) === false
-    ? (v === null || typeof v === 'boolean' || typeof v === 'number' || typeof v === 'string')
-    : false;
-}
-
 function quoteKey(k: string): string {
   if (needsQuoting(k)) return quoteDoubleString(k);
   return k;

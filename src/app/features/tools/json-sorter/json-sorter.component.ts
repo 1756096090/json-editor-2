@@ -29,7 +29,7 @@ function sortJson(value: JsonValue): JsonValue {
       <app-tool-intro title="JSON Sorter">
         <span slot="subtitle">Sort all object keys alphabetically across the entire JSON tree.
           Nested objects are sorted recursively. Paste your JSON on the left panel, then click Sort.</span>
-        <div slot="actions" class="tool-intro-actions">
+        <div slot="actions" class="tool-page__actions">
           <button
             type="button"
             class="tool-page__action-btn"

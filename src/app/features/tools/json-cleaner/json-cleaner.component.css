@@ -1,0 +1,50 @@
+.tool-page__actions {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* ── Options fieldset ─────────────────────────────────────────── */
+.cleaner-options {
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  gap: var(--space-1) var(--space-3);
+  flex-wrap: wrap;
+  margin: 0;
+  padding: var(--space-1) var(--space-3);
+}
+
+.cleaner-options__legend {
+  color: var(--color-text-muted);
+  float: left;
+  font-size: var(--text-xs);
+  padding: 0 var(--space-1) 0 0;
+}
+
+.cleaner-option {
+  align-items: center;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-sm);
+  gap: var(--space-1);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.cleaner-option input[type='checkbox'] {
+  accent-color: var(--color-accent);
+  cursor: pointer;
+  height: 16px;
+  width: 16px;
+}
+
+.cleaner-option input[type='checkbox']:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}

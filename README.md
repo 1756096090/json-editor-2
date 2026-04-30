@@ -194,7 +194,6 @@ src/
       settings-panel/
     core/
       json-error.utils.ts
-      json.utils.ts
       monaco-loader.service.ts
       storage.service.ts
 ```

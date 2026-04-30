@@ -140,16 +140,6 @@ export class TabsService {
     return null;
   }
 
-  // ── Rename ───────────────────────────────────────────────────────────────
-
-  renameLeftTab(id: string, label: string): void {
-    this._leftTabs.update((ts) => ts.map((t) => (t.id === id ? { ...t, label } : t)));
-  }
-
-  renameRightTab(id: string, label: string): void {
-    this._rightTabs.update((ts) => ts.map((t) => (t.id === id ? { ...t, label } : t)));
-  }
-
   // ── Swap ──────────────────────────────────────────────────────────────
 
   swapTabs(): void {

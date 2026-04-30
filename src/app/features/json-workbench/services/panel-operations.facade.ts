@@ -123,16 +123,6 @@ export class PanelOperationsFacade {
     this.store.setRightMode(mode as any);
   }
 
-  // ── Panel active state ────────────────────────────────────────────────
-
-  setLeftPanelActive(): void {
-    this.store.setActivePanel('left');
-  }
-
-  setRightPanelActive(): void {
-    this.store.setActivePanel('right');
-  }
-
   // ── Helpers ───────────────────────────────────────────────────────────
 
   private setLeftPanelContent(content: string, label: string): void {

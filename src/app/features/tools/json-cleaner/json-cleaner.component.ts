@@ -4,28 +4,49 @@ import { JsonWorkbenchComponent } from '../../json-workbench/json-workbench.comp
 import { WorkbenchStore, JsonValue } from '../../json-workbench/state/workbench.store';
 import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
 
-function cleanJson(value: JsonValue): JsonValue | undefined {
-  if (value === null || value === '') return undefined;
+interface CleanOptions {
+  removeNull: boolean;
+  removeEmptyStrings: boolean;
+  removeEmptyArrays: boolean;
+  removeEmptyObjects: boolean;
+}
+
+function cleanJson(value: JsonValue, opts: CleanOptions): JsonValue | undefined {
+  if (opts.removeNull && value === null) return undefined;
+  if (opts.removeEmptyStrings && value === '') return undefined;
 
   if (Array.isArray(value)) {
     const cleaned = value
-      .map((item) => cleanJson(item))
+      .map((item) => cleanJson(item, opts))
       .filter((item): item is JsonValue => item !== undefined);
-    return cleaned.length > 0 ? cleaned : undefined;
+    if (opts.removeEmptyArrays && cleaned.length === 0) return undefined;
+    return cleaned;
   }
 
-  if (typeof value === 'object') {
+  if (value !== null && typeof value === 'object') {
     const cleaned: Record<string, JsonValue> = {};
     for (const [k, v] of Object.entries(value)) {
-      const result = cleanJson(v);
+      const result = cleanJson(v, opts);
       if (result !== undefined) {
         cleaned[k] = result;
       }
     }
-    return Object.keys(cleaned).length > 0 ? cleaned : undefined;
+    if (opts.removeEmptyObjects && Object.keys(cleaned).length === 0) return undefined;
+    return cleaned;
   }
 
   return value;
+}
+
+/** Count total key/item slots in a JSON tree (not leaf primitives themselves). */
+function countEntries(value: JsonValue): number {
+  if (Array.isArray(value)) {
+    return value.reduce<number>((n, v) => n + 1 + countEntries(v), 0);
+  }
+  if (value !== null && typeof value === 'object') {
+    return Object.entries(value).reduce<number>((n, [, v]) => n + 1 + countEntries(v), 0);
+  }
+  return 0;
 }
 
 @Component({
@@ -35,14 +56,53 @@ function cleanJson(value: JsonValue): JsonValue | undefined {
     <div class="tool-page">
       <app-tool-intro title="JSON Cleaner">
         <span slot="subtitle">Remove null values, empty strings, empty arrays and empty objects
-          from your JSON recursively. Paste your JSON on the left panel, then click Clean.</span>
-        <div slot="actions" class="tool-intro-actions">
+          from your JSON recursively. Configure what to remove, paste your JSON and click Clean.</span>
+        <div slot="actions" class="tool-page__actions">
+          <fieldset class="cleaner-options" aria-label="Select which empty values to remove">
+            <legend class="cleaner-options__legend">Remove</legend>
+            <label class="cleaner-option">
+              <input
+                type="checkbox"
+                [checked]="opts().removeNull"
+                (change)="toggleOpt('removeNull')"
+                aria-label="Remove null values"
+              />
+              <span aria-hidden="true">null</span>
+            </label>
+            <label class="cleaner-option">
+              <input
+                type="checkbox"
+                [checked]="opts().removeEmptyStrings"
+                (change)="toggleOpt('removeEmptyStrings')"
+                aria-label="Remove empty strings"
+              />
+              <span aria-hidden="true">""</span>
+            </label>
+            <label class="cleaner-option">
+              <input
+                type="checkbox"
+                [checked]="opts().removeEmptyArrays"
+                (change)="toggleOpt('removeEmptyArrays')"
+                aria-label="Remove empty arrays"
+              />
+              <span aria-hidden="true">[ ]</span>
+            </label>
+            <label class="cleaner-option">
+              <input
+                type="checkbox"
+                [checked]="opts().removeEmptyObjects"
+                (change)="toggleOpt('removeEmptyObjects')"
+                aria-label="Remove empty objects"
+              />
+              <span aria-hidden="true">&#123; &#125;</span>
+            </label>
+          </fieldset>
           <button
             type="button"
             class="tool-page__action-btn"
             (click)="onClean()"
             [disabled]="!store.isValidJson()"
-            aria-label="Clean JSON — remove nulls and empty values"
+            aria-label="Clean JSON — remove selected empty values"
           >
             ✧ Clean JSON
           </button>
@@ -54,22 +114,47 @@ function cleanJson(value: JsonValue): JsonValue | undefined {
       <app-json-workbench />
     </div>
   `,
-  styleUrl: '../tool-page.css',
+  styleUrls: ['../tool-page.css', './json-cleaner.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class JsonCleanerComponent {
   readonly store = inject(WorkbenchStore);
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
+
+  readonly opts = signal<CleanOptions>({
+    removeNull: true,
+    removeEmptyStrings: true,
+    removeEmptyArrays: true,
+    removeEmptyObjects: true,
+  });
 
   readonly lastStatus = signal('');
 
   constructor() {
-    this.title.setTitle('JSON Cleaner — Remove Nulls & Empty Values | JSONScan');
-    this.meta.updateTag({
+    inject(Title).setTitle('JSON Cleaner — Remove Nulls & Empty Values | JSONScan');
+    inject(Meta).updateTag({
       name: 'description',
       content:
         'Clean JSON by removing null values, empty strings, empty arrays and empty objects recursively. Free online JSON cleaning tool.',
+    });
+    this.restoreOptions();
+  }
+
+  private restoreOptions(): void {
+    const saved = localStorage.getItem('json-we-format:cleaner-opts');
+    if (saved) {
+      try {
+        this.opts.set(JSON.parse(saved));
+      } catch {
+        // Invalid JSON in localStorage, use defaults
+      }
+    }
+  }
+
+  toggleOpt(key: keyof CleanOptions): void {
+    this.opts.update((o) => {
+      const updated = { ...o, [key]: !o[key] };
+      localStorage.setItem('json-we-format:cleaner-opts', JSON.stringify(updated));
+      return updated;
     });
   }
 
@@ -77,13 +162,18 @@ export class JsonCleanerComponent {
     const json = this.store.currentJson();
     if (json === null) return;
 
-    const result = cleanJson(json) ?? {};
-    const formatted = JSON.stringify(result, null, 2);
-    this.store.setRawText(formatted);
+    const opts = this.opts();
+    const before = countEntries(json);
+    const fallback: JsonValue = Array.isArray(json) ? [] : {};
+    const result = cleanJson(json, opts) ?? fallback;
+    const after = countEntries(result);
+    const removed = before - after;
 
-    const before = JSON.stringify(json).length;
-    const after = formatted.length;
-    const saved = Math.max(0, before - after);
-    this.lastStatus.set(saved > 0 ? `Removed ${saved} chars of empty values.` : 'Nothing to clean.');
+    this.store.setRawText(JSON.stringify(result, null, 2));
+    this.lastStatus.set(
+      removed > 0
+        ? `Removed ${removed} empty ${removed === 1 ? 'value' : 'values'}.`
+        : 'Nothing to clean.',
+    );
   }
 }

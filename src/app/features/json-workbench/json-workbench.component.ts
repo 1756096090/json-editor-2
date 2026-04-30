@@ -28,7 +28,6 @@ import { TabBarComponent } from '../../components/ui/tab-bar/tab-bar.component';
 // Facades
 import { WorkbenchActionsFacade } from './services/workbench-actions.facade';
 import { PanelOperationsFacade } from './services/panel-operations.facade';
-import { KeyboardHandlerService } from './services/keyboard-handler.service';
 
 @Component({
   selector: 'app-json-workbench',
@@ -57,11 +56,11 @@ export class JsonWorkbenchComponent implements OnDestroy {
   readonly store = inject(WorkbenchStore);
   readonly diffService = inject(LiveDiffService);
   readonly settings = inject(SettingsStore);
+  readonly tabs = inject(TabsService);
 
   // ── Facades ──────────────────────────────────────────────────────────────
   private readonly actions = inject(WorkbenchActionsFacade);
   private readonly operations = inject(PanelOperationsFacade);
-  private readonly keyboardHandler = inject(KeyboardHandlerService);
 
   // ── View children ────────────────────────────────────────────────────────
   private readonly leftPanel = viewChild<EditorPanelComponent>('leftPanel');
@@ -273,7 +272,6 @@ export class JsonWorkbenchComponent implements OnDestroy {
 
   private executeDownload(pretty: boolean): void {
     try {
-      const fileName = pretty ? 'json-we-format.pretty.json' : 'json-we-format.min.json';
       const label    = pretty ? 'Pretty' : 'Minified';
       
       if (pretty) {
@@ -402,12 +400,10 @@ export class JsonWorkbenchComponent implements OnDestroy {
   // ── Panel label operations ─────────────────────────────────────────────
 
   onLeftPanelLabelChanged(newLabel: string): void {
-    console.log('Left panel label changed:', newLabel);
     this.leftPanelLabel.set(newLabel);
   }
 
   onRightPanelLabelChanged(newLabel: string): void {
-    console.log('Right panel label changed:', newLabel);
     this.rightPanelLabel.set(newLabel);
   }
 

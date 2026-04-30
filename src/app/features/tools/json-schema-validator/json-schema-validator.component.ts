@@ -15,7 +15,7 @@ import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
           in the <strong>right panel</strong>, then click Validate. Supports
           JSON Schema draft-07 (type, required, properties, enum, allOf/anyOf/oneOf,
           string/number/array constraints).</span>
-        <div slot="actions" class="tool-intro-actions">
+        <div slot="actions" class="tool-page__actions">
           <button
             type="button"
             class="tool-page__action-btn"

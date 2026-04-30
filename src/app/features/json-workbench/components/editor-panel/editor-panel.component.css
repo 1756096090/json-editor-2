@@ -93,11 +93,10 @@
   font-weight: var(--weight-semibold);
   letter-spacing: 0.4px;
   margin: 0;
-  padding: 5px var(--space-1-5) 5px var(--space-1-5);
+  padding: 5px 22px 5px var(--space-1-5);
   text-transform: uppercase;
   transition: all var(--duration-fast);
-  padding-right: 22px;
-  min-width: 68px;
+  min-width: 82px;
 }
 
 .editor-panel__mode-select:hover {
@@ -127,20 +126,6 @@
 }
 
 /* ── Header controls: actions + validation ────────────────── */
-.editor-panel__header-controls {
-  align-items: center;
-  display: flex;
-  flex: 1;
-  gap: var(--space-1);
-  justify-content: flex-end;
-  margin-left: auto;
-}
-
-.editor-panel__header-actions {
-  display: flex;
-  gap: var(--space-1);
-}
-
 /* ── Validation state indicator: minimal, elegant ───────────── */
 .editor-panel__validation-state {
   border-radius: 50%;
@@ -242,15 +227,6 @@
     padding: var(--space-1) var(--space-2);
   }
 
-  .editor-panel__header-title {
-    width: 100%;
-  }
-
-  .editor-panel__header-controls {
-    width: 100%;
-    margin-left: 0;
-  }
-
   .editor-panel__mode-select {
     font-size: var(--text-xs);
     justify-content: flex-start;
@@ -262,16 +238,4 @@
     padding: var(--space-2);
   }
 
-  .editor-panel__meta {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .editor-panel__actions {
-    width: 100%;
-  }
-
-  .editor-panel__valid-badge {
-    align-self: flex-start;
-  }
 }
