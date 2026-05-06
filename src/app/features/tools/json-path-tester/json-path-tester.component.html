@@ -1,0 +1,53 @@
+<div class="tool-page">
+  <app-tool-intro title="JSONPath Tester">
+    <span slot="subtitle">Paste your JSON in the left panel and type a JSONPath expression below
+      to interactively query matching values. Supports
+      <code>$</code>, <code>.key</code>, <code>..key</code>,
+      <code>[n]</code>, <code>[*]</code>, <code>[n:m]</code>,
+      <code>[n,m]</code>, and bracket notation.</span>
+  </app-tool-intro>
+
+  <div class="jp-bar" role="search" aria-label="JSONPath query">
+    <label class="jp-bar__label" for="jp-input">Expression</label>
+    <input
+      id="jp-input"
+      class="jp-bar__input"
+      type="text"
+      placeholder="$.store.book[*].author"
+      [value]="expression()"
+      (input)="expression.set($any($event.target).value)"
+      (keydown.enter)="onEvaluate()"
+      autocomplete="off"
+      spellcheck="false"
+      aria-describedby="jp-hint"
+    />
+    <button
+      type="button"
+      class="tool-page__action-btn"
+      (click)="onEvaluate()"
+      [disabled]="!store.isValidJson() || !expression().trim()"
+      aria-label="Run JSONPath expression"
+    >
+      ⊙ Run
+    </button>
+  </div>
+  <p id="jp-hint" class="jp-hint" aria-live="polite">
+    @if (statusMsg()) { {{ statusMsg() }} }
+  </p>
+
+  @if (results().length > 0) {
+    <div class="jp-results" role="region" aria-label="Query results">
+      <p class="jp-results__count">{{ results().length }} match{{ results().length === 1 ? '' : 'es' }}</p>
+      <ul class="jp-results__list">
+        @for (result of results(); track $index) {
+          <li class="jp-results__item">
+            <code class="jp-results__path">{{ result.path }}</code>
+            <pre class="jp-results__value">{{ stringify(result.value) }}</pre>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+
+  <app-json-workbench />
+</div>

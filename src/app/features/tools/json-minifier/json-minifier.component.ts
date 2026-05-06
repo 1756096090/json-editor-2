@@ -6,15 +6,7 @@ import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
 @Component({
   selector: 'app-json-minifier',
   imports: [JsonWorkbenchComponent, ToolIntroComponent],
-  template: `
-    <div class="tool-page">
-      <app-tool-intro title="JSON Minifier">
-        <span slot="subtitle">Remove all whitespace and compress your JSON to its smallest possible
-          form — ideal for API payloads and config files.</span>
-      </app-tool-intro>
-      <app-json-workbench />
-    </div>
-  `,
+  templateUrl: './json-minifier.component.html',
   styleUrl: '../tool-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

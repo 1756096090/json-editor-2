@@ -6,15 +6,7 @@ import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
 @Component({
   selector: 'app-json-formatter',
   imports: [JsonWorkbenchComponent, ToolIntroComponent],
-  template: `
-    <div class="tool-page">
-      <app-tool-intro title="JSON Formatter">
-        <span slot="subtitle">Paste your JSON below and format it with proper indentation instantly.
-          Supports any valid JSON — objects, arrays, nested structures.</span>
-      </app-tool-intro>
-      <app-json-workbench />
-    </div>
-  `,
+  templateUrl: './json-formatter.component.html',
   styleUrl: '../tool-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

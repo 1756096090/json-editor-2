@@ -6,15 +6,7 @@ import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
 @Component({
   selector: 'app-json-validator',
   imports: [JsonWorkbenchComponent, ToolIntroComponent],
-  template: `
-    <div class="tool-page">
-      <app-tool-intro title="JSON Validator">
-        <span slot="subtitle">Validate any JSON document and get clear, actionable error messages
-          with exact line and column references.</span>
-      </app-tool-intro>
-      <app-json-workbench />
-    </div>
-  `,
+  templateUrl: './json-validator.component.html',
   styleUrl: '../tool-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

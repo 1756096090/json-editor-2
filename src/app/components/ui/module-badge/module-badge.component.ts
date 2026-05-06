@@ -32,13 +32,7 @@ const STATE_LABELS: Record<ModuleState, string> = {
 
 @Component({
   selector: 'app-module-badge',
-  template: `
-    @if (label()) {
-      <span class="module-badge" [class]="badgeClass()" [attr.aria-label]="label()">
-        {{ label() }}
-      </span>
-    }
-  `,
+  templateUrl: './module-badge.component.html',
   styleUrl: './module-badge.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

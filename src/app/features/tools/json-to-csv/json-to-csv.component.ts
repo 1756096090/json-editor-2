@@ -6,15 +6,7 @@ import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
 @Component({
   selector: 'app-json-to-csv',
   imports: [JsonWorkbenchComponent, ToolIntroComponent],
-  template: `
-    <div class="tool-page">
-      <app-tool-intro title="JSON to CSV">
-        <span slot="subtitle">Export flat JSON arrays to CSV format for spreadsheets,
-          data pipelines and analytics tools.</span>
-      </app-tool-intro>
-      <app-json-workbench />
-    </div>
-  `,
+  templateUrl: './json-to-csv.component.html',
   styleUrl: '../tool-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

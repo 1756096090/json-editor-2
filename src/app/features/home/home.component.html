@@ -48,7 +48,7 @@
       <ul class="home__recent-list" role="list">
         @for (doc of recentDocs(); track doc.id) {
           <li class="home__recent-item">
-            <span class="home__recent-icon" aria-hidden="true">&#123;&#125;</span>
+            <span class="home__recent-icon" aria-hidden="true"><mat-icon>data_object</mat-icon></span>
             <span class="home__recent-label" [title]="doc.label">{{ doc.label }}</span>
             <span class="home__recent-size">{{ formatSize(doc.sizeBytes) }}</span>
             <button
@@ -79,7 +79,7 @@
     <div class="home__features-grid">
 
       <div class="home__feature">
-        <span class="home__feature-icon" aria-hidden="true">⚡</span>
+        <span class="home__feature-icon" aria-hidden="true"><mat-icon>flash</mat-icon></span>
         <h3 class="home__feature-title">Instant validation</h3>
         <p class="home__feature-desc">
           Detects and highlights JSON errors as you type, with precise line and column info.
@@ -87,7 +87,7 @@
       </div>
 
       <div class="home__feature">
-        <span class="home__feature-icon" aria-hidden="true">⟷</span>
+        <span class="home__feature-icon" aria-hidden="true"><mat-icon>compare_arrows</mat-icon></span>
         <h3 class="home__feature-title">Visual diff</h3>
         <p class="home__feature-desc">
           Compare two JSON documents side by side with line-level change highlighting.
@@ -95,7 +95,7 @@
       </div>
 
       <div class="home__feature">
-        <span class="home__feature-icon" aria-hidden="true">⇄</span>
+        <span class="home__feature-icon" aria-hidden="true"><mat-icon>swap_horiz</mat-icon></span>
         <h3 class="home__feature-title">One-click convert</h3>
         <p class="home__feature-desc">
           Convert JSON to YAML, CSV or XML without leaving the workspace.

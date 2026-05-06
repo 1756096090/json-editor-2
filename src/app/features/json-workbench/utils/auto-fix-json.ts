@@ -39,10 +39,7 @@ export type AutoFixResult = AutoFixSuccess | AutoFixFailure;
  * @param maxAttempts - Maximum number of single-step iterations (default 10).
  */
 export function tryAutoFixJson(input: string, maxAttempts = 10): AutoFixResult {
-  // If it already parses → nothing to do (caller should not call us, but just in case)
-  if (looksLikeValidJson(input)) {
-    return { ok: false, reason: 'Input is already valid JSON.' };
-  }
+  const isInitiallyValid = looksLikeValidJson(input);
 
   // ──────────────────────────────────────────────────────────────────────────
   // Phase 1: Try each single-step transform in isolation
@@ -61,6 +58,11 @@ export function tryAutoFixJson(input: string, maxAttempts = 10): AutoFixResult {
     if (candidate !== input && looksLikeValidJson(candidate)) {
       return { ok: true, fixedText: candidate, appliedFixes: [step.label] };
     }
+  }
+
+  // If input was initially valid and no transforms were applied, nothing to do
+  if (isInitiallyValid) {
+    return { ok: false, reason: 'Input is already valid JSON.' };
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -109,9 +111,14 @@ function looksLikeValidJson(text: string): boolean {
 
 /**
  * Trim surrounding whitespace and normalize line endings.
+ * Note: BOM (\uFEFF) is handled separately by applyBom.
  */
 function applyTrim(text: string): string {
-  return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  // Normalize line endings first
+  let result = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  // Trim whitespace but preserve BOM at the start (BOM is \uFEFF)
+  result = result.replace(/^[\t\n\f\r ]+/, '').replace(/[\t\n\f\r ]+$/, '');
+  return result;
 }
 
 /**

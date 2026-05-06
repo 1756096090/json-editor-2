@@ -1,0 +1,21 @@
+<div class="tool-page">
+  <app-tool-intro title="JSON Sorter">
+    <span slot="subtitle">Sort all object keys alphabetically across the entire JSON tree.
+      Nested objects are sorted recursively. Paste your JSON on the left panel, then click Sort.</span>
+    <div slot="actions" class="tool-intro-actions">
+      <button
+        type="button"
+        class="tool-page__action-btn"
+        (click)="onSort()"
+        [disabled]="!store.isValidJson()"
+        aria-label="Sort JSON keys alphabetically"
+      >
+        ⇅ Sort Keys
+      </button>
+      @if (lastStatus()) {
+        <span class="tool-page__action-status" aria-live="polite">{{ lastStatus() }}</span>
+      }
+    </div>
+  </app-tool-intro>
+  <app-json-workbench />
+</div>

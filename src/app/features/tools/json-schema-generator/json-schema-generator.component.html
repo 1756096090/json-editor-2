@@ -1,0 +1,23 @@
+<div class="tool-page">
+  <app-tool-intro title="Auto Schema Generator">
+    <span slot="subtitle">Paste any JSON in the left panel and click Generate — a JSON Schema
+      (draft-07) that reflects your data structure will appear in the
+      right panel. All properties are inferred as required and typed accurately.</span>
+    <div slot="actions" class="tool-intro-actions">
+      <button
+        type="button"
+        class="tool-page__action-btn"
+        (click)="onGenerate()"
+        [disabled]="!store.isValidJson()"
+        aria-label="Generate JSON Schema from the current JSON"
+      >
+        ⬡ Generate Schema
+      </button>
+      @if (lastStatus()) {
+        <span class="tool-page__action-status" aria-live="polite">{{ lastStatus() }}</span>
+      }
+    </div>
+  </app-tool-intro>
+
+  <app-json-workbench />
+</div>

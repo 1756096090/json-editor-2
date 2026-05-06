@@ -27,11 +27,12 @@ import type * as monacoNs from 'monaco-editor';
 @Component({
   selector: 'app-editor-text',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `<div #editorContainer class="editor-text-container" role="textbox" aria-multiline="true" [attr.aria-label]="ariaLabel()"></div>`,
-  styles: `
-    :host { display: block; height: 100%; width: 100%; }
-    .editor-text-container { height: 100%; width: 100%; }
-  `,
+  templateUrl: './editor-text.component.html',
+  styleUrl: './editor-text.component.css',
+  host: {
+    '[attr.aria-label]': 'ariaLabel()',
+    'role': 'region',
+  },
 })
 export class EditorTextComponent implements OnInit {
   /** Current text content of the editor. */

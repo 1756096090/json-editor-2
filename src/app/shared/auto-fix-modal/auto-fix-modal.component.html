@@ -10,10 +10,10 @@
     <!-- ── Header ──────────────────────────────────────────────────── -->
     <header class="afm__header">
       @if (mode() === 'accept') {
-        <span class="afm__icon" aria-hidden="true">✨</span>
+        <span class="afm__icon" aria-hidden="true"><mat-icon>auto_awesome</mat-icon></span>
         <h2 class="afm__title">Corrección automática detectada</h2>
       } @else {
-        <span class="afm__icon afm__icon--error" aria-hidden="true">⚠</span>
+        <span class="afm__icon afm__icon--error" aria-hidden="true"><mat-icon>warning</mat-icon></span>
         <h2 class="afm__title">JSON inválido</h2>
       }
     </header>

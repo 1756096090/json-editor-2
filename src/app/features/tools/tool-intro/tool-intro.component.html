@@ -1,0 +1,32 @@
+@if (!collapsed()) {
+  <div class="tool-intro">
+
+    <div class="tool-intro__body">
+      <div class="tool-intro__text">
+        <h1 class="tool-intro__title">{{ title() }}</h1>
+        <div class="tool-intro__subtitle">
+          <ng-content select="[slot=subtitle]" />
+        </div>
+      </div>
+
+      <ng-content select="[slot=actions]" />
+    </div>
+
+    <button
+      class="tool-intro__dismiss"
+      type="button"
+      aria-label="Hide introduction"
+      title="Hide introduction"
+      (click)="collapsed.set(true)"
+    >×</button>
+
+  </div>
+} @else {
+  <button
+    class="tool-intro__restore"
+    type="button"
+    aria-label="Show introduction"
+    title="Show introduction"
+    (click)="collapsed.set(false)"
+  >ℹ Show intro</button>
+}

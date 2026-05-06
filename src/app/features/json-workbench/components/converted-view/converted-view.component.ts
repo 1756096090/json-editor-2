@@ -5,41 +5,8 @@ import { EmptyStateComponent } from '../../../../components/ui/empty-state/empty
 @Component({
   selector: 'app-converted-view',
   imports: [EditorTextComponent, EmptyStateComponent],
-  template: `
-    <div class="editor-panel__surface">
-      @if (shouldShowContent()) {
-        <app-editor-text
-          [value]="content()"
-          [language]="language()"
-          [theme]="theme()"
-          [readOnly]="true"
-          [ariaLabel]="ariaLabel()"
-        />
-      } @else {
-        <app-empty-state
-          [title]="emptyTitle()"
-          [description]="emptyDescription()"
-        />
-      }
-    </div>
-  `,
-  styles: `
-    :host {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      min-height: 0;
-      overflow: hidden;
-    }
-    .editor-panel__surface {
-      display: flex;
-      flex: 1;
-      flex-direction: column;
-      min-height: 0;
-      overflow: hidden;
-      position: relative;
-    }
-  `,
+  templateUrl: './converted-view.component.html',
+  styleUrl: './converted-view.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConvertedViewComponent {

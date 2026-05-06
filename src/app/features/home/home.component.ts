@@ -4,6 +4,7 @@ import { ToolCardComponent } from '../../components/ui/tool-card/tool-card.compo
 import { ModuleState } from '../../components/ui/module-badge/module-badge.component';
 import { RecentDocsService, RecentDoc } from '../../core/recent-docs.service';
 import { WorkbenchStore } from '../json-workbench/state/workbench.store';
+import { MatIconModule } from '@angular/material/icon';
 
 interface ToolDef {
   name: string;
@@ -18,7 +19,7 @@ const AVAILABLE_TOOLS: ToolDef[] = [
   {
     name: 'JSON Formatter',
     description: 'Beautify and format any JSON with proper indentation instantly.',
-    icon: '✦',
+    icon: 'format_align_left',
     route: '/tools/json-formatter',
     state: 'most-used',
     ctaLabel: 'Open Formatter',
@@ -26,7 +27,7 @@ const AVAILABLE_TOOLS: ToolDef[] = [
   {
     name: 'JSON Validator',
     description: 'Validate JSON and get clear, actionable error messages.',
-    icon: '✓',
+    icon: 'check_circle',
     route: '/tools/json-validator',
     state: 'most-used',
     ctaLabel: 'Open Validator',
@@ -34,7 +35,7 @@ const AVAILABLE_TOOLS: ToolDef[] = [
   {
     name: 'JSON Error Finder',
     description: 'Find and fix JSON syntax errors with precise line/column references.',
-    icon: '⚠️',
+    icon: 'warning',
     route: '/tools/json-error-finder',
     state: 'new',
     ctaLabel: 'Open Error Finder',
@@ -42,7 +43,7 @@ const AVAILABLE_TOOLS: ToolDef[] = [
   {
     name: 'JSON Viewer',
     description: 'Explore JSON as an interactive tree or table.',
-    icon: '⎇',
+    icon: 'account_tree',
     route: '/tools/json-viewer',
     state: 'active',
     ctaLabel: 'Open Viewer',
@@ -50,7 +51,7 @@ const AVAILABLE_TOOLS: ToolDef[] = [
   {
     name: 'JSON Compare',
     description: 'Diff two JSON documents and highlight every change line by line.',
-    icon: '⟷',
+    icon: 'compare_arrows',
     route: '/tools/json-compare',
     state: 'new',
     ctaLabel: 'Open Compare',
@@ -58,7 +59,7 @@ const AVAILABLE_TOOLS: ToolDef[] = [
   {
     name: 'JSON Minifier',
     description: 'Remove whitespace and compress JSON to its smallest form.',
-    icon: '⬡',
+    icon: 'radio_button_unchecked',
     route: '/tools/json-minifier',
     state: 'active',
     ctaLabel: 'Open Minifier',
@@ -66,7 +67,7 @@ const AVAILABLE_TOOLS: ToolDef[] = [
   {
     name: 'JSON to YAML',
     description: 'Convert JSON to clean, readable YAML in one click.',
-    icon: '⇄',
+    icon: 'swap_horiz',
     route: '/tools/json-to-yaml',
     state: 'active',
     ctaLabel: 'Convert to YAML',
@@ -74,7 +75,7 @@ const AVAILABLE_TOOLS: ToolDef[] = [
   {
     name: 'JSON to CSV',
     description: 'Export flat JSON arrays to CSV for spreadsheets and data pipelines.',
-    icon: '⊞',
+    icon: 'grid_on',
     route: '/tools/json-to-csv',
     state: 'active',
     ctaLabel: 'Convert to CSV',
@@ -82,7 +83,7 @@ const AVAILABLE_TOOLS: ToolDef[] = [
   {
     name: 'JSON to XML',
     description: 'Transform JSON structures into valid XML documents.',
-    icon: '◈',
+    icon: 'code',
     route: '/tools/json-to-xml',
     state: 'active',
     ctaLabel: 'Convert to XML',
@@ -90,7 +91,7 @@ const AVAILABLE_TOOLS: ToolDef[] = [
   {
     name: 'JSON Cleaner',
     description: 'Remove nulls, empty strings and redundant fields from any JSON.',
-    icon: '✧',
+    icon: 'cleaning_services',
     route: '/tools/json-cleaner',
     state: 'new',
     ctaLabel: 'Clean JSON',
@@ -98,7 +99,7 @@ const AVAILABLE_TOOLS: ToolDef[] = [
   {
     name: 'JSON Sorter',
     description: 'Sort all keys alphabetically across the entire JSON tree.',
-    icon: '⇅',
+    icon: 'sort',
     route: '/tools/json-sorter',
     state: 'new',
     ctaLabel: 'Sort JSON',
@@ -106,7 +107,7 @@ const AVAILABLE_TOOLS: ToolDef[] = [
   {
     name: 'JSON Schema Validator',
     description: 'Validate any JSON against a JSON Schema draft-07 and get precise errors.',
-    icon: '⬡',
+    icon: 'verified',
     route: '/tools/json-schema-validator',
     state: 'new',
     ctaLabel: 'Validate Schema',
@@ -114,7 +115,7 @@ const AVAILABLE_TOOLS: ToolDef[] = [
   {
     name: 'JSONPath Tester',
     description: 'Test JSONPath expressions interactively and see matching results instantly.',
-    icon: '⊙',
+    icon: 'center_focus_strong',
     route: '/tools/json-path-tester',
     state: 'new',
     ctaLabel: 'Test JSONPath',
@@ -122,7 +123,7 @@ const AVAILABLE_TOOLS: ToolDef[] = [
   {
     name: 'Schema Generator',
     description: 'Auto-generate a JSON Schema (draft-07) from any JSON document in one click.',
-    icon: '◎',
+    icon: 'schema',
     route: '/tools/json-schema-generator',
     state: 'new',
     ctaLabel: 'Generate Schema',
@@ -133,7 +134,7 @@ const COMING_SOON_TOOLS: ToolDef[] = [];
 
 @Component({
   selector: 'app-home',
-  imports: [ToolCardComponent],
+  imports: [ToolCardComponent, MatIconModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

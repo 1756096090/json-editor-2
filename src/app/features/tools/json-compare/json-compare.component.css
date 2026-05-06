@@ -1,0 +1,33 @@
+.tool-page__legend {
+  display: flex;
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+.tool-page__legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.legend-dot--added   { background: var(--color-success); }
+.legend-dot--removed { background: var(--color-error); }
+.legend-dot--changed { background: var(--color-accent); }
+
+kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+}

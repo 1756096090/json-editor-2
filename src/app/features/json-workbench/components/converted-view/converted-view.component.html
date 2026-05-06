@@ -1,0 +1,16 @@
+<div class="editor-panel__surface">
+  @if (shouldShowContent()) {
+    <app-editor-text
+      [value]="content()"
+      [language]="language()"
+      [theme]="theme()"
+      [readOnly]="true"
+      [ariaLabel]="ariaLabel()"
+    />
+  } @else {
+    <app-empty-state
+      [title]="emptyTitle()"
+      [description]="emptyDescription()"
+    />
+  }
+</div>

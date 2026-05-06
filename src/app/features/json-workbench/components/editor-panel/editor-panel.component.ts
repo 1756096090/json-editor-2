@@ -27,6 +27,7 @@ import type { DiffLineDecoration } from '../../utils/diff-engine.types';
 import { jsonToYaml } from '../../../tools/json-to-yaml/json-yaml.utils';
 import { jsonToCsv, jsonToXml } from '../../utils/convert.utils';
 import { downloadTextFile, copyTextToClipboard } from '../../utils/file-utils';
+import { MatIconModule } from '@angular/material/icon';
 
 const VIEW_MODES: SegmentItem[] = [
   { value: 'text',  label: 'Text'  },
@@ -48,6 +49,7 @@ const VIEW_MODES: SegmentItem[] = [
     InlineErrorBarComponent,
     ButtonComponent,
     ConvertedViewComponent,
+    MatIconModule,
   ],
   templateUrl: './editor-panel.component.html',
   styleUrl: './editor-panel.component.css',
@@ -171,19 +173,23 @@ export class EditorPanelComponent {
     this.focused.emit();
   }
 
-  onEditorPasted(): void {
+  onEditorPasted(pastedContent: string): void {
     if (!this.autoFixEnabled()) return;
 
-    // Snapshot current text for potential revert
+    // Snapshot current text for potential revert.
     this.textBeforePaste = this.rawText();
-    // The full text already includes the paste (Monaco emits after applying)
-    const fullText = this.monacoEditor()?.getEditorInstance()?.getModel()?.getValue() ?? '';
+
+    // Monaco emits after applying the paste, so the model contains the full text.
+    const fullText =
+      this.monacoEditor()?.getEditorInstance()?.getModel()?.getValue() ??
+      pastedContent;
+
     this.pastedText = fullText;
 
-    // Check if result is already valid JSON
+    // If the pasted result is already valid JSON, no repair UI is needed.
     try {
       JSON.parse(fullText);
-      return; // All good
+      return;
     } catch (e) {
       const result = tryAutoFixJson(fullText);
       if (result.ok) {

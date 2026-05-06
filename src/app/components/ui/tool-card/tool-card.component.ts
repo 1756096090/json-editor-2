@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ModuleBadgeComponent, ModuleState } from '../module-badge/module-badge.component';
+import { MatIconModule } from '@angular/material/icon';
 
 /**
  * Tool card for the home grid and SEO tool suite.
@@ -14,7 +15,7 @@ import { ModuleBadgeComponent, ModuleState } from '../module-badge/module-badge.
  */
 @Component({
   selector: 'app-tool-card',
-  imports: [RouterLink, ModuleBadgeComponent],
+  imports: [RouterLink, ModuleBadgeComponent, MatIconModule],
   templateUrl: './tool-card.component.html',
   styleUrl: './tool-card.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

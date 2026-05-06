@@ -27,8 +27,11 @@ const FIX_LABELS: Record<FixLabel, string> = {
   'combined':        'Correcciones combinadas',
 };
 
+import { MatIconModule } from '@angular/material/icon';
+
 @Component({
   selector: 'app-auto-fix-modal',
+  imports: [MatIconModule],
   templateUrl: './auto-fix-modal.component.html',
   styleUrl: './auto-fix-modal.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

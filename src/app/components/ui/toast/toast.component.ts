@@ -18,8 +18,11 @@ export interface ToastMessage {
 const TOAST_DURATION_MS = 3500;
 let nextId = 0;
 
+import { MatIconModule } from '@angular/material/icon';
+
 @Component({
   selector: 'app-toast',
+  imports: [MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   templateUrl: './toast.component.html',
@@ -58,11 +61,11 @@ export class ToastComponent {
   getIcon(type: ToastType): string {
     switch (type) {
       case 'success':
-        return '✓';
+        return 'check_circle';
       case 'error':
-        return '✗';
+        return 'error';
       default:
-        return 'ℹ';
+        return 'info';
     }
   }
 

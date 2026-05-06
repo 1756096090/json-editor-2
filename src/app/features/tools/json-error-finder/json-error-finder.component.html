@@ -1,0 +1,38 @@
+<div class="tool-page">
+  <app-tool-intro title="JSON Error Finder">
+    <span slot="subtitle">Identify and locate JSON syntax errors with precise line and column references.
+      Get actionable suggestions to fix each issue.</span>
+  </app-tool-intro>
+
+  <!-- Error Analysis Panel -->
+  <div class="error-finder-panel" *ngIf="errorResults() as results">
+    <div class="error-finder-header">
+      <h3>
+        @if (results.isValid) {
+          ✓ Valid JSON
+        } @else {
+          ⚠️ Errors Found
+        }
+      </h3>
+      <p class="error-finder-summary">{{ results.summary }}</p>
+    </div>
+
+    @if (!results.isValid && results.errors.length > 0) {
+      <div class="error-finder-list">
+        @for (error of results.errors; track $index) {
+          <div class="error-item" [class.error-item--warning]="error.severity === 'warning'">
+            <div class="error-item__header">
+              <span class="error-item__type">{{ error.errorType }}</span>
+              <span class="error-item__location">Ln {{ error.line }}, Col {{ error.column }}</span>
+            </div>
+            <p class="error-item__message">{{ error.message }}</p>
+            <code class="error-item__context">{{ error.context }}</code>
+            <p class="error-item__suggestion">💡 {{ error.suggestion }}</p>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <app-json-workbench />
+</div>

@@ -5,10 +5,7 @@ import { AppHeaderComponent } from './components/ui/app-header/app-header.compon
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, AppHeaderComponent],
-  template: `
-    <app-header />
-    <router-outlet />
-  `,
+  templateUrl: './app.component.html',
   styleUrl: './app.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

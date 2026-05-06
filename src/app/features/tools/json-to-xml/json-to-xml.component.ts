@@ -6,15 +6,7 @@ import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
 @Component({
   selector: 'app-json-to-xml',
   imports: [JsonWorkbenchComponent, ToolIntroComponent],
-  template: `
-    <div class="tool-page">
-      <app-tool-intro title="JSON to XML">
-        <span slot="subtitle">Transform any JSON structure into valid XML.
-          Useful for legacy integrations, SOAP services and data exchange formats.</span>
-      </app-tool-intro>
-      <app-json-workbench />
-    </div>
-  `,
+  templateUrl: './json-to-xml.component.html',
   styleUrl: '../tool-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
