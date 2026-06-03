@@ -1,9 +1,10 @@
 /* ── Shared styles for all SEO tool pages ───────────────────────── */
 
 .tool-page {
-  display: flex;
-  flex-direction: column;
-  height: calc(100dvh - var(--header-height));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: calc(100svh - var(--header-height));
+  min-height: calc(100dvh - var(--header-height));
   overflow: hidden;
 }
 
@@ -32,13 +33,11 @@
 
 /* ── Workbench fills the rest ─────────────────────────────────────── */
 .tool-page app-json-workbench {
-  flex: 1;
+  --workbench-height: 100%;
+  --workbench-min-height: 0px;
+  align-self: stretch;
+  justify-self: stretch;
   min-height: 0;
-  /* Override :host { height: calc(100dvh - header) } from the component.
-     Specificity (0,1,1) beats :host's compiled [_nghost-xxx] at (0,1,0).
-     height:auto lets the flex algorithm determine the real allocated size
-     so the editors don't overflow and get clipped at the bottom. */
-  height: auto;
 }
 
 /* ── Generic flex-fill for custom workspace blocks ────────────────── */
@@ -55,6 +54,10 @@
 
   .tool-page__title {
     font-size: var(--text-md);
+  }
+
+  .tool-page {
+    min-height: calc(100svh - var(--header-height));
   }
 }
 

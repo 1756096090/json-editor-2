@@ -2,14 +2,18 @@
   display: flex;
   flex: 1;
   flex-direction: column;
+  height: 100%;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
   width: 100%;
 }
 
 .editor-text-container {
+  height: 100%;
   flex: 1;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
   width: 100%;
 }

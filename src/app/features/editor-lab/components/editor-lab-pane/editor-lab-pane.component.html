@@ -1,0 +1,120 @@
+<section
+  class="editor-lab-pane"
+  [class.editor-lab-pane--active]="active()"
+  [class.editor-lab-pane--error]="!!errorMessage()"
+>
+  <header class="editor-lab-pane__header">
+    <div class="editor-lab-pane__tabs" role="tablist" [attr.aria-label]="title() + ' versions'">
+      @for (version of versions(); track $index) {
+        <div class="editor-lab-pane__tab" [class.editor-lab-pane__tab--active]="$index === selectedVersionIndex()">
+          <button
+            type="button"
+            role="tab"
+            class="editor-lab-pane__tab-select"
+            [attr.aria-selected]="$index === selectedVersionIndex()"
+            (click)="onSelectVersion($index)"
+          >
+            {{ title() }} {{ $index + 1 }}
+          </button>
+          @if (versions().length > 1) {
+            <button
+              type="button"
+              class="editor-lab-pane__tab-close"
+              (click)="onRemoveVersion($index)"
+              [attr.aria-label]="'Close ' + title() + ' version ' + ($index + 1)"
+            >
+              ×
+            </button>
+          }
+        </div>
+      }
+      <button
+        type="button"
+        class="editor-lab-pane__tab-add"
+        (click)="onSaveVersion()"
+        [attr.aria-label]="'Add new ' + title() + ' version'"
+      >
+        +
+      </button>
+    </div>
+    <div class="editor-lab-pane__tools">
+      @if (formatItems().length > 0) {
+        <app-segmented-control
+          [items]="formatItems()"
+          [value]="selectedFormatValue()"
+          [ariaLabel]="title() + ' format'"
+          (valueChange)="onFormatChange($event)"
+        />
+      }
+      <button
+        type="button"
+        class="editor-lab-pane__tool-button"
+        (click)="onFormat()"
+        [attr.aria-label]="'Format ' + title() + ' content'">
+        Format
+      </button>
+      <button
+        type="button"
+        class="editor-lab-pane__tool-button"
+        (click)="onMinify()"
+        [attr.aria-label]="'Minify ' + title() + ' content'">
+        Minify
+      </button>
+      <button
+        type="button"
+        class="editor-lab-pane__tool-button"
+        (click)="onValidate()"
+        [attr.aria-label]="'Validate ' + title() + ' content'">
+        Validate
+      </button>
+      <button
+        type="button"
+        class="editor-lab-pane__tool-button editor-lab-pane__tool-button--ghost"
+        (click)="onClear()"
+        [attr.aria-label]="'Clear ' + title() + ' content'">
+        Clear
+      </button>
+    </div>
+  </header>
+  <div class="editor-lab-pane__surface">
+    <div class="editor-lab-pane__gutter" aria-hidden="true">
+      <div class="editor-lab-pane__gutter-lines" [style.transform]="'translateY(-' + gutterOffset() + 'px)'">
+        @for (lineNumber of lineNumbers(); track lineNumber) {
+          <span class="editor-lab-pane__line-number">{{ lineNumber }}</span>
+        }
+      </div>
+    </div>
+    <div class="editor-lab-pane__editor-shell">
+      <pre
+        #highlightPre
+        class="editor-lab-pane__highlight"
+        aria-hidden="true"
+      ><code [innerHTML]="highlightedValue()"></code></pre>
+    <textarea
+      class="editor-lab-pane__editor"
+      [value]="value()"
+      (input)="onInput($event)"
+      (focus)="onFocus($event)"
+      (click)="onCursorChange($event)"
+      (keyup)="onCursorChange($event)"
+      (select)="onCursorChange($event)"
+      (scroll)="onScroll($event)"
+      spellcheck="false"
+      [attr.aria-label]="ariaLabel()"
+    ></textarea>
+    </div>
+  </div>
+  <footer class="editor-lab-pane__meta" aria-label="Editor status">
+    <p class="editor-lab-pane__meta-item">
+      {{ title() }} {{ selectedVersionIndex() + 1 }} / {{ versions().length }}
+    </p>
+    <p class="editor-lab-pane__meta-item">
+      Ln {{ cursorLine() }}, Col {{ cursorColumn() }}
+    </p>
+  </footer>
+  @if (errorMessage()) {
+    <p class="editor-lab-pane__alert editor-lab-pane__alert--bottom" role="alert">
+      {{ title() }} error: {{ errorMessage() }}
+    </p>
+  }
+</section>

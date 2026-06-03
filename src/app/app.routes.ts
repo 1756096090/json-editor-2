@@ -18,6 +18,15 @@ export const routes: Routes = [
       ),
   },
 
+  // Basic editor lab (testing screen)
+  {
+    path: 'editor-lab',
+    loadComponent: () =>
+      import('./features/editor-lab/editor-lab.component').then(
+        (m) => m.EditorLabComponent
+      ),
+  },
+
   // ── SEO Tool Suite ──────────────────────────────────────────────
   {
     path: 'tools/json-formatter',

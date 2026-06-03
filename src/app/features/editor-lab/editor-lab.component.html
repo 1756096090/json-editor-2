@@ -1,0 +1,53 @@
+<main class="editor-lab" aria-label="Basic JSON editor">
+  @if (status()) {
+    <p class="editor-lab__status" aria-live="polite">{{ status() }}</p>
+  }
+
+  <section class="editor-lab__content">
+    <app-editor-lab-pane
+      title="Input"
+      [ariaLabel]="'Input ' + inputFormat() + ' editor'"
+      [value]="inputText()"
+      [active]="activePane() === 'input'"
+      [errorMessage]="inputError()"
+      [colorRules]="inputColorRules()"
+      [formatItems]="formatItems"
+      [selectedFormatValue]="inputFormat()"
+      [versions]="inputVersions()"
+      [selectedVersionIndex]="inputSelectedVersion()"
+      (valueChange)="onInput($event)"
+      (focused)="setActivePane('input')"
+      (saveVersionRequested)="saveInputVersion()"
+      (versionSelected)="selectInputVersion($event)"
+      (removeVersionRequested)="removeInputVersion($event)"
+      (formatRequested)="formatPane('input')"
+      (validateRequested)="validatePane('input')"
+      (minifyRequested)="minifyPane('input')"
+      (clearRequested)="clearPane('input')"
+      (formatChange)="onFormatChange('input', $event)"
+    />
+
+    <app-editor-lab-pane
+      title="Output"
+      [ariaLabel]="'Output ' + outputFormat() + ' editor'"
+      [value]="outputText()"
+      [active]="activePane() === 'output'"
+      [errorMessage]="outputError()"
+      [colorRules]="outputColorRules()"
+      [formatItems]="formatItems"
+      [selectedFormatValue]="outputFormat()"
+      [versions]="outputVersions()"
+      [selectedVersionIndex]="outputSelectedVersion()"
+      (valueChange)="onOutput($event)"
+      (focused)="setActivePane('output')"
+      (saveVersionRequested)="saveOutputVersion()"
+      (versionSelected)="selectOutputVersion($event)"
+      (removeVersionRequested)="removeOutputVersion($event)"
+      (formatRequested)="formatPane('output')"
+      (validateRequested)="validatePane('output')"
+      (minifyRequested)="minifyPane('output')"
+      (clearRequested)="clearPane('output')"
+      (formatChange)="onFormatChange('output', $event)"
+    />
+  </section>
+</main>
