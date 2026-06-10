@@ -48,10 +48,10 @@ export class PanelOperationsFacade {
 
   // ── File I/O ──────────────────────────────────────────────────────────
 
-  async openFileIntoActivePanel(): Promise<void> {
+  async openFileIntoPanel(panel: 'left' | 'right' = this.store.activePanel()): Promise<void> {
     try {
       const file = await openJsonFilePicker();
-      if (this.store.activePanel() === 'right') {
+      if (panel === 'right') {
         this.store.setBaselineText(file.content);
         this.store.setStatusMessage(`Loaded file into Output: ${file.fileName}`);
       } else {

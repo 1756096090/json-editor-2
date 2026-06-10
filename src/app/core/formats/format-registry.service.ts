@@ -3,6 +3,7 @@ import { DataFormatHandler } from './data-format-handler.interface';
 import { JsonFormatHandler } from './json-format.handler';
 import { XmlFormatHandler } from './xml-format.handler';
 import { YamlFormatHandler } from './yaml-format.handler';
+import { CsvFormatHandler } from './csv-format.handler';
 
 @Injectable({ providedIn: 'root' })
 export class FormatRegistryService {
@@ -12,6 +13,7 @@ export class FormatRegistryService {
     this.registerFormat(inject(JsonFormatHandler));
     this.registerFormat(inject(XmlFormatHandler));
     this.registerFormat(inject(YamlFormatHandler));
+    this.registerFormat(inject(CsvFormatHandler));
   }
 
   getAvailableFormats(): DataFormatHandler[] {

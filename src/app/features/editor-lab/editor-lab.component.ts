@@ -2,35 +2,51 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
+import { diffLines } from 'diff';
+import type { Change } from 'diff';
 import { EditorLabPaneComponent } from './components/editor-lab-pane/editor-lab-pane.component';
 import { DataFormatHandler } from '../../core/formats/data-format-handler.interface';
 import { FormatRegistryService } from '../../core/formats/format-registry.service';
 import { SegmentItem } from '../../components/ui/segmented-control/segmented-control.component';
 import { StorageService } from '../../core/storage.service';
+import { SplitPaneComponent } from '../../components/ui/split-pane/split-pane.component';
+import { SettingsStore } from '../settings/settings.store';
+import { EditorLabIoService } from './services/editor-lab-io.service';
+import type { DiffLineDecoration } from '../json-workbench/utils/diff-engine.types';
 
 const INITIAL_INPUT_JSON = '';
-
 const INITIAL_OUTPUT_JSON = '';
+
+const STORAGE_KEY_INPUT_TEXT = 'json-we-format:editor-lab:input-text';
+const STORAGE_KEY_OUTPUT_TEXT = 'json-we-format:editor-lab:output-text';
 
 @Component({
   selector: 'app-editor-lab',
-  imports: [EditorLabPaneComponent],
+  imports: [EditorLabPaneComponent, SplitPaneComponent, FormsModule],
   templateUrl: './editor-lab.component.html',
   styleUrl: './editor-lab.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '(window:keydown)': 'onWindowKeydown($event)',
+  },
 })
 export class EditorLabComponent {
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
   private readonly formatRegistry = inject(FormatRegistryService);
   private readonly storage = inject(StorageService);
+  private readonly io = inject(EditorLabIoService);
+  readonly settings = inject(SettingsStore);
 
   private readonly STORAGE_KEY_INPUT_FORMAT = 'json-we-format:editor-lab:input-format';
   private readonly STORAGE_KEY_OUTPUT_FORMAT = 'json-we-format:editor-lab:output-format';
+  private readonly STORAGE_KEY_SPLIT_RATIO = 'json-we-format:editor-lab:split-ratio';
 
   private readonly inputPane = 'input' as const;
   private readonly outputPane = 'output' as const;
@@ -58,6 +74,11 @@ export class EditorLabComponent {
 
   readonly status = signal('');
   readonly activePane = signal<'input' | 'output'>(this.inputPane);
+  readonly splitRatio = signal(50);
+  readonly compareEnabled = signal(false);
+  readonly compareButtonMessage = signal('Compare current Input and Output.');
+  readonly inputDiffDecorations = signal<DiffLineDecoration[]>([]);
+  readonly outputDiffDecorations = signal<DiffLineDecoration[]>([]);
 
   private readonly inputHandler = computed<DataFormatHandler>(() =>
     this.formatRegistry.getFormatHandler(this.inputFormat())
@@ -68,6 +89,41 @@ export class EditorLabComponent {
 
   readonly inputColorRules = computed(() => this.inputHandler().getColorRules());
   readonly outputColorRules = computed(() => this.outputHandler().getColorRules());
+
+  readonly canCompare = computed(() => {
+    const left = this.inputText();
+    const right = this.outputText();
+
+    if (left.trim() === '' || right.trim() === '') {
+      return false;
+    }
+
+    const leftFormat = this.inputFormat();
+    const rightFormat = this.outputFormat();
+    return leftFormat === rightFormat;
+  });
+
+  readonly compareRuleHint = computed(() => {
+    const leftFormat = this.inputFormat();
+    const rightFormat = this.outputFormat();
+
+    if (leftFormat !== rightFormat) {
+      return `Compare disabled: ${leftFormat} and ${rightFormat} cannot be compared.`;
+    }
+
+    const left = this.inputText();
+    const right = this.outputText();
+    if (left.trim() === '' || right.trim() === '') {
+      return 'Compare disabled: both current editors must have content.';
+    }
+
+    return '';
+  });
+
+  readonly compareButtonTitle = computed(() => {
+    const hint = this.compareRuleHint();
+    return hint !== '' ? hint : this.compareButtonMessage();
+  });
 
   readonly inputError = computed(() => this.getFormatError(this.inputText(), this.inputHandler()));
   readonly outputError = computed(() => this.getFormatError(this.outputText(), this.outputHandler()));
@@ -83,11 +139,19 @@ export class EditorLabComponent {
   onInput(text: string): void {
     this.setInputText(text);
     this.activePane.set(this.inputPane);
+
+    if (this.compareEnabled()) {
+      this.compareCurrentEditors();
+    }
   }
 
   onOutput(text: string): void {
     this.setOutputText(text);
     this.activePane.set(this.outputPane);
+
+    if (this.compareEnabled()) {
+      this.compareCurrentEditors();
+    }
   }
 
   setActivePane(pane: 'input' | 'output'): void {
@@ -109,12 +173,41 @@ export class EditorLabComponent {
       );
     }
     this.status.set(`${pane === this.inputPane ? 'Input' : 'Output'} format changed to ${formatName}.`);
+
+    if (this.compareEnabled()) {
+      this.compareCurrentEditors();
+    }
   }
 
   copyInputToOutput(): void {
     this.setOutputText(this.inputText());
     this.status.set('Input copied to Output.');
     this.activePane.set(this.outputPane);
+  }
+
+  copyOutputToInput(): void {
+    this.setInputText(this.outputText());
+    this.status.set('Output copied to Input.');
+    this.activePane.set(this.inputPane);
+  }
+
+  swapPanels(): void {
+    const input = this.inputText();
+    const output = this.outputText();
+    const inputFormat = this.inputFormat();
+    const outputFormat = this.outputFormat();
+
+    this.setInputText(output);
+    this.setOutputText(input);
+
+    this.onFormatChange(this.inputPane, outputFormat);
+    this.onFormatChange(this.outputPane, inputFormat);
+
+    this.status.set('Input and Output swapped.');
+  }
+
+  getSplitStorageKey(): string {
+    return this.STORAGE_KEY_SPLIT_RATIO;
   }
 
   saveInputVersion(): void {
@@ -124,6 +217,10 @@ export class EditorLabComponent {
     this.inputSelectedVersion.set(this.inputVersions().length - 1);
     this.inputText.set('');
     this.status.set('New Input version saved.');
+
+    if (this.compareEnabled()) {
+      this.compareCurrentEditors();
+    }
   }
 
   saveOutputVersion(): void {
@@ -133,6 +230,10 @@ export class EditorLabComponent {
     this.outputSelectedVersion.set(this.outputVersions().length - 1);
     this.outputText.set('');
     this.status.set('New Output version saved.');
+
+    if (this.compareEnabled()) {
+      this.compareCurrentEditors();
+    }
   }
 
   removeInputVersion(index: number): void {
@@ -152,6 +253,10 @@ export class EditorLabComponent {
     this.inputFormat.set(restoredFormat);
     this.storage.write(this.STORAGE_KEY_INPUT_FORMAT, restoredFormat);
     this.status.set('Input version removed.');
+
+    if (this.compareEnabled()) {
+      this.compareCurrentEditors();
+    }
   }
 
   removeOutputVersion(index: number): void {
@@ -171,6 +276,10 @@ export class EditorLabComponent {
     this.outputFormat.set(restoredFormat);
     this.storage.write(this.STORAGE_KEY_OUTPUT_FORMAT, restoredFormat);
     this.status.set('Output version removed.');
+
+    if (this.compareEnabled()) {
+      this.compareCurrentEditors();
+    }
   }
 
   selectInputVersion(index: number): void {
@@ -184,6 +293,10 @@ export class EditorLabComponent {
     this.storage.write(this.STORAGE_KEY_INPUT_FORMAT, format);
     this.activePane.set(this.inputPane);
     this.status.set(`Input version ${index + 1} selected.`);
+
+    if (this.compareEnabled()) {
+      this.compareCurrentEditors();
+    }
   }
 
   selectOutputVersion(index: number): void {
@@ -197,6 +310,10 @@ export class EditorLabComponent {
     this.storage.write(this.STORAGE_KEY_OUTPUT_FORMAT, format);
     this.activePane.set(this.outputPane);
     this.status.set(`Output version ${index + 1} selected.`);
+
+    if (this.compareEnabled()) {
+      this.compareCurrentEditors();
+    }
   }
 
   formatJson(): void {
@@ -262,13 +379,143 @@ export class EditorLabComponent {
   clearPane(pane: 'input' | 'output'): void {
     this.activePane.set(pane);
     this.clearEditor();
+
+    if (this.compareEnabled()) {
+      this.compareCurrentEditors();
+    }
   }
 
-  validatePane(pane: 'input' | 'output'): void {
-    const handler = pane === this.inputPane ? this.inputHandler() : this.outputHandler();
-    const error = pane === this.inputPane ? this.inputError() : this.outputError();
-    const label = pane === this.inputPane ? 'Input' : 'Output';
-    this.status.set(error ? `${label} error: ${error}` : `${label} is valid ${handler.name}.`);
+  onWindowKeydown(event: KeyboardEvent): void {
+    const key = event.key.toLowerCase();
+
+    if (event.ctrlKey && event.shiftKey && key === 'f') {
+      event.preventDefault();
+      this.formatJson();
+      return;
+    }
+
+    if (event.ctrlKey && key === 'm') {
+      event.preventDefault();
+      this.minifyJson();
+      return;
+    }
+
+    if (event.ctrlKey && event.shiftKey && key === 'd') {
+      event.preventDefault();
+      this.onCompareToggle(!this.compareEnabled());
+    }
+  }
+
+  onCompareToggle(checked: boolean): void {
+    this.compareEnabled.set(checked);
+
+    if (!checked) {
+      this.compareButtonMessage.set('Compare current Input and Output.');
+      this.inputDiffDecorations.set([]);
+      this.outputDiffDecorations.set([]);
+      return;
+    }
+
+    this.compareCurrentEditors();
+  }
+
+  private compareCurrentEditors(): void {
+    const left = this.inputText();
+    const right = this.outputText();
+
+    if (left.trim() === '' || right.trim() === '') {
+      this.compareButtonMessage.set('Both current editors must have content before comparing.');
+      this.inputDiffDecorations.set([]);
+      this.outputDiffDecorations.set([]);
+      return;
+    }
+
+    const leftFormat = this.inputFormat();
+    const rightFormat = this.outputFormat();
+
+    if (leftFormat !== rightFormat) {
+      this.compareButtonMessage.set(`Only same type can be compared. Current types: ${leftFormat} vs ${rightFormat}.`);
+      this.inputDiffDecorations.set([]);
+      this.outputDiffDecorations.set([]);
+      return;
+    }
+
+    const handler = this.formatRegistry.getFormatHandler(leftFormat);
+
+    try {
+      const normalizedLeft = handler.minify(left);
+      const normalizedRight = handler.minify(right);
+
+      if (normalizedLeft === normalizedRight) {
+        this.compareButtonMessage.set(`Match: current Input and Output are equal (${leftFormat}).`);
+        this.inputDiffDecorations.set([]);
+        this.outputDiffDecorations.set([]);
+      } else {
+        this.compareButtonMessage.set(`Different: current Input and Output are not equal (${leftFormat}).`);
+        const diff = this.computeDiffDecorations(left, right);
+        this.inputDiffDecorations.set(diff.left);
+        this.outputDiffDecorations.set(diff.right);
+      }
+    } catch {
+      this.compareButtonMessage.set(`Cannot compare current ${leftFormat} editors: invalid content.`);
+      this.inputDiffDecorations.set([]);
+      this.outputDiffDecorations.set([]);
+    }
+  }
+
+  private computeDiffDecorations(left: string, right: string): {
+    left: DiffLineDecoration[];
+    right: DiffLineDecoration[];
+  } {
+    const leftDecorations: DiffLineDecoration[] = [];
+    const rightDecorations: DiffLineDecoration[] = [];
+
+    const changes = diffLines(
+      left.replaceAll('\r\n', '\n'),
+      right.replaceAll('\r\n', '\n'),
+      { newlineIsToken: false }
+    );
+
+    let leftLine = 1;
+    let rightLine = 1;
+
+    for (const change of changes) {
+      if (change.added) {
+        const count = this.countLines(change);
+        for (let i = 0; i < count; i++) {
+          rightDecorations.push({ lineNumber: rightLine + i, kind: 'added' });
+        }
+        rightLine += count;
+        continue;
+      }
+
+      if (change.removed) {
+        const count = this.countLines(change);
+        for (let i = 0; i < count; i++) {
+          leftDecorations.push({ lineNumber: leftLine + i, kind: 'removed' });
+        }
+        leftLine += count;
+        continue;
+      }
+
+      const count = this.countLines(change);
+      leftLine += count;
+      rightLine += count;
+    }
+
+    return { left: leftDecorations, right: rightDecorations };
+  }
+
+  private countLines(change: Change): number {
+    const value = change.value;
+    if (!value) return 0;
+
+    let count = 0;
+    for (let i = 0; i < value.length; i++) {
+      if (value.charCodeAt(i) === 10) count++;
+    }
+
+    return value.charCodeAt(value.length - 1) === 10 ? count : count + 1;
   }
 
   private setInputText(text: string): void {

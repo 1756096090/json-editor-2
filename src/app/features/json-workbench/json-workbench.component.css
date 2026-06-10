@@ -30,6 +30,17 @@
   width: 100%;
 }
 
+.workbench__input-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-1);
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
 /* ── Transfer bar — premium design ─────────────────────────── */
 .workbench__transfer {
   align-items: center;

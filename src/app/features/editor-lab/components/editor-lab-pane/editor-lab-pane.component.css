@@ -45,6 +45,7 @@
 .editor-lab-pane__tabs {
   align-items: flex-end;
   display: flex;
+  flex-wrap: nowrap;
   gap: var(--space-2);
   min-width: 0;
   overflow-x: auto;
@@ -86,6 +87,11 @@
 .editor-lab-pane__tool-button:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+.editor-lab-pane__tool-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
 }
 
 .editor-lab-pane__tool-button--ghost {
@@ -177,6 +183,14 @@
   overflow: hidden;
 }
 
+.editor-lab-pane__tree-shell {
+  background: var(--color-panel-bg);
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
 .editor-lab-pane__gutter {
   background: color-mix(in srgb, var(--color-panel-bg-soft) 88%, transparent);
   border-right: 1px solid var(--color-border);
@@ -198,8 +212,53 @@
 }
 
 .editor-lab-pane__line-number {
+  border-radius: var(--radius-xs);
   display: block;
   min-height: calc(0.9rem * 1.6);
+  padding-right: var(--space-1);
+  position: relative;
+}
+
+.editor-lab-pane__line-number--added,
+.editor-lab-pane__line-number--removed,
+.editor-lab-pane__line-number--modified {
+  color: var(--color-text);
+}
+
+.editor-lab-pane__line-number--removed {
+  background: color-mix(in srgb, var(--color-success) 20%, transparent);
+}
+
+.editor-lab-pane__line-number--added {
+  background: color-mix(in srgb, var(--color-danger) 20%, transparent);
+}
+
+.editor-lab-pane__line-number--modified {
+  background: color-mix(in srgb, var(--color-warning) 20%, transparent);
+}
+
+.editor-lab-pane__line-number--added::before,
+.editor-lab-pane__line-number--removed::before,
+.editor-lab-pane__line-number--modified::before {
+  border-radius: 2px;
+  bottom: 2px;
+  content: '';
+  left: -2px;
+  position: absolute;
+  top: 2px;
+  width: 3px;
+}
+
+.editor-lab-pane__line-number--removed::before {
+  background: var(--color-success);
+}
+
+.editor-lab-pane__line-number--added::before {
+  background: var(--color-danger);
+}
+
+.editor-lab-pane__line-number--modified::before {
+  background: var(--color-warning);
 }
 
 .editor-lab-pane__editor-shell {
@@ -239,6 +298,23 @@
   display: block;
   font: inherit;
   min-height: 100%;
+}
+
+.editor-lab-pane__code-line {
+  display: block;
+  min-height: calc(0.9rem * 1.6);
+}
+
+.editor-lab-pane__code-line--removed {
+  background: color-mix(in srgb, var(--color-success) 20%, transparent);
+}
+
+.editor-lab-pane__code-line--added {
+  background: color-mix(in srgb, var(--color-danger) 20%, transparent);
+}
+
+.editor-lab-pane__code-line--modified {
+  background: color-mix(in srgb, var(--color-warning) 20%, transparent);
 }
 
 .editor-lab-pane__editor {
@@ -286,12 +362,63 @@
 }
 
 .editor-lab-pane__alert {
-  background: color-mix(in srgb, var(--color-danger) 12%, var(--color-panel-bg));
-  border-top: 1px solid color-mix(in srgb, var(--color-danger) 28%, var(--color-border));
-  color: var(--color-danger);
   font-size: var(--text-sm);
   margin: 0;
   padding: var(--space-2) var(--space-3);
+}
+
+.editor-lab-pane__alert--error {
+  background: color-mix(in srgb, var(--color-danger) 12%, var(--color-panel-bg));
+  border-top: 1px solid color-mix(in srgb, var(--color-danger) 28%, var(--color-border));
+  color: var(--color-danger);
+}
+
+.editor-lab-pane__alert--valid {
+  background: color-mix(in srgb, var(--color-success, #22c55e) 10%, var(--color-panel-bg));
+  border-top: 1px solid color-mix(in srgb, var(--color-success, #22c55e) 25%, var(--color-border));
+  color: var(--color-success, #22c55e);
+}
+
+[data-theme='dark'] .editor-lab-pane {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-panel-bg) 74%, #f3f7fd 26%) 0%,
+      color-mix(in srgb, var(--color-panel-bg) 80%, #eef4fb 20%) 100%);
+  border-color: color-mix(in srgb, var(--color-border) 62%, #9fb2c6);
+}
+
+[data-theme='dark'] .editor-lab-pane__header {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--color-surface) 64%, #eaf1f9 36%) 0%,
+    color-mix(in srgb, var(--color-panel-bg-soft) 82%, #eaf1f9 18%) 100%);
+}
+
+[data-theme='dark'] .editor-lab-pane__tools {
+  background: color-mix(in srgb, var(--color-panel-bg-soft) 72%, #edf3fa 28%);
+  border-color: color-mix(in srgb, var(--color-border) 62%, #9fb2c6);
+}
+
+[data-theme='dark'] .editor-lab-pane__tab {
+  background: color-mix(in srgb, var(--color-surface) 66%, #eaf1f9 34%);
+}
+
+[data-theme='dark'] .editor-lab-pane__tab--active {
+  background: color-mix(in srgb, var(--color-panel-bg) 76%, #f5f8fc 24%);
+  border-color: color-mix(in srgb, var(--color-border) 60%, #a6b8cb);
+}
+
+[data-theme='dark'] .editor-lab-pane__gutter {
+  background: color-mix(in srgb, var(--color-panel-bg-soft) 68%, #edf3fa 32%);
+  color: color-mix(in srgb, var(--color-text-muted) 70%, #d1dbe6);
+}
+
+[data-theme='dark'] .editor-lab-pane__highlight {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-panel-bg-soft) 62%, #edf3fa 38%) 0%, transparent 100%),
+    color-mix(in srgb, var(--color-panel-bg) 74%, #f4f8fd 26%);
+}
+
+[data-theme='dark'] .editor-lab-pane__tree-shell {
+  background: color-mix(in srgb, var(--color-panel-bg) 74%, #f4f8fd 26%);
 }
 
 @media (max-width: 900px) {
@@ -325,4 +452,40 @@
     padding-left: var(--space-2);
     padding-right: var(--space-2);
   }
+}
+
+/* ── Drag & Drop overlay ──────────────────────────────────────────────── */
+
+.editor-lab-pane--dragging {
+  outline: 2px dashed var(--color-accent);
+  outline-offset: -4px;
+}
+
+.editor-lab-pane__drop-overlay {
+  align-items: center;
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-panel-bg) 88%);
+  border-radius: var(--radius-md);
+  bottom: 0;
+  color: var(--color-accent);
+  display: flex;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  inset: 0;
+  justify-content: center;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 10;
+}
+
+/* ── Toolbar divider ──────────────────────────────────────────────────── */
+
+.editor-lab-pane__tool-divider {
+  background: var(--color-border);
+  flex-shrink: 0;
+  height: 16px;
+  margin: 0 var(--space-1);
+  width: 1px;
 }

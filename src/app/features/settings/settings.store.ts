@@ -4,6 +4,7 @@ export type ThemeMode = 'light' | 'dark';
 
 export interface AppSettings {
   confirmDownloads: boolean;
+  confirmPanelTransfers: boolean;
   formatOnAltClick: boolean;
   formatOnBadgeClick: boolean;
   autoFixOnPasteEnabled: boolean;
@@ -16,6 +17,7 @@ const SETTINGS_KEY = 'json-we-format:settings';
 
 const DEFAULT_SETTINGS: AppSettings = {
   confirmDownloads: true,
+  confirmPanelTransfers: true,
   formatOnAltClick: true,
   formatOnBadgeClick: false,
   autoFixOnPasteEnabled: true,
@@ -27,6 +29,7 @@ const DEFAULT_SETTINGS: AppSettings = {
 @Injectable({ providedIn: 'root' })
 export class SettingsStore {
   readonly confirmDownloads  = signal<boolean>(DEFAULT_SETTINGS.confirmDownloads);
+  readonly confirmPanelTransfers = signal<boolean>(DEFAULT_SETTINGS.confirmPanelTransfers);
   readonly formatOnAltClick  = signal<boolean>(DEFAULT_SETTINGS.formatOnAltClick);
   readonly formatOnBadgeClick = signal<boolean>(DEFAULT_SETTINGS.formatOnBadgeClick);
   readonly autoFixOnPasteEnabled = signal<boolean>(DEFAULT_SETTINGS.autoFixOnPasteEnabled);
@@ -41,6 +44,7 @@ export class SettingsStore {
   }
 
   setConfirmDownloads(v: boolean): void  { this.confirmDownloads.set(v); }
+  setConfirmPanelTransfers(v: boolean): void { this.confirmPanelTransfers.set(v); }
   setFormatOnAltClick(v: boolean): void  { this.formatOnAltClick.set(v); }
   setFormatOnBadgeClick(v: boolean): void { this.formatOnBadgeClick.set(v); }
   setAutoFixOnPasteEnabled(v: boolean): void { this.autoFixOnPasteEnabled.set(v); }
@@ -56,6 +60,7 @@ export class SettingsStore {
 
   reset(): void {
     this.confirmDownloads.set(DEFAULT_SETTINGS.confirmDownloads);
+    this.confirmPanelTransfers.set(DEFAULT_SETTINGS.confirmPanelTransfers);
     this.formatOnAltClick.set(DEFAULT_SETTINGS.formatOnAltClick);
     this.formatOnBadgeClick.set(DEFAULT_SETTINGS.formatOnBadgeClick);
     this.autoFixOnPasteEnabled.set(DEFAULT_SETTINGS.autoFixOnPasteEnabled);
@@ -69,6 +74,7 @@ export class SettingsStore {
     try {
       const data: AppSettings = {
         confirmDownloads:  this.confirmDownloads(),
+        confirmPanelTransfers: this.confirmPanelTransfers(),
         formatOnAltClick:  this.formatOnAltClick(),
         formatOnBadgeClick: this.formatOnBadgeClick(),
         autoFixOnPasteEnabled: this.autoFixOnPasteEnabled(),
@@ -87,6 +93,7 @@ export class SettingsStore {
       if (!raw) return;
       const p = JSON.parse(raw) as Partial<AppSettings>;
       if (typeof p.confirmDownloads  === 'boolean') this.confirmDownloads.set(p.confirmDownloads);
+      if (typeof p.confirmPanelTransfers === 'boolean') this.confirmPanelTransfers.set(p.confirmPanelTransfers);
       if (typeof p.formatOnAltClick  === 'boolean') this.formatOnAltClick.set(p.formatOnAltClick);
       if (typeof p.formatOnBadgeClick === 'boolean') this.formatOnBadgeClick.set(p.formatOnBadgeClick);
       if (typeof p.autoFixOnPasteEnabled === 'boolean') this.autoFixOnPasteEnabled.set(p.autoFixOnPasteEnabled);

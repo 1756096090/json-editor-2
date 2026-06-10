@@ -8,9 +8,39 @@
 >
   <header class="editor-panel__header">
     <div class="editor-panel__header-start">
-      <h2 class="editor-panel__title">{{ panelTitle() }}</h2>
+      @if (panelTitle()) {
+        <h2 class="editor-panel__title">{{ panelTitle() }}</h2>
+      }
       @if (isActive()) {
         <span class="editor-panel__active-indicator" aria-label="Active panel"></span>
+      }
+    </div>
+
+    <div class="editor-panel__actions">
+      <ng-content select="[editorPanelActions]"></ng-content>
+      @if (leftMode() === 'text') {
+        <span class="editor-panel__actions-separator" aria-hidden="true"></span>
+        <app-ui-button
+          size="sm"
+          variant="ghost"
+          ariaLabel="Convert selected text to camel case"
+          tooltipText="Selection to camelCase"
+          (pressed)="transformSelectionToCamelCase()"
+        >camel</app-ui-button>
+        <app-ui-button
+          size="sm"
+          variant="ghost"
+          ariaLabel="Convert selected text to uppercase"
+          tooltipText="Selection to uppercase"
+          (pressed)="transformSelectionToUpperCase()"
+        >AA</app-ui-button>
+        <app-ui-button
+          size="sm"
+          variant="ghost"
+          ariaLabel="Convert selected text to lowercase"
+          tooltipText="Selection to lowercase"
+          (pressed)="transformSelectionToLowerCase()"
+        >aa</app-ui-button>
       }
     </div>
 
@@ -24,7 +54,7 @@
           class="editor-panel__mode-select"
           aria-label="Panel view mode"
         >
-          <option value="text">TEXT</option>
+          <option value="text">JSON</option>
           <option value="yaml">YAML</option>
           <option value="csv">CSV</option>
           <option value="xml">XML</option>
@@ -33,6 +63,22 @@
         </select>
         <span class="editor-panel__mode-icon"><mat-icon>expand_more</mat-icon></span>
       </div>
+
+      @if (leftMode() === 'xml') {
+        <div class="editor-panel__encoding-selector">
+          <select
+            [value]="xmlEncoding()"
+            (change)="setXmlEncoding($any($event.target).value)"
+            class="editor-panel__encoding-select"
+            aria-label="XML encoding"
+          >
+            @for (encoding of xmlEncodingOptions; track encoding) {
+              <option [value]="encoding">{{ encoding }}</option>
+            }
+          </select>
+          <span class="editor-panel__encoding-icon"><mat-icon>expand_more</mat-icon></span>
+        </div>
+      }
       
       @if (leftMode() === 'yaml' || leftMode() === 'csv' || leftMode() === 'xml') {
         <app-ui-button
@@ -57,16 +103,6 @@
   <div class="editor-panel__body">
     @switch (leftMode()) {
       @case ('text') {
-        <!-- ── Inline error bar ──────────────────────────────────── -->
-        @if (errorPosition(); as err) {
-          <app-inline-error-bar
-            [error]="err"
-            [autoFixEnabled]="autoFixEnabled()"
-            (showMe)="onShowMePressed()"
-            (autoRepair)="onRepairPressed()"
-          />
-        }
-
         <!-- ── Monaco editor surface ────────────────────────────── -->
         <div class="editor-panel__surface">
         <app-editor-text
@@ -96,6 +132,16 @@
           <div class="editor-panel__drop-overlay">Drop .json file to load</div>
         }
       </div>
+
+      <!-- ── Inline error bar ──────────────────────────────────── -->
+      @if (errorPosition(); as err) {
+        <app-inline-error-bar
+          [error]="err"
+          [autoFixEnabled]="autoFixEnabled()"
+          (showMe)="onShowMePressed()"
+          (autoRepair)="onRepairPressed()"
+        />
+      }
     }
     @case ('tree') {
       <div class="editor-panel__view-body">
@@ -127,9 +173,11 @@
         [hasValidInput]="hasValidJsonForConversion()"
         language="yaml"
         [theme]="theme()"
-        ariaLabel="YAML output (read-only)"
+        [readOnly]="false"
+        ariaLabel="YAML editor"
         emptyTitle="No valid JSON to convert"
         emptyDescription="Switch to Text mode, paste valid JSON, then come back to YAML view."
+        (contentChange)="onYamlContentChanged($event)"
       />
     }
     @case ('csv') {

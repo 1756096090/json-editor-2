@@ -1,7 +1,7 @@
 .error-bar {
   align-items: center;
   background: color-mix(in srgb, var(--color-danger) 12%, var(--color-panel-bg));
-  border-bottom: 2px solid var(--color-danger);
+  border-top: 2px solid var(--color-danger);
   box-sizing: border-box;
   display: flex;
   font-size: var(--text-sm, 0.78rem);

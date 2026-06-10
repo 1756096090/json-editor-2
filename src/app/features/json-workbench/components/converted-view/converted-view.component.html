@@ -4,8 +4,9 @@
       [value]="content()"
       [language]="language()"
       [theme]="theme()"
-      [readOnly]="true"
+      [readOnly]="readOnly()"
       [ariaLabel]="ariaLabel()"
+      (valueChange)="onContentChange($event)"
     />
   } @else {
     <app-empty-state

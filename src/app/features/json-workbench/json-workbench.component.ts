@@ -9,38 +9,36 @@
   signal,
   viewChild,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { NgTemplateOutlet } from '@angular/common';
 import { SplitPaneComponent } from '../../components/ui/split-pane/split-pane.component';
 import { ToastComponent } from '../../components/ui/toast/toast.component';
 import { ButtonComponent } from '../../components/ui/button/button.component';
 import { EditorPanelComponent } from './components/editor-panel/editor-panel.component';
-import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { DiffBarComponent } from './components/diff-bar/diff-bar.component';
-import { LeftPanelMode, WorkbenchStore } from './state/workbench.store';
+import { ActivePanel, LeftPanelMode, WorkbenchStore } from './state/workbench.store';
 import { SettingsStore } from '../settings/settings.store';
 import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/confirm-dialog/confirm-dialog.component';
-import { SettingsPanelComponent } from '../../shared/settings-panel/settings-panel.component';
 import { LiveDiffService } from './services/live-diff.service';
 import { DiffLineDecoration } from './utils/diff-engine.types';
-import { TabsService } from '../../core/tabs.service';
+import { Tab, TabsService } from '../../core/tabs.service';
 import { TabBarComponent } from '../../components/ui/tab-bar/tab-bar.component';
 
 // Facades
 import { WorkbenchActionsFacade } from './services/workbench-actions.facade';
 import { PanelOperationsFacade } from './services/panel-operations.facade';
 
+type PanelTransferDirection = 'left-to-right' | 'right-to-left';
+
 @Component({
   selector: 'app-json-workbench',
   imports: [
-    ToolbarComponent,
     DiffBarComponent,
     EditorPanelComponent,
     SplitPaneComponent,
+    NgTemplateOutlet,
     ToastComponent,
     ButtonComponent,
     ConfirmDialogComponent,
-    SettingsPanelComponent,
-    FormsModule,
     TabBarComponent,
   ],
   providers: [LiveDiffService],
@@ -66,12 +64,6 @@ export class JsonWorkbenchComponent implements OnDestroy {
   private readonly leftPanel = viewChild<EditorPanelComponent>('leftPanel');
   private readonly rightPanel = viewChild<EditorPanelComponent>('rightPanel');
 
-  // ── Settings panel ───────────────────────────────────────────────────────
-  readonly showSettings = signal(false);
-
-  // ── Toolbar collapse ─────────────────────────────────────────────────────
-  readonly toolbarCollapsed = signal(false);
-
   // ── Mobile layout (≤ 680 px: hide second panel, disable diff) ───────────
   readonly isMobileLayout = signal(false);
 
@@ -79,8 +71,10 @@ export class JsonWorkbenchComponent implements OnDestroy {
   readonly splitRatio = signal(50);
 
   // ── Panel labels (editable) ────────────────────────────────────────────
-  readonly leftPanelLabel = signal('Input');
-  readonly rightPanelLabel = signal('Output');
+  readonly leftPanelLabel = signal('');
+  readonly rightPanelLabel = signal('');
+  readonly leftDisplayTabs = computed<Tab[]>(() => this.toDisplayTabs(this.tabs.leftTabs()));
+  readonly rightDisplayTabs = computed<Tab[]>(() => this.toDisplayTabs(this.tabs.rightTabs()));
 
   // ── URL import ───────────────────────────────────────────────────────────
   readonly showUrlImport = signal(false);
@@ -88,18 +82,13 @@ export class JsonWorkbenchComponent implements OnDestroy {
   readonly urlImportLoading = signal(false);
   readonly urlImportTarget = signal<'left' | 'right'>('left');
 
-  // ── Autosave indicator ───────────────────────────────────────────────────
-  readonly lastSavedAt = signal<Date | null>(null);
-  readonly autosavedLabel = computed<string>(() => {
-    const d = this.lastSavedAt();
-    if (!d) return '';
-    return `Autosaved ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-  });
-
-  // ── Download confirmation ────────────────────────────────────────────────
-  /** true = pretty download pending; false = min download pending */
-  private readonly pendingDownloadIsPretty = signal(true);
-  readonly showConfirmDownload = signal(false);
+  readonly showConfirmPanelTransfer = signal(false);
+  private readonly pendingPanelTransfer = signal<PanelTransferDirection | null>(null);
+  readonly panelTransferConfirmMessage = computed(() => (
+    this.pendingPanelTransfer() === 'right-to-left'
+      ? 'This will replace editor A with the current content from editor B.'
+      : 'This will replace editor B with the current content from editor A.'
+  ));
 
   // ── Diff navigation state ────────────────────────────────────────────────────
   readonly currentHunkIndex = signal(-1);
@@ -109,6 +98,15 @@ export class JsonWorkbenchComponent implements OnDestroy {
 
   /** Derived theme for Monaco editors. */
   readonly monacoTheme = computed<'dark' | 'light'>(() => this.store.themeMode());
+  readonly panelsHaveSameMode = computed(() => this.store.leftMode() === this.store.rightMode());
+  readonly canComparePanels = computed(() => !this.isMobileLayout() && this.panelsHaveSameMode());
+  readonly compareTooltip = computed(() => (
+    this.isMobileLayout()
+      ? 'Compare is available in two-panel view'
+      : this.panelsHaveSameMode()
+        ? 'Compare (Ctrl+Shift+D)'
+        : 'Select the same type in both panels to compare'
+  ));
 
   /** Diff decorations for each panel (empty when diff is OFF).
    * schedule(baseline, working) → leftDecorations = baseline side (Output),
@@ -149,11 +147,20 @@ export class JsonWorkbenchComponent implements OnDestroy {
       }
     });
 
+    effect(() => {
+      if (this.store.showDiff() && !this.panelsHaveSameMode()) {
+        this.store.showDiff.set(false);
+        this.diffService.clear();
+        this.currentHunkIndex.set(-1);
+        this.store.setStatusMessage('Compare is only available when both panels use the same type.');
+      }
+    });
+
     // Schedule diff whenever editor content changes (only when diff mode is ON)
     effect(() => {
       const baseline = this.store.baselineText();
       const working = this.store.rawText();
-      if (this.store.showDiff()) {
+      if (this.store.showDiff() && this.panelsHaveSameMode()) {
         this.currentHunkIndex.set(-1);
         this.diffService.schedule(baseline, working);
       }
@@ -166,12 +173,6 @@ export class JsonWorkbenchComponent implements OnDestroy {
       if (cur >= count) {
         this.currentHunkIndex.set(count > 0 ? count - 1 : -1);
       }
-    });
-
-    // Track last save time — the store auto-persists on every rawText change
-    effect(() => {
-      this.store.rawText(); // track changes
-      this.lastSavedAt.set(new Date());
     });
   }
 
@@ -220,73 +221,66 @@ export class JsonWorkbenchComponent implements OnDestroy {
 
   // ── Per-panel format / minify / copy ─────────────────────────────────────────
 
-  onFormatLeft():  void { this.actions.formatPanel('left');  }
-  onFormatRight(): void { this.actions.formatPanel('right'); }
-  onMinifyLeft():  void { this.actions.minifyPanel('left');  }
-  onMinifyRight(): void { this.actions.minifyPanel('right'); }
+  onFormatPanel(panel: ActivePanel): void {
+    this.store.setActivePanel(panel);
+    this.actions.formatPanel(panel);
+  }
+
+  onMinifyPanel(panel: ActivePanel): void {
+    this.store.setActivePanel(panel);
+    this.actions.minifyPanel(panel);
+  }
+
+  onCleanPanel(panel: ActivePanel): void {
+    this.store.setActivePanel(panel);
+    this.actions.cleanPanel(panel);
+  }
+
+  onFormatLeft():  void { this.onFormatPanel('left');  }
+  onFormatRight(): void { this.onFormatPanel('right'); }
+  onMinifyLeft():  void { this.onMinifyPanel('left');  }
+  onMinifyRight(): void { this.onMinifyPanel('right'); }
 
   onCopyLeft  = (): Promise<void> => this.actions.copyPanel('left');
   onCopyRight = (): Promise<void> => this.actions.copyPanel('right');
 
   // ── Transfer between panels ──────────────────────────────────────────────────
 
-  onCopyLeftToRight(): void { this.actions.copyLeftToRight(); }
-  onCopyRightToLeft(): void { this.actions.copyRightToLeft(); }
+  onCopyLeftToRight(): void { this.confirmPanelTransfer('left-to-right'); }
+  onCopyRightToLeft(): void { this.confirmPanelTransfer('right-to-left'); }
 
-  // ── Global toolbar actions ───────────────────────────────────────────────────
-
-  onFormatPressed(): void {
-    this.actions.formatActivePanel();
-  }
-
-  onMinifyPressed(): void {
-    this.actions.minifyActivePanel();
-  }
-
-  async onCopyPressed(): Promise<void> {
-    await this.actions.copyPanel(this.store.activePanel());
-  }
-
-  async onPastePressed(): Promise<void> {
-    await this.actions.pasteFromClipboard();
-  }
-
-  onDownloadPrettyPressed(): void { this.triggerDownload(true);  }
-  onDownloadMinPressed():   void { this.triggerDownload(false); }
-
-  private triggerDownload(pretty: boolean): void {
-    if (this.settings.confirmDownloads()) {
-      this.pendingDownloadIsPretty.set(pretty);
-      this.showConfirmDownload.set(true);
-    } else {
-      this.executeDownload(pretty);
+  private confirmPanelTransfer(direction: PanelTransferDirection): void {
+    if (this.settings.confirmPanelTransfers()) {
+      this.pendingPanelTransfer.set(direction);
+      this.showConfirmPanelTransfer.set(true);
+      return;
     }
+
+    this.executePanelTransfer(direction);
   }
 
-  onDownloadConfirmClosed(result: ConfirmDialogResult): void {
-    this.showConfirmDownload.set(false);
-    if (!result.confirmed) return;
-    if (result.dontAskAgain) this.settings.setConfirmDownloads(false);
-    this.executeDownload(this.pendingDownloadIsPretty());
+  onPanelTransferConfirmClosed(result: ConfirmDialogResult): void {
+    this.showConfirmPanelTransfer.set(false);
+    const direction = this.pendingPanelTransfer();
+    this.pendingPanelTransfer.set(null);
+
+    if (!result.confirmed || !direction) return;
+    if (result.dontAskAgain) this.settings.setConfirmPanelTransfers(false);
+    this.executePanelTransfer(direction);
   }
 
-  private executeDownload(pretty: boolean): void {
-    try {
-      const label    = pretty ? 'Pretty' : 'Minified';
-      
-      if (pretty) {
-        this.actions.downloadPrettyJson();
-      } else {
-        this.actions.downloadMinifiedJson();
-      }
-      this.store.setStatusMessage(`${label} JSON download started.`);
-    } catch (error) {
-      this.store.setStatusMessage(this.toActionError('Download failed', error));
+  private executePanelTransfer(direction: PanelTransferDirection): void {
+    if (direction === 'left-to-right') {
+      this.actions.copyLeftToRight();
+      return;
     }
+
+    this.actions.copyRightToLeft();
   }
 
-  async onOpenFilePressed(): Promise<void> {
-    await this.operations.openFileIntoActivePanel();
+  async onOpenFilePressed(panel: ActivePanel = this.store.activePanel()): Promise<void> {
+    this.store.setActivePanel(panel);
+    await this.operations.openFileIntoPanel(panel);
   }
 
   onFileDropped         = (file: File): Promise<void> => this.operations.loadFileIntoPanel(file, 'left');
@@ -296,21 +290,12 @@ export class JsonWorkbenchComponent implements OnDestroy {
   onLeftModeChanged(mode: LeftPanelMode):  void { this.operations.setLeftMode(mode);  }
   onRightModeChanged(mode: LeftPanelMode): void { this.operations.setRightMode(mode); }
 
-  onSetBaselinePressed(): void {
-    this.store.setBaselineText(this.store.rawText());
-    this.store.setStatusMessage('Right editor updated from left editor.');
-  }
-
-  onResetBaselinePressed(): void {
-    const success = this.store.resetToBaseline();
-    this.store.setStatusMessage(success ? 'Left editor updated from right editor.' : 'Right editor is empty.');
-  }
-
-  onToggleSettingsPressed(): void {
-    this.showSettings.update((v) => !v);
-  }
-
   onToggleDiffPressed(): void {
+    if (!this.store.showDiff() && !this.canComparePanels()) {
+      this.store.setStatusMessage('Choose the same type in both panels before comparing.');
+      return;
+    }
+
     this.store.toggleDiff();
     if (!this.store.showDiff()) {
       this.diffService.clear();
@@ -343,10 +328,11 @@ export class JsonWorkbenchComponent implements OnDestroy {
 
   // ── URL import ────────────────────────────────────────────────────────────
 
-  onImportUrlPressed(): void {
+  onImportUrlPressed(panel: ActivePanel = this.store.activePanel()): void {
+    this.store.setActivePanel(panel);
     this.showUrlImport.update((v) => !v);
     this.urlImportValue.set('');
-    this.urlImportTarget.set('left');
+    this.urlImportTarget.set(panel);
   }
 
   async onUrlImportSubmit(): Promise<void> {
@@ -416,5 +402,12 @@ export class JsonWorkbenchComponent implements OnDestroy {
   private toActionError(prefix: string, error: unknown): string {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error.';
     return `${prefix}: ${errorMessage}`;
+  }
+
+  private toDisplayTabs(tabs: Tab[]): Tab[] {
+    return tabs.map((tab, index) => ({
+      ...tab,
+      label: /^(Input|Output)\s+\d+$/i.test(tab.label) ? `Doc ${index + 1}` : tab.label,
+    }));
   }
 }

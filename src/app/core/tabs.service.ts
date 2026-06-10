@@ -88,7 +88,7 @@ export class TabsService {
   addLeftTab(currentContent: string): Tab {
     this.saveLeftContent(this._leftActiveId(), currentContent);
     const id = crypto.randomUUID();
-    const label = `Input ${this._leftTabs().length + 1}`;
+    const label = `Doc ${this._leftTabs().length + 1}`;
     const tab: Tab = { id, label };
     this._leftTabs.update((ts) => [...ts, tab]);
     this._leftActiveId.set(id);
@@ -99,7 +99,7 @@ export class TabsService {
   addRightTab(currentContent: string): Tab {
     this.saveRightContent(this._rightActiveId(), currentContent);
     const id = crypto.randomUUID();
-    const label = `Output ${this._rightTabs().length + 1}`;
+    const label = `Doc ${this._rightTabs().length + 1}`;
     const tab: Tab = { id, label };
     this._rightTabs.update((ts) => [...ts, tab]);
     this._rightActiveId.set(id);
@@ -186,7 +186,7 @@ export class TabsService {
         const rActive = this.storage.read(RIGHT_ACTIVE_KEY);
         this._rightActiveId.set(savedRight.some((t) => t.id === rActive) ? rActive : savedRight[0].id);
       } else {
-        const rt: Tab = { id: crypto.randomUUID(), label: 'Output 1' };
+        const rt: Tab = { id: crypto.randomUUID(), label: 'Doc 1' };
         this._rightTabs.set([rt]);
         this._rightActiveId.set(rt.id);
       }
@@ -201,8 +201,8 @@ export class TabsService {
     }
 
     // Fresh start
-    const lt: Tab = { id: crypto.randomUUID(), label: 'Input 1' };
-    const rt: Tab = { id: crypto.randomUUID(), label: 'Output 1' };
+    const lt: Tab = { id: crypto.randomUUID(), label: 'Doc 1' };
+    const rt: Tab = { id: crypto.randomUUID(), label: 'Doc 1' };
     this._leftTabs.set([lt]);
     this._leftActiveId.set(lt.id);
     this._rightTabs.set([rt]);
@@ -213,7 +213,7 @@ export class TabsService {
     const legacyActive = this.storage.read(LEGACY_ACTIVE_KEY);
 
     // Migrate left content for each old tab
-    const leftTabs: Tab[] = legacyTabs.map((t, i) => ({ id: t.id, label: `Input ${i + 1}` }));
+    const leftTabs: Tab[] = legacyTabs.map((t, i) => ({ id: t.id, label: `Doc ${i + 1}` }));
     for (const t of legacyTabs) {
       const content = this.storage.read(legacyTabLeftKey(t.id))
         || this.storage.read(legacyTabKey(t.id));
@@ -227,7 +227,7 @@ export class TabsService {
     // For the right panel, take the active tab's right content
     const activeId = lExists ? legacyActive : leftTabs[0].id;
     const rightContent = this.storage.read(legacyTabRightKey(activeId));
-    const rt: Tab = { id: crypto.randomUUID(), label: 'Output 1' };
+    const rt: Tab = { id: crypto.randomUUID(), label: 'Doc 1' };
     if (rightContent) this.storage.write(rightContentKey(rt.id), rightContent);
     this._rightTabs.set([rt]);
     this._rightActiveId.set(rt.id);

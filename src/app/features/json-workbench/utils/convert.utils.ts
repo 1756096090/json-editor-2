@@ -9,6 +9,8 @@ type JsonValue = JsonPrimitive | JsonObject | JsonArray;
 interface JsonObject { [key: string]: JsonValue; }
 type JsonArray = JsonValue[];
 
+export type XmlEncoding = 'UTF-8' | 'UTF-16LE' | 'UTF-16BE' | 'ISO-8859-1' | 'Windows-1252';
+
 // ── CSV ─────────────────────────────────────────────────────────────────────
 
 function csvEscape(v: unknown): string {
@@ -122,8 +124,8 @@ function serializeXmlValue(value: JsonValue, tag: string, indent: string): strin
 /**
  * Convert a JSON value to an XML string with a <root> wrapper.
  */
-export function jsonToXml(value: JsonValue): string {
-  const header = '<?xml version="1.0" encoding="UTF-8"?>';
+export function jsonToXml(value: JsonValue, encoding: XmlEncoding = 'UTF-8'): string {
+  const header = `<?xml version="1.0" encoding="${encoding}"?>`;
   if (Array.isArray(value)) {
     if (value.length === 0) return `${header}\n<root/>`;
     const items = value.map(item => serializeXmlValue(item, 'item', '  ')).join('\n');

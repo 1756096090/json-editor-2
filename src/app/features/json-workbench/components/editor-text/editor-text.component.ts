@@ -159,6 +159,26 @@ export class EditorTextComponent implements OnInit {
     this.editor?.focus();
   }
 
+  /** Transform the selected text. Returns false when there is no editable selection. */
+  transformSelection(transform: (selectedText: string) => string): boolean {
+    if (!this.editor || this.readOnly()) return false;
+    const model = this.editor.getModel();
+    const selection = this.editor.getSelection();
+    if (!model || !selection || selection.isEmpty()) return false;
+
+    const selectedText = model.getValueInRange(selection);
+    const replacement = transform(selectedText);
+    this.editor.executeEdits('selection-transform', [
+      {
+        range: selection,
+        text: replacement,
+        forceMoveMarkers: true,
+      },
+    ]);
+    this.editor.focus();
+    return true;
+  }
+
   /** Get the underlying Monaco editor instance (for diff, etc.). */
   getEditorInstance(): monacoNs.editor.IStandaloneCodeEditor | null {
     return this.editor;

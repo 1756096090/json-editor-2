@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BaseFormatHandler } from './base/base-format-handler';
 import { ColorRule } from './models/color-rule.model';
+import { tryAutoFixJson, type AutoFixResult } from '../../features/json-workbench/utils/auto-fix-json';
 
 @Injectable({ providedIn: 'root' })
 export class JsonFormatHandler extends BaseFormatHandler {
@@ -72,5 +73,9 @@ export class JsonFormatHandler extends BaseFormatHandler {
         description: 'Numeric value',
       },
     ];
+  }
+
+  autoFix(content: string): AutoFixResult {
+    return tryAutoFixJson(content);
   }
 }

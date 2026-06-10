@@ -1,25 +1,56 @@
 ﻿<section class="workbench">
-  @if (!toolbarCollapsed()) {
-    <app-toolbar
-      [valid]="store.isValidJson()"
-      [errorMessage]="store.parseErrorMessage()"
-      [themeMode]="store.themeMode()"
-      [diffOpen]="store.showDiff()"
-      [autosavedLabel]="autosavedLabel()"
-      [collapsed]="false"
-      (formatPressed)="onFormatPressed()"
-      (minifyPressed)="onMinifyPressed()"
-      (copyPressed)="onCopyPressed()"
-      (pastePressed)="onPastePressed()"
-      (downloadPrettyPressed)="onDownloadPrettyPressed()"
-      (downloadMinPressed)="onDownloadMinPressed()"
-      (openFilePressed)="onOpenFilePressed()"
-      (importUrlPressed)="onImportUrlPressed()"
-      (toggleDiffPressed)="onToggleDiffPressed()"
-      (toggleSettingsPressed)="onToggleSettingsPressed()"
-      (toggleCollapse)="toolbarCollapsed.set(true)"
-    />
-  }
+  <ng-template #panelActions let-panel="panel">
+    <app-ui-button
+      size="sm"
+      variant="default"
+      tooltipText="Open a .json file from disk"
+      (pressed)="onOpenFilePressed(panel)"
+    >
+      Open
+    </app-ui-button>
+    <app-ui-button
+      size="sm"
+      variant="ghost"
+      tooltipText="Import JSON from a URL"
+      (pressed)="onImportUrlPressed(panel)"
+    >
+      URL
+    </app-ui-button>
+    <app-ui-button
+      size="sm"
+      variant="accent"
+      tooltipText="Format JSON (Ctrl+Shift+F)"
+      (pressed)="onFormatPanel(panel)"
+    >
+      Format
+    </app-ui-button>
+    <app-ui-button
+      size="sm"
+      variant="ghost"
+      tooltipText="Minify JSON (Ctrl+M)"
+      (pressed)="onMinifyPanel(panel)"
+    >
+      Minify
+    </app-ui-button>
+    <app-ui-button
+      size="sm"
+      variant="ghost"
+      tooltipText="Clean JSON"
+      (pressed)="onCleanPanel(panel)"
+    >
+      Clean
+    </app-ui-button>
+    <app-ui-button
+      size="sm"
+      [variant]="store.showDiff() ? 'active' : 'ghost'"
+      [ariaPressed]="store.showDiff()"
+      [disabled]="!canComparePanels()"
+      [tooltipText]="compareTooltip()"
+      (pressed)="onToggleDiffPressed()"
+    >
+      Compare
+    </app-ui-button>
+  </ng-template>
 
   @if (showUrlImport()) {
     <div class="url-import-bar" role="search" aria-label="Import JSON from URL">
@@ -29,12 +60,14 @@
           class="url-import-bar__target-btn"
           [class.url-import-bar__target-btn--active]="urlImportTarget() === 'left'"
           (click)="urlImportTarget.set('left')"
-        >Input</button>
+          aria-label="Load into editor A"
+        >A</button>
         <button
           class="url-import-bar__target-btn"
           [class.url-import-bar__target-btn--active]="urlImportTarget() === 'right'"
           (click)="urlImportTarget.set('right')"
-        >Output</button>
+          aria-label="Load into editor B"
+        >B</button>
       </div>
       <input
         id="url-import-input"
@@ -76,19 +109,10 @@
   <app-toast [message]="store.statusMessage()" />
 
   <div class="workbench__dual-tabs">
-    @if (toolbarCollapsed()) {
-      <button
-        class="workbench__toolbar-expand"
-        type="button"
-        title="Show toolbar"
-        aria-label="Show toolbar"
-        (click)="toolbarCollapsed.set(false)"
-      >▾</button>
-    }
     <div class="workbench__tab-section" [style.flex-basis]="splitRatio() + '%'" [style.max-width]="splitRatio() + '%'">
       <app-tab-bar
-        [panelLabel]="leftPanelLabel()"
-        [tabs]="tabs.leftTabs()"
+        panelLabel=""
+        [tabs]="leftDisplayTabs()"
         [activeTabId]="tabs.leftActiveId()"
         (tabClicked)="onLeftTabSwitch($event)"
         (tabClosed)="onLeftTabClose($event)"
@@ -99,8 +123,8 @@
     @if (!isMobileLayout()) {
       <div class="workbench__tab-section workbench__tab-section--right" [style.flex-basis]="(100 - splitRatio()) + '%'" [style.max-width]="(100 - splitRatio()) + '%'">
         <app-tab-bar
-          [panelLabel]="rightPanelLabel()"
-          [tabs]="tabs.rightTabs()"
+          panelLabel=""
+          [tabs]="rightDisplayTabs()"
           [activeTabId]="tabs.rightActiveId()"
           (tabClicked)="onRightTabSwitch($event)"
           (tabClosed)="onRightTabClose($event)"
@@ -118,7 +142,7 @@
         #leftPanel
         split-start
         [rawText]="store.rawText()"
-        [panelTitle]="leftPanelLabel()"
+        panelTitle=""
         [leftMode]="store.leftMode()"
         [jsonValue]="store.workingJson()"
         [theme]="monacoTheme()"
@@ -134,13 +158,20 @@
         (formatRequested)="onFormatLeft()"
         (minifyRequested)="onMinifyLeft()"
         (copyRequested)="onCopyLeft()"
-      />
+      >
+        <div editorPanelActions class="workbench__input-actions" role="toolbar" aria-label="Editor actions">
+          <ng-container
+            [ngTemplateOutlet]="panelActions"
+            [ngTemplateOutletContext]="{ panel: 'left' }"
+          />
+        </div>
+      </app-editor-panel>
 
       <app-editor-panel
         #rightPanel
         split-end
         [rawText]="store.baselineText()"
-        [panelTitle]="rightPanelLabel()"
+        panelTitle=""
         [leftMode]="store.rightMode()"
         [jsonValue]="store.baselineJson()"
         [theme]="monacoTheme()"
@@ -156,29 +187,36 @@
         (formatRequested)="onFormatRight()"
         (minifyRequested)="onMinifyRight()"
         (copyRequested)="onCopyRight()"
-      />
+      >
+        <div editorPanelActions class="workbench__input-actions" role="toolbar" aria-label="Editor actions">
+          <ng-container
+            [ngTemplateOutlet]="panelActions"
+            [ngTemplateOutletContext]="{ panel: 'right' }"
+          />
+        </div>
+      </app-editor-panel>
       @if (!isMobileLayout()) {
         <div split-gutter class="workbench__transfer" role="group" aria-label="Transfer actions">
           <app-ui-button
             size="sm"
             variant="ghost"
-            ariaLabel="Copy Input to Output"
-            tooltipText="Copy Input → Output"
+            ariaLabel="Copy editor A to editor B"
+            tooltipText="Copy A → B"
             (pressed)="onCopyLeftToRight()"
           >→</app-ui-button>
 
           <app-ui-button
             size="sm"
             variant="ghost"
-            ariaLabel="Copy Output to Input"
-            tooltipText="Copy Output → Input"
+            ariaLabel="Copy editor B to editor A"
+            tooltipText="Copy B → A"
             (pressed)="onCopyRightToLeft()"
           >←</app-ui-button>
 
           <app-ui-button
             size="sm"
             variant="ghost"
-            ariaLabel="Swap Input and Output panels"
+            ariaLabel="Swap editor panels"
             tooltipText="Swap panels"
             (pressed)="onSwapPanels()"
           >⇅</app-ui-button>
@@ -187,9 +225,9 @@
             size="sm"
             [variant]="store.showDiff() ? 'active' : 'ghost'"
             [ariaPressed]="store.showDiff()"
-            [disabled]="isMobileLayout()"
+            [disabled]="!canComparePanels()"
             ariaLabel="Compare (toggle diff)"
-            tooltipText="Compare (Ctrl+Shift+D)"
+            [tooltipText]="compareTooltip()"
             (pressed)="onToggleDiffPressed()"
           >⇄</app-ui-button>
         </div>
@@ -198,21 +236,13 @@
   </div>
 </section>
 
-<!-- ── Download confirmation dialog ─────────────────────────────── -->
-@if (showConfirmDownload()) {
+@if (showConfirmPanelTransfer()) {
   <app-confirm-dialog
-    title="Confirmar descarga"
-    [message]="store.isValidJson() ? '&#191;Deseas descargar el archivo JSON?' : ''"
-    confirmText="Descargar"
+    title="Confirmar copia"
+    [message]="panelTransferConfirmMessage()"
+    confirmText="Copiar"
     cancelText="Cancelar"
     [showDontAsk]="true"
-    [confirmDisabled]="!store.isValidJson()"
-    [warningText]="store.isValidJson() ? '' : 'El JSON actual no es v&#225;lido. Corr&#237;gelo antes de descargar.'"
-    (closed)="onDownloadConfirmClosed($event)"
+    (closed)="onPanelTransferConfirmClosed($event)"
   />
-}
-
-<!-- ── Settings side-panel ───────────────────────────────────────── -->
-@if (showSettings()) {
-  <app-settings-panel (closed)="showSettings.set(false)" />
 }

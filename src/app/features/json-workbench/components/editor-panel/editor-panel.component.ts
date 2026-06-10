@@ -24,8 +24,8 @@ import { ButtonComponent } from '../../../../components/ui/button/button.compone
 import { ConvertedViewComponent } from '../converted-view/converted-view.component';
 import type { JsonErrorPosition } from '../../../../core/json-error.utils';
 import type { DiffLineDecoration } from '../../utils/diff-engine.types';
-import { jsonToYaml } from '../../../tools/json-to-yaml/json-yaml.utils';
-import { jsonToCsv, jsonToXml } from '../../utils/convert.utils';
+import { jsonToYaml, yamlToJsonValue } from '../../../tools/json-to-yaml/json-yaml.utils';
+import { jsonToCsv, jsonToXml, type XmlEncoding } from '../../utils/convert.utils';
 import { downloadTextFile, copyTextToClipboard } from '../../utils/file-utils';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -36,6 +36,14 @@ const VIEW_MODES: SegmentItem[] = [
   { value: 'xml',   label: 'XML'   },
   { value: 'tree',  label: 'Tree'  },
   { value: 'table', label: 'Table' },
+];
+
+const XML_ENCODING_OPTIONS: XmlEncoding[] = [
+  'UTF-8',
+  'UTF-16LE',
+  'UTF-16BE',
+  'ISO-8859-1',
+  'Windows-1252',
 ];
 
 @Component({
@@ -96,6 +104,8 @@ export class EditorPanelComponent {
 
   // ── Local state ────────────────────────────────────────────────────────────
   readonly viewModes = VIEW_MODES;
+  readonly xmlEncodingOptions = XML_ENCODING_OPTIONS;
+  readonly xmlEncoding = signal<XmlEncoding>('UTF-8');
   readonly draggingFile = signal(false);
 
   /** YAML representation of the current valid JSON. Empty when JSON is invalid. */
@@ -127,7 +137,7 @@ export class EditorPanelComponent {
     const v = this.jsonValue();
     if (v === null || v === undefined) return '';
     try {
-      return jsonToXml(v as Parameters<typeof jsonToXml>[0]);
+      return jsonToXml(v as Parameters<typeof jsonToXml>[0], this.xmlEncoding());
     } catch (e) {
       console.error('[XML] conversion error:', e);
       return '';
@@ -255,8 +265,42 @@ export class EditorPanelComponent {
     this.monacoEditor()?.focusEditor();
   }
 
+  transformSelectionToCamelCase(): void {
+    this.transformSelection(toCamelCase);
+  }
+
+  transformSelectionToUpperCase(): void {
+    this.transformSelection((value) => value.toUpperCase());
+  }
+
+  transformSelectionToLowerCase(): void {
+    this.transformSelection((value) => value.toLowerCase());
+  }
+
+  private transformSelection(transform: (selectedText: string) => string): void {
+    const changed = this.monacoEditor()?.transformSelection(transform) ?? false;
+    if (!changed) {
+      this.focusEditor();
+    }
+  }
+
   setMode(mode: string): void {
     this.modeChange.emit(mode as LeftPanelMode);
+  }
+
+  setXmlEncoding(encoding: string): void {
+    if (XML_ENCODING_OPTIONS.includes(encoding as XmlEncoding)) {
+      this.xmlEncoding.set(encoding as XmlEncoding);
+    }
+  }
+
+  onYamlContentChanged(value: string): void {
+    try {
+      const parsed = yamlToJsonValue(value);
+      this.rawTextChange.emit(JSON.stringify(parsed, null, 2));
+    } catch (error) {
+      console.warn('[YAML] edit parse error:', error);
+    }
   }
 
   onDragEnter(event: DragEvent): void {
@@ -315,10 +359,32 @@ export class EditorPanelComponent {
     }
     if (mode === 'xml') {
       const config = this.exportConfig.xml;
-      downloadTextFile(config.fileName, this.xmlText(), config.mimeType);
+      downloadTextFile(config.fileName, this.xmlText(), config.mimeType, this.xmlEncoding());
       return;
     }
     downloadTextFile('output.json', this.rawText(), 'application/json');
   }
+}
+
+function toCamelCase(value: string): string {
+  return value
+    .split(/(\s+)/)
+    .map((part) => (/^\s+$/.test(part) ? part : camelCaseToken(part)))
+    .join('');
+}
+
+function camelCaseToken(value: string): string {
+  const words = value
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .split(/[^a-zA-Z0-9]+/)
+    .filter(Boolean);
+
+  if (words.length === 0) return value;
+  return words
+    .map((word, index) => {
+      const lower = word.toLowerCase();
+      return index === 0 ? lower : lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join('');
 }
 

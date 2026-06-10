@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { WorkbenchStore } from '../state/workbench.store';
+import { ActivePanel, JsonValue, WorkbenchStore } from '../state/workbench.store';
 import { TabsService } from '../../../core/tabs.service';
 import { copyTextToClipboard, downloadTextFile, readTextFromClipboard } from '../utils/file-utils';
 
@@ -40,7 +40,7 @@ export class WorkbenchActionsFacade {
   }
 
   /** Minify JSON in specific panel */
-  minifyPanel(panel: 'left' | 'right'): boolean {
+  minifyPanel(panel: ActivePanel): boolean {
     const success = panel === 'left'
       ? this.store.minifyJson()
       : this.store.minifyBaselineJson();
@@ -48,6 +48,34 @@ export class WorkbenchActionsFacade {
     const msg = success ? `${label} minified.` : `Cannot minify invalid JSON.`;
     this.store.setStatusMessage(msg);
     return success;
+  }
+
+  cleanPanel(panel: ActivePanel): boolean {
+    const json = panel === 'left' ? this.store.currentJson() : this.store.baselineJson();
+    const label = panel === 'left' ? 'Input' : 'Output';
+    if (json === null) {
+      this.store.setStatusMessage('Cannot clean invalid JSON.');
+      return false;
+    }
+
+    const before = countEntries(json);
+    const fallback: JsonValue = Array.isArray(json) ? [] : {};
+    const result = cleanJson(json) ?? fallback;
+    const removed = before - countEntries(result);
+    const nextText = JSON.stringify(result, null, 2);
+
+    if (panel === 'left') {
+      this.store.setRawText(nextText);
+    } else {
+      this.store.setBaselineText(nextText);
+    }
+
+    this.store.setStatusMessage(
+      removed > 0
+        ? `${label} cleaned. Removed ${removed} empty ${removed === 1 ? 'value' : 'values'}.`
+        : `${label} cleaned. Nothing to remove.`,
+    );
+    return true;
   }
 
   /** Copy panel content to clipboard */
@@ -133,4 +161,40 @@ export class WorkbenchActionsFacade {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error.';
     return `${prefix}: ${errorMessage}`;
   }
+}
+
+function cleanJson(value: JsonValue): JsonValue | undefined {
+  if (value === null || value === '') return undefined;
+
+  if (Array.isArray(value)) {
+    const cleaned = value
+      .map((item) => cleanJson(item))
+      .filter((item): item is JsonValue => item !== undefined);
+    return cleaned.length === 0 ? undefined : cleaned;
+  }
+
+  if (value !== null && typeof value === 'object') {
+    const cleaned: Record<string, JsonValue> = {};
+    for (const [key, child] of Object.entries(value)) {
+      const result = cleanJson(child);
+      if (result !== undefined) {
+        cleaned[key] = result;
+      }
+    }
+    return Object.keys(cleaned).length === 0 ? undefined : cleaned;
+  }
+
+  return value;
+}
+
+function countEntries(value: JsonValue): number {
+  if (Array.isArray(value)) {
+    return value.reduce<number>((count, child) => count + 1 + countEntries(child), 0);
+  }
+
+  if (value !== null && typeof value === 'object') {
+    return Object.values(value).reduce<number>((count, child) => count + 1 + countEntries(child), 0);
+  }
+
+  return 0;
 }
