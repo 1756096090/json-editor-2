@@ -1,74 +1,142 @@
 ﻿<section class="workbench">
   <ng-template #panelActions let-panel="panel">
-    <app-ui-button
-      size="sm"
-      variant="default"
-      tooltipText="Open a .json file from disk"
-      (pressed)="onOpenFilePressed(panel)"
-    >
-      Open
-    </app-ui-button>
-    <app-ui-button
-      size="sm"
-      variant="ghost"
-      tooltipText="Import JSON from a URL"
-      (pressed)="onImportUrlPressed(panel)"
-    >
-      URL
-    </app-ui-button>
-    <app-ui-button
-      size="sm"
-      variant="accent"
-      tooltipText="Format JSON (Ctrl+Shift+F)"
-      (pressed)="onFormatPanel(panel)"
-    >
-      Format
-    </app-ui-button>
-    <app-ui-button
-      size="sm"
-      variant="ghost"
-      tooltipText="Minify JSON (Ctrl+M)"
-      (pressed)="onMinifyPanel(panel)"
-    >
-      Minify
-    </app-ui-button>
-    <app-ui-button
-      size="sm"
-      variant="ghost"
-      tooltipText="Clean JSON"
-      (pressed)="onCleanPanel(panel)"
-    >
-      Clean
-    </app-ui-button>
-    <app-ui-button
-      size="sm"
-      [variant]="store.showDiff() ? 'active' : 'ghost'"
-      [ariaPressed]="store.showDiff()"
-      [disabled]="!canComparePanels()"
-      [tooltipText]="compareTooltip()"
-      (pressed)="onToggleDiffPressed()"
-    >
-      Compare
-    </app-ui-button>
+    @if (isCsvConverter()) {
+      @if (panel === 'left') {
+        <app-ui-button
+          size="sm"
+          variant="default"
+          tooltipText="Open a .json file from disk"
+          (pressed)="onOpenFilePressed('left')"
+        >
+          Open
+        </app-ui-button>
+        <app-ui-button
+          size="sm"
+          variant="ghost"
+          tooltipText="Import JSON from a URL"
+          (pressed)="onImportUrlPressed('left')"
+        >
+          URL
+        </app-ui-button>
+        <app-ui-button
+          size="sm"
+          variant="ghost"
+          tooltipText="Format input JSON"
+          (pressed)="onFormatPanel('left')"
+        >
+          Format
+        </app-ui-button>
+        <app-ui-button
+          size="sm"
+          variant="accent"
+          tooltipText="Convert JSON input to CSV output"
+          (pressed)="onConvertToCsv()"
+        >
+          Convert to CSV
+        </app-ui-button>
+      } @else {
+        <app-ui-button
+          size="sm"
+          variant="default"
+          [disabled]="!hasCsvOutput()"
+          tooltipText="Copy CSV output"
+          (pressed)="onCopyCsvOutput()"
+        >
+          Copy CSV
+        </app-ui-button>
+        <app-ui-button
+          size="sm"
+          variant="ghost"
+          [disabled]="!hasCsvOutput()"
+          tooltipText="Download CSV output"
+          (pressed)="onDownloadCsvOutput()"
+        >
+          Download CSV
+        </app-ui-button>
+      }
+    } @else {
+      <app-ui-button
+        size="sm"
+        variant="default"
+        tooltipText="Open a .json file from disk"
+        (pressed)="onOpenFilePressed(panel)"
+      >
+        Open
+      </app-ui-button>
+      <app-ui-button
+        size="sm"
+        variant="ghost"
+        tooltipText="Import JSON from a URL"
+        (pressed)="onImportUrlPressed(panel)"
+      >
+        URL
+      </app-ui-button>
+      <app-ui-button
+        size="sm"
+        variant="accent"
+        tooltipText="Format JSON (Ctrl+Shift+F)"
+        (pressed)="onFormatPanel(panel)"
+      >
+        Format
+      </app-ui-button>
+      <app-ui-button
+        size="sm"
+        variant="ghost"
+        tooltipText="Minify JSON (Ctrl+M)"
+        (pressed)="onMinifyPanel(panel)"
+      >
+        Minify
+      </app-ui-button>
+      <app-ui-button
+        size="sm"
+        variant="ghost"
+        tooltipText="Clean JSON"
+        (pressed)="onCleanPanel(panel)"
+      >
+        Clean
+      </app-ui-button>
+      @if (isJsonPanel(panel)) {
+        <app-ui-button
+          size="sm"
+          variant="ghost"
+          tooltipText="Sort object keys alphabetically"
+          (pressed)="onSortPanel(panel)"
+        >
+          Sort
+        </app-ui-button>
+      }
+      <app-ui-button
+        size="sm"
+        [variant]="store.showDiff() ? 'active' : 'ghost'"
+        [ariaPressed]="store.showDiff()"
+        [disabled]="!canComparePanels()"
+        [tooltipText]="compareTooltip()"
+        (pressed)="onToggleDiffPressed()"
+      >
+        Compare
+      </app-ui-button>
+    }
   </ng-template>
 
   @if (showUrlImport()) {
     <div class="url-import-bar" role="search" aria-label="Import JSON from URL">
       <label class="url-import-bar__label" for="url-import-input">URL</label>
-      <div class="url-import-bar__target" role="group" aria-label="Target panel">
-        <button
-          class="url-import-bar__target-btn"
-          [class.url-import-bar__target-btn--active]="urlImportTarget() === 'left'"
-          (click)="urlImportTarget.set('left')"
-          aria-label="Load into editor A"
-        >A</button>
-        <button
-          class="url-import-bar__target-btn"
-          [class.url-import-bar__target-btn--active]="urlImportTarget() === 'right'"
-          (click)="urlImportTarget.set('right')"
-          aria-label="Load into editor B"
-        >B</button>
-      </div>
+      @if (!isCsvConverter()) {
+        <div class="url-import-bar__target" role="group" aria-label="Target panel">
+          <button
+            class="url-import-bar__target-btn"
+            [class.url-import-bar__target-btn--active]="urlImportTarget() === 'left'"
+            (click)="urlImportTarget.set('left')"
+            aria-label="Load into editor A"
+          >A</button>
+          <button
+            class="url-import-bar__target-btn"
+            [class.url-import-bar__target-btn--active]="urlImportTarget() === 'right'"
+            (click)="urlImportTarget.set('right')"
+            aria-label="Load into editor B"
+          >B</button>
+        </div>
+      }
       <input
         id="url-import-input"
         class="url-import-bar__input"
@@ -108,42 +176,52 @@
 
   <app-toast [message]="store.statusMessage()" />
 
-  <div class="workbench__dual-tabs">
-    <div class="workbench__tab-section" [style.flex-basis]="splitRatio() + '%'" [style.max-width]="splitRatio() + '%'">
-      <app-tab-bar
-        panelLabel=""
-        [tabs]="leftDisplayTabs()"
-        [activeTabId]="tabs.leftActiveId()"
-        (tabClicked)="onLeftTabSwitch($event)"
-        (tabClosed)="onLeftTabClose($event)"
-        (addTab)="onAddLeftTab()"
-        (panelLabelChanged)="onLeftPanelLabelChanged($event)"
-      />
+  @if (isCsvConverter()) {
+    <div class="workbench__conversion-flow" aria-label="JSON to CSV workflow">
+      <span class="workbench__conversion-step workbench__conversion-step--active">1. Input JSON</span>
+      <span class="workbench__conversion-arrow" aria-hidden="true">→</span>
+      <span class="workbench__conversion-step">2. Convert</span>
+      <span class="workbench__conversion-arrow" aria-hidden="true">→</span>
+      <span class="workbench__conversion-step" [class.workbench__conversion-step--active]="hasCsvOutput()">3. CSV Output</span>
     </div>
-    @if (!isMobileLayout()) {
-      <div class="workbench__tab-section workbench__tab-section--right" [style.flex-basis]="(100 - splitRatio()) + '%'" [style.max-width]="(100 - splitRatio()) + '%'">
+  } @else {
+    <div class="workbench__dual-tabs">
+      <div class="workbench__tab-section" [style.flex-basis]="splitRatio() + '%'" [style.max-width]="splitRatio() + '%'">
         <app-tab-bar
           panelLabel=""
-          [tabs]="rightDisplayTabs()"
-          [activeTabId]="tabs.rightActiveId()"
-          (tabClicked)="onRightTabSwitch($event)"
-          (tabClosed)="onRightTabClose($event)"
-          (addTab)="onAddRightTab()"
-          (panelLabelChanged)="onRightPanelLabelChanged($event)"
+          [tabs]="leftDisplayTabs()"
+          [activeTabId]="tabs.leftActiveId()"
+          (tabClicked)="onLeftTabSwitch($event)"
+          (tabClosed)="onLeftTabClose($event)"
+          (addTab)="onAddLeftTab()"
+          (panelLabelChanged)="onLeftPanelLabelChanged($event)"
         />
       </div>
-    }
-  </div>
+      @if (!isMobileLayout()) {
+        <div class="workbench__tab-section workbench__tab-section--right" [style.flex-basis]="(100 - splitRatio()) + '%'" [style.max-width]="(100 - splitRatio()) + '%'">
+          <app-tab-bar
+            panelLabel=""
+            [tabs]="rightDisplayTabs()"
+            [activeTabId]="tabs.rightActiveId()"
+            (tabClicked)="onRightTabSwitch($event)"
+            (tabClosed)="onRightTabClose($event)"
+            (addTab)="onAddRightTab()"
+            (panelLabelChanged)="onRightPanelLabelChanged($event)"
+          />
+        </div>
+      }
+    </div>
+  }
 
   <div class="workbench__panels">
     <!-- ── Side-by-side Editor Panels (always visible) ─────── -->
-    <app-split-pane direction="horizontal" storageKey="json-we-format:split-ratio" [hideEnd]="isMobileLayout()" (ratioChange)="splitRatio.set($event)">
+    <app-split-pane direction="horizontal" storageKey="json-we-format:split-ratio" [hideEnd]="!isCsvConverter() && isMobileLayout()" (ratioChange)="splitRatio.set($event)">
       <app-editor-panel
         #leftPanel
         split-start
         [rawText]="store.rawText()"
-        panelTitle=""
-        [leftMode]="store.leftMode()"
+        [panelTitle]="leftPanelTitle()"
+        [leftMode]="leftPanelMode()"
         [jsonValue]="store.workingJson()"
         [theme]="monacoTheme()"
         [isActive]="store.activePanel() === 'left'"
@@ -151,13 +229,12 @@
         [lastValidText]="store.lastValidLeftText()"
         [autoFixEnabled]="settings.autoFixOnPasteEnabled()"
         [diffDecorations]="leftDiffDecorations()"
+        [showModeSelector]="!isCsvConverter()"
+        [textAriaLabel]="isCsvConverter() ? 'JSON input editor' : 'JSON editor'"
         (rawTextChange)="onRawTextChanged($event)"
         (fileDropped)="onFileDropped($event)"
         (modeChange)="onLeftModeChanged($event)"
         (focused)="onLeftPanelFocused()"
-        (formatRequested)="onFormatLeft()"
-        (minifyRequested)="onMinifyLeft()"
-        (copyRequested)="onCopyLeft()"
       >
         <div editorPanelActions class="workbench__input-actions" role="toolbar" aria-label="Editor actions">
           <ng-container
@@ -171,22 +248,26 @@
         #rightPanel
         split-end
         [rawText]="store.baselineText()"
-        panelTitle=""
-        [leftMode]="store.rightMode()"
-        [jsonValue]="store.baselineJson()"
+        [panelTitle]="rightPanelTitle()"
+        [leftMode]="rightPanelMode()"
+        [jsonValue]="csvOutputValue()"
         [theme]="monacoTheme()"
         [isActive]="store.activePanel() === 'right'"
         [errorPosition]="store.rightError()"
         [lastValidText]="store.lastValidRightText()"
         [autoFixEnabled]="false"
         [diffDecorations]="rightDiffDecorations()"
+        [readOnly]="isCsvConverter()"
+        [allowFileDrop]="!isCsvConverter()"
+        [showModeSelector]="!isCsvConverter()"
+        [showValidationState]="!isCsvConverter()"
+        [showConvertedExport]="!isCsvConverter()"
+        [convertedEmptyTitle]="isCsvConverter() ? 'No CSV output yet' : 'No valid JSON to convert'"
+        [convertedEmptyDescription]="isCsvConverter() ? 'Paste valid JSON on the left, then click Convert to CSV.' : 'Switch to Text mode, paste valid JSON, then come back to CSV view.'"
         (rawTextChange)="onBaselineTextChanged($event)"
         (fileDropped)="onBaselineFileDropped($event)"
         (modeChange)="onRightModeChanged($event)"
         (focused)="onRightPanelFocused()"
-        (formatRequested)="onFormatRight()"
-        (minifyRequested)="onMinifyRight()"
-        (copyRequested)="onCopyRight()"
       >
         <div editorPanelActions class="workbench__input-actions" role="toolbar" aria-label="Editor actions">
           <ng-container
@@ -195,7 +276,7 @@
           />
         </div>
       </app-editor-panel>
-      @if (!isMobileLayout()) {
+      @if (!isCsvConverter() && !isMobileLayout()) {
         <div split-gutter class="workbench__transfer" role="group" aria-label="Transfer actions">
           <app-ui-button
             size="sm"

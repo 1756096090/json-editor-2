@@ -10,7 +10,6 @@
 } from '@angular/core';
 import { JsonTreeViewComponent } from '../../../../components/ui/json-tree-view/json-tree-view.component';
 import { JsonTableViewComponent } from '../../../../components/ui/json-table-view/json-table-view.component';
-import { SegmentItem } from '../../../../components/ui/segmented-control/segmented-control.component';
 import { EmptyStateComponent } from '../../../../components/ui/empty-state/empty-state.component';
 import { LeftPanelMode } from '../../state/workbench.store';
 import {
@@ -26,17 +25,8 @@ import type { JsonErrorPosition } from '../../../../core/json-error.utils';
 import type { DiffLineDecoration } from '../../utils/diff-engine.types';
 import { jsonToYaml, yamlToJsonValue } from '../../../tools/json-to-yaml/json-yaml.utils';
 import { jsonToCsv, jsonToXml, type XmlEncoding } from '../../utils/convert.utils';
-import { downloadTextFile, copyTextToClipboard } from '../../utils/file-utils';
+import { downloadTextFile } from '../../utils/file-utils';
 import { MatIconModule } from '@angular/material/icon';
-
-const VIEW_MODES: SegmentItem[] = [
-  { value: 'text',  label: 'Text'  },
-  { value: 'yaml',  label: 'YAML'  },
-  { value: 'csv',   label: 'CSV'   },
-  { value: 'xml',   label: 'XML'   },
-  { value: 'tree',  label: 'Tree'  },
-  { value: 'table', label: 'Table' },
-];
 
 const XML_ENCODING_OPTIONS: XmlEncoding[] = [
   'UTF-8',
@@ -72,6 +62,16 @@ export class EditorPanelComponent {
   readonly jsonValue = input<unknown>(null);
   readonly theme = input<'dark' | 'light'>('dark');
   readonly isActive = input<boolean>(false);
+  readonly readOnly = input<boolean>(false);
+  readonly allowFileDrop = input<boolean>(true);
+  readonly showModeSelector = input<boolean>(true);
+  readonly showValidationState = input<boolean>(true);
+  readonly showConvertedExport = input<boolean>(true);
+  readonly textAriaLabel = input<string>('JSON editor');
+  readonly convertedEmptyTitle = input<string>('No valid JSON to convert');
+  readonly convertedEmptyDescription = input<string>(
+    'Switch to Text mode, paste valid JSON, then come back to this view.'
+  );
 
   // ── Error inputs ───────────────────────────────────────────────────────
   readonly errorPosition = input<JsonErrorPosition | null>(null);
@@ -94,16 +94,12 @@ export class EditorPanelComponent {
   readonly fileDropped = output<File>();
   readonly modeChange = output<LeftPanelMode>();
   readonly focused = output<void>();
-  readonly formatRequested = output<void>();
-  readonly minifyRequested = output<void>();
-  readonly copyRequested = output<void>();
   readonly textReverted = output<string>();
 
   // ── View children ──────────────────────────────────────────────────────────
   private readonly monacoEditor = viewChild<EditorTextComponent>('monacoEditor');
 
   // ── Local state ────────────────────────────────────────────────────────────
-  readonly viewModes = VIEW_MODES;
   readonly xmlEncodingOptions = XML_ENCODING_OPTIONS;
   readonly xmlEncoding = signal<XmlEncoding>('UTF-8');
   readonly draggingFile = signal(false);
@@ -265,25 +261,6 @@ export class EditorPanelComponent {
     this.monacoEditor()?.focusEditor();
   }
 
-  transformSelectionToCamelCase(): void {
-    this.transformSelection(toCamelCase);
-  }
-
-  transformSelectionToUpperCase(): void {
-    this.transformSelection((value) => value.toUpperCase());
-  }
-
-  transformSelectionToLowerCase(): void {
-    this.transformSelection((value) => value.toLowerCase());
-  }
-
-  private transformSelection(transform: (selectedText: string) => string): void {
-    const changed = this.monacoEditor()?.transformSelection(transform) ?? false;
-    if (!changed) {
-      this.focusEditor();
-    }
-  }
-
   setMode(mode: string): void {
     this.modeChange.emit(mode as LeftPanelMode);
   }
@@ -305,43 +282,29 @@ export class EditorPanelComponent {
 
   onDragEnter(event: DragEvent): void {
     event.preventDefault();
+    if (!this.allowFileDrop()) return;
     this.draggingFile.set(true);
   }
 
   onDragOver(event: DragEvent): void {
     event.preventDefault();
+    if (!this.allowFileDrop()) return;
     this.draggingFile.set(true);
   }
 
   onDragLeave(event: DragEvent): void {
     event.preventDefault();
+    if (!this.allowFileDrop()) return;
     this.draggingFile.set(false);
   }
 
   onDrop(event: DragEvent): void {
     event.preventDefault();
+    if (!this.allowFileDrop()) return;
     this.draggingFile.set(false);
     const file = event.dataTransfer?.files?.item(0);
     if (!file) return;
     this.fileDropped.emit(file);
-  }
-
-  /** Copy: uses converted text for yaml/csv/xml modes, otherwise bubbles up. */
-  handleCopy(): void {
-    const mode = this.leftMode();
-    if (mode === 'yaml') {
-      void copyTextToClipboard(this.yamlText());
-      return;
-    }
-    if (mode === 'csv') {
-      void copyTextToClipboard(this.csvText());
-      return;
-    }
-    if (mode === 'xml') {
-      void copyTextToClipboard(this.xmlText());
-      return;
-    }
-    this.copyRequested.emit();
   }
 
   /** Download the current view as a file in its native format. */
@@ -364,27 +327,5 @@ export class EditorPanelComponent {
     }
     downloadTextFile('output.json', this.rawText(), 'application/json');
   }
-}
-
-function toCamelCase(value: string): string {
-  return value
-    .split(/(\s+)/)
-    .map((part) => (/^\s+$/.test(part) ? part : camelCaseToken(part)))
-    .join('');
-}
-
-function camelCaseToken(value: string): string {
-  const words = value
-    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-    .split(/[^a-zA-Z0-9]+/)
-    .filter(Boolean);
-
-  if (words.length === 0) return value;
-  return words
-    .map((word, index) => {
-      const lower = word.toLowerCase();
-      return index === 0 ? lower : lower.charAt(0).toUpperCase() + lower.slice(1);
-    })
-    .join('');
 }
 

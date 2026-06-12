@@ -10,13 +10,13 @@
 }
 
 .cdlg::backdrop {
-  background: rgba(0, 0, 0, 0.55);
+  background: rgb(15 17 23 / 0.62);
   backdrop-filter: blur(2px);
 }
 
 /* ─── Panel ──────────────────────────────────────────────────────── */
 .cdlg__panel {
-  background: var(--color-surface);
+  background: var(--color-surface-overlay);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg, 0 16px 40px rgba(0, 0, 0, 0.35));
@@ -66,7 +66,7 @@
 }
 
 .cdlg__message {
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
   font-size: var(--text-sm, 0.875rem);
   line-height: 1.5;
   margin: 0;
@@ -119,26 +119,28 @@
 .cdlg__btn:focus-visible { outline: var(--focus-ring); }
 
 .cdlg__btn--cancel {
-  background: transparent;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
 }
 .cdlg__btn--cancel:hover {
-  background: var(--color-panel-bg);
+  background: var(--color-surface-hover);
   color: var(--color-text);
 }
 
 .cdlg__btn--confirm {
-  background: var(--color-accent, #569cd6);
-  border: 1px solid transparent;
-  color: #000;
+  background: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
+  color: var(--accent-on-primary);
 }
 .cdlg__btn--confirm:hover:not(:disabled) {
-  filter: brightness(1.1);
+  background: var(--accent-primary-strong);
+  border-color: var(--accent-primary-strong);
 }
 .cdlg__btn--confirm:disabled {
-  background: var(--color-border);
-  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--text-dim);
   cursor: not-allowed;
-  opacity: 0.6;
+  opacity: 1;
 }

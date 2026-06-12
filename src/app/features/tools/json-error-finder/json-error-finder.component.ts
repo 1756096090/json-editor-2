@@ -29,7 +29,7 @@ export class JsonErrorFinderComponent {
   });
 
   constructor() {
-    this.titleService.setTitle('JSON Error Finder — Find & Fix JSON Errors | JSONScan');
+    this.titleService.setTitle('JSON Error Finder — Find & Fix JSON Errors | JSON Hunt');
     this.metaService.updateTag({
       name: 'description',
       content: 'Find and fix JSON syntax errors accurately. Get precise line and column references with actionable suggestions.'

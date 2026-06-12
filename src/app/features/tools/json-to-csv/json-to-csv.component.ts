@@ -12,7 +12,7 @@ import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
 })
 export class JsonToCsvComponent {
   constructor() {
-    inject(Title).setTitle('JSON to CSV Converter — Export JSON Arrays Online | JSONScan');
+    inject(Title).setTitle('JSON to CSV Converter — Export JSON Arrays Online | JSON Hunt');
     inject(Meta).updateTag({ name: 'description', content: 'Convert flat JSON arrays to CSV for spreadsheets, data pipelines and analytics. Free online JSON to CSV converter tool.' });
   }
 }

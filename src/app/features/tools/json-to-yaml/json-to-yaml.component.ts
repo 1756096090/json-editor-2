@@ -31,7 +31,7 @@ export class JsonToYamlComponent {
   );
 
   constructor() {
-    inject(Title).setTitle('JSON to YAML Converter — Free Online Tool | JSONScan');
+    inject(Title).setTitle('JSON to YAML Converter — Free Online Tool | JSON Hunt');
     inject(Meta).updateTag({
       name: 'description',
       content:

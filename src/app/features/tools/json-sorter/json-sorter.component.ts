@@ -1,25 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Title, Meta } from '@angular/platform-browser';
 import { JsonWorkbenchComponent } from '../../json-workbench/json-workbench.component';
-import { WorkbenchStore, JsonValue } from '../../json-workbench/state/workbench.store';
+import { WorkbenchStore } from '../../json-workbench/state/workbench.store';
 import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
-
-function sortJson(value: JsonValue): JsonValue {
-  if (Array.isArray(value)) {
-    return value.map((item) => sortJson(item));
-  }
-
-  if (value !== null && typeof value === 'object') {
-    return Object.keys(value)
-      .sort((a, b) => a.localeCompare(b))
-      .reduce<Record<string, JsonValue>>((acc, key) => {
-        acc[key] = sortJson(value[key]);
-        return acc;
-      }, {});
-  }
-
-  return value;
-}
+import { sortJsonKeys } from '../../json-workbench/utils/json-sort.utils';
 
 @Component({
   selector: 'app-json-sorter',
@@ -34,7 +18,7 @@ function sortJson(value: JsonValue): JsonValue {
             type="button"
             class="tool-page__action-btn"
             (click)="onSort()"
-            [disabled]="!store.isValidJson()"
+            [disabled]="!canSort()"
             aria-label="Sort JSON keys alphabetically"
           >
             ⇅ Sort Keys
@@ -56,9 +40,10 @@ export class JsonSorterComponent {
   private readonly meta = inject(Meta);
 
   readonly lastStatus = signal('');
+  readonly canSort = computed(() => this.store.leftMode() === 'text' && this.store.isValidJson());
 
   constructor() {
-    this.title.setTitle('JSON Sorter — Sort Keys Alphabetically | JSONScan');
+    this.title.setTitle('JSON Sorter — Sort Keys Alphabetically | JSON Hunt');
     this.meta.updateTag({
       name: 'description',
       content:
@@ -67,10 +52,12 @@ export class JsonSorterComponent {
   }
 
   onSort(): void {
+    if (!this.canSort()) return;
+
     const json = this.store.currentJson();
     if (json === null) return;
 
-    const sorted = sortJson(json);
+    const sorted = sortJsonKeys(json);
     const formatted = JSON.stringify(sorted, null, 2);
     this.store.setRawText(formatted);
 

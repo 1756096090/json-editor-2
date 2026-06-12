@@ -67,11 +67,11 @@
 
 .split-pane__gutter:hover,
 .split-pane__gutter:active {
-  background: var(--color-accent);
+  background: var(--accent-primary);
 }
 
 .split-pane__gutter:focus-visible {
-  box-shadow: 0 0 0 2px var(--color-accent);
+  box-shadow: 0 0 0 2px var(--accent-primary-strong);
   outline: none;
 }
 
@@ -85,7 +85,7 @@
 
 .split-pane__gutter:hover .split-pane__gutter-dot,
 .split-pane__gutter:active .split-pane__gutter-dot {
-  background: var(--color-bg);
+  background: var(--accent-on-primary);
 }
 
 /* ── Responsive: stack vertically on small screens ─────────────── */

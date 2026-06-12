@@ -6,6 +6,7 @@
   computed,
   effect,
   inject,
+  input,
   signal,
   viewChild,
 } from '@angular/core';
@@ -15,19 +16,22 @@ import { ToastComponent } from '../../components/ui/toast/toast.component';
 import { ButtonComponent } from '../../components/ui/button/button.component';
 import { EditorPanelComponent } from './components/editor-panel/editor-panel.component';
 import { DiffBarComponent } from './components/diff-bar/diff-bar.component';
-import { ActivePanel, LeftPanelMode, WorkbenchStore } from './state/workbench.store';
+import { ActivePanel, JsonValue, LeftPanelMode, WorkbenchStore } from './state/workbench.store';
 import { SettingsStore } from '../settings/settings.store';
 import { ConfirmDialogComponent, ConfirmDialogResult } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { LiveDiffService } from './services/live-diff.service';
 import { DiffLineDecoration } from './utils/diff-engine.types';
 import { Tab, TabsService } from '../../core/tabs.service';
 import { TabBarComponent } from '../../components/ui/tab-bar/tab-bar.component';
+import { jsonToCsv } from './utils/convert.utils';
+import { copyTextToClipboard, downloadTextFile } from './utils/file-utils';
 
 // Facades
 import { WorkbenchActionsFacade } from './services/workbench-actions.facade';
 import { PanelOperationsFacade } from './services/panel-operations.facade';
 
 type PanelTransferDirection = 'left-to-right' | 'right-to-left';
+type WorkbenchPreset = 'default' | 'json-to-csv';
 
 @Component({
   selector: 'app-json-workbench',
@@ -50,6 +54,8 @@ type PanelTransferDirection = 'left-to-right' | 'right-to-left';
   }
 })
 export class JsonWorkbenchComponent implements OnDestroy {
+  readonly preset = input<WorkbenchPreset>('default');
+
   // ── Core services ────────────────────────────────────────────────────────
   readonly store = inject(WorkbenchStore);
   readonly diffService = inject(LiveDiffService);
@@ -75,6 +81,23 @@ export class JsonWorkbenchComponent implements OnDestroy {
   readonly rightPanelLabel = signal('');
   readonly leftDisplayTabs = computed<Tab[]>(() => this.toDisplayTabs(this.tabs.leftTabs()));
   readonly rightDisplayTabs = computed<Tab[]>(() => this.toDisplayTabs(this.tabs.rightTabs()));
+  readonly isCsvConverter = computed(() => this.preset() === 'json-to-csv');
+  readonly leftPanelTitle = computed(() => this.isCsvConverter() ? 'Input JSON' : '');
+  readonly rightPanelTitle = computed(() => this.isCsvConverter() ? 'CSV Output' : '');
+  readonly leftPanelMode = computed<LeftPanelMode>(() => this.isCsvConverter() ? 'text' : this.store.leftMode());
+  readonly rightPanelMode = computed<LeftPanelMode>(() => this.isCsvConverter() ? 'csv' : this.store.rightMode());
+
+  private readonly csvOutputJson = signal<JsonValue | null>(null);
+  private readonly csvOutputSource = signal('');
+  readonly csvOutputValue = computed<JsonValue | null>(() => {
+    if (!this.isCsvConverter()) return this.store.baselineJson();
+    return this.csvOutputSource() === this.store.rawText() ? this.csvOutputJson() : null;
+  });
+  readonly csvOutputText = computed(() => {
+    const value = this.csvOutputValue();
+    return value === null ? '' : jsonToCsv(value);
+  });
+  readonly hasCsvOutput = computed(() => this.csvOutputText().length > 0);
 
   // ── URL import ───────────────────────────────────────────────────────────
   readonly showUrlImport = signal(false);
@@ -143,6 +166,14 @@ export class JsonWorkbenchComponent implements OnDestroy {
     // Auto-close diff when switching to single-panel mobile view
     effect(() => {
       if (this.isMobileLayout() && this.store.showDiff()) {
+        this.store.showDiff.set(false);
+      }
+    });
+
+    effect(() => {
+      if (this.isCsvConverter()) {
+        this.store.setLeftMode('text');
+        this.store.setRightMode('csv');
         this.store.showDiff.set(false);
       }
     });
@@ -219,6 +250,47 @@ export class JsonWorkbenchComponent implements OnDestroy {
     this.store.setRawText(nextRawText);
   }
 
+  onConvertToCsv(): void {
+    const json = this.store.currentJson();
+    if (json === null) {
+      this.csvOutputJson.set(null);
+      this.csvOutputSource.set('');
+      this.store.setStatusMessage('Paste valid JSON before converting to CSV.');
+      return;
+    }
+
+    this.csvOutputJson.set(json);
+    this.csvOutputSource.set(this.store.rawText());
+    const rows = this.csvOutputText().split('\n').filter(Boolean).length;
+    this.store.setStatusMessage(`CSV ready. ${rows} ${rows === 1 ? 'row' : 'rows'} generated.`);
+  }
+
+  async onCopyCsvOutput(): Promise<void> {
+    const csv = this.csvOutputText();
+    if (!csv) {
+      this.store.setStatusMessage('Convert valid JSON before copying CSV.');
+      return;
+    }
+
+    try {
+      await copyTextToClipboard(csv);
+      this.store.setStatusMessage('CSV copied to clipboard.');
+    } catch (error) {
+      this.store.setStatusMessage(this.toActionError('Copy CSV failed', error));
+    }
+  }
+
+  onDownloadCsvOutput(): void {
+    const csv = this.csvOutputText();
+    if (!csv) {
+      this.store.setStatusMessage('Convert valid JSON before downloading CSV.');
+      return;
+    }
+
+    downloadTextFile('output.csv', csv, 'text/csv');
+    this.store.setStatusMessage('CSV download started.');
+  }
+
   // ── Per-panel format / minify / copy ─────────────────────────────────────────
 
   onFormatPanel(panel: ActivePanel): void {
@@ -236,13 +308,16 @@ export class JsonWorkbenchComponent implements OnDestroy {
     this.actions.cleanPanel(panel);
   }
 
-  onFormatLeft():  void { this.onFormatPanel('left');  }
-  onFormatRight(): void { this.onFormatPanel('right'); }
-  onMinifyLeft():  void { this.onMinifyPanel('left');  }
-  onMinifyRight(): void { this.onMinifyPanel('right'); }
+  onSortPanel(panel: ActivePanel): void {
+    this.store.setActivePanel(panel);
+    this.actions.sortPanel(panel);
+  }
 
-  onCopyLeft  = (): Promise<void> => this.actions.copyPanel('left');
-  onCopyRight = (): Promise<void> => this.actions.copyPanel('right');
+  isJsonPanel(panel: ActivePanel): boolean {
+    return panel === 'left'
+      ? this.store.leftMode() === 'text'
+      : this.store.rightMode() === 'text';
+  }
 
   // ── Transfer between panels ──────────────────────────────────────────────────
 
@@ -288,9 +363,13 @@ export class JsonWorkbenchComponent implements OnDestroy {
 
   onBaselineTextChanged(text: string): void { this.store.setBaselineText(text); }
   onLeftModeChanged(mode: LeftPanelMode):  void { this.operations.setLeftMode(mode);  }
-  onRightModeChanged(mode: LeftPanelMode): void { this.operations.setRightMode(mode); }
+  onRightModeChanged(mode: LeftPanelMode): void {
+    if (this.isCsvConverter()) return;
+    this.operations.setRightMode(mode);
+  }
 
   onToggleDiffPressed(): void {
+    if (this.isCsvConverter()) return;
     if (!this.store.showDiff() && !this.canComparePanels()) {
       this.store.setStatusMessage('Choose the same type in both panels before comparing.');
       return;
@@ -329,10 +408,11 @@ export class JsonWorkbenchComponent implements OnDestroy {
   // ── URL import ────────────────────────────────────────────────────────────
 
   onImportUrlPressed(panel: ActivePanel = this.store.activePanel()): void {
-    this.store.setActivePanel(panel);
+    const target = this.isCsvConverter() ? 'left' : panel;
+    this.store.setActivePanel(target);
     this.showUrlImport.update((v) => !v);
     this.urlImportValue.set('');
-    this.urlImportTarget.set(panel);
+    this.urlImportTarget.set(target);
   }
 
   async onUrlImportSubmit(): Promise<void> {
@@ -405,6 +485,10 @@ export class JsonWorkbenchComponent implements OnDestroy {
   }
 
   private toDisplayTabs(tabs: Tab[]): Tab[] {
+    if (this.isCsvConverter()) {
+      return tabs;
+    }
+
     return tabs.map((tab, index) => ({
       ...tab,
       label: /^(Input|Output)\s+\d+$/i.test(tab.label) ? `Doc ${index + 1}` : tab.label,

@@ -116,7 +116,7 @@ export class JsonSchemaValidatorComponent {
   );
 
   constructor() {
-    inject(Title).setTitle('JSON Schema Validator — Validate JSON against JSON Schema | JSONScan');
+    inject(Title).setTitle('JSON Schema Validator — Validate JSON against JSON Schema | JSON Hunt');
     inject(Meta).updateTag({
       name: 'description',
       content:

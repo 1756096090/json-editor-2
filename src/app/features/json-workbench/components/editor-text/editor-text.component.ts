@@ -24,6 +24,20 @@ import type { JsonErrorPosition } from '../../../../core/json-error.utils';
 import type { DiffLineDecoration } from '../../utils/diff-engine.types';
 import type * as monacoNs from 'monaco-editor';
 
+interface SelectionToolbarPosition {
+  left: number;
+  top: number;
+}
+
+type CaseTransform =
+  | 'camel'
+  | 'pascal'
+  | 'snake'
+  | 'upper-snake'
+  | 'kebab'
+  | 'flat'
+  | 'train';
+
 @Component({
   selector: 'app-editor-text',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -69,7 +83,8 @@ export class EditorTextComponent implements OnInit {
   private decorationIds: string[] = [];
   private diffDecorationIds: string[] = [];
 
-  readonly ready = signal(false);
+  public readonly ready = signal(false);
+  public readonly selectionToolbarPosition = signal<SelectionToolbarPosition | null>(null);
 
   private readonly monacoTheme = computed(() =>
     this.theme() === 'dark' ? 'json-we-dark' : 'json-we-light'
@@ -176,7 +191,17 @@ export class EditorTextComponent implements OnInit {
       },
     ]);
     this.editor.focus();
+    this.selectionToolbarPosition.set(null);
     return true;
+  }
+
+  onCaseTransformSelected(value: string): void {
+    if (!value) return;
+    this.transformSelection((selectedText) => transformCase(selectedText, value as CaseTransform));
+  }
+
+  public getSelectionToolbarPosition(): SelectionToolbarPosition | null {
+    return this.selectionToolbarPosition();
   }
 
   /** Get the underlying Monaco editor instance (for diff, etc.). */
@@ -233,6 +258,14 @@ export class EditorTextComponent implements OnInit {
       if (model) {
         this.valueChange.emit(model.getValue());
       }
+    });
+
+    this.editor.onDidChangeCursorSelection(() => {
+      this.updateSelectionToolbarPosition();
+    });
+
+    this.editor.onDidScrollChange(() => {
+      this.updateSelectionToolbarPosition();
     });
 
     // Listen for focus
@@ -298,6 +331,31 @@ export class EditorTextComponent implements OnInit {
     ]);
   }
 
+  private updateSelectionToolbarPosition(): void {
+    if (!this.editor || this.readOnly()) {
+      this.selectionToolbarPosition.set(null);
+      return;
+    }
+
+    const selection = this.editor.getSelection();
+    if (!selection || selection.isEmpty()) {
+      this.selectionToolbarPosition.set(null);
+      return;
+    }
+
+    const position = this.editor.getScrolledVisiblePosition(selection.getStartPosition());
+    const layout = this.editor.getLayoutInfo();
+    if (!position) {
+      this.selectionToolbarPosition.set(null);
+      return;
+    }
+
+    this.selectionToolbarPosition.set({
+      left: Math.min(Math.max(position.left, 8), Math.max(layout.width - 176, 8)),
+      top: Math.max(position.top - 58, 8),
+    });
+  }
+
   private clearErrorDecorations(): void {
     if (this.editor && this.decorationIds.length) {
       this.decorationIds = this.editor.deltaDecorations(this.decorationIds, []);
@@ -340,4 +398,48 @@ export class EditorTextComponent implements OnInit {
 
     this.diffDecorationIds = this.editor.deltaDecorations(this.diffDecorationIds, monacoDecos);
   }
+}
+
+function transformCase(value: string, transform: CaseTransform): string {
+  const words = getCaseWords(value);
+  if (words.length === 0) return value;
+
+  switch (transform) {
+    case 'camel':
+      return joinCamel(words, false);
+    case 'pascal':
+      return joinCamel(words, true);
+    case 'snake':
+      return words.map((word) => word.toLowerCase()).join('_');
+    case 'upper-snake':
+      return words.map((word) => word.toUpperCase()).join('_');
+    case 'kebab':
+      return words.map((word) => word.toLowerCase()).join('-');
+    case 'flat':
+      return words.map((word) => word.toLowerCase()).join('');
+    case 'train':
+      return words.map(capitalize).join('-');
+  }
+}
+
+function getCaseWords(value: string): string[] {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+    .split(/[^a-zA-Z0-9]+/)
+    .filter(Boolean);
+}
+
+function joinCamel(words: string[], pascal: boolean): string {
+  return words
+    .map((word, index) => {
+      const lower = word.toLowerCase();
+      return index === 0 && !pascal ? lower : capitalize(lower);
+    })
+    .join('');
+}
+
+function capitalize(value: string): string {
+  const lower = value.toLowerCase();
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
 }

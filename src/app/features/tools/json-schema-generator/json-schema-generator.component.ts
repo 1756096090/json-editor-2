@@ -41,7 +41,7 @@ export class JsonSchemaGeneratorComponent {
   readonly lastStatus = signal('');
 
   constructor() {
-    inject(Title).setTitle('JSON Schema Generator — Auto Generate Schema from JSON | JSONScan');
+    inject(Title).setTitle('JSON Schema Generator — Auto Generate Schema from JSON | JSON Hunt');
     inject(Meta).updateTag({
       name: 'description',
       content:

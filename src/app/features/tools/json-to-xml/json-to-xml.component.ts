@@ -12,7 +12,7 @@ import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
 })
 export class JsonToXmlComponent {
   constructor() {
-    inject(Title).setTitle('JSON to XML Converter — Transform JSON to XML Online | JSONScan');
+    inject(Title).setTitle('JSON to XML Converter — Transform JSON to XML Online | JSON Hunt');
     inject(Meta).updateTag({ name: 'description', content: 'Transform JSON structures into valid XML documents. Free online JSON to XML converter for legacy integrations, SOAP and data exchange.' });
   }
 }

@@ -12,7 +12,7 @@ import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
 })
 export class JsonViewerComponent {
   constructor() {
-    inject(Title).setTitle('JSON Viewer — Explore JSON as Tree or Table | JSONScan');
+    inject(Title).setTitle('JSON Viewer — Explore JSON as Tree or Table | JSON Hunt');
     inject(Meta).updateTag({ name: 'description', content: 'View and explore JSON as an interactive tree or table. Expand, collapse and navigate complex nested structures. Free online JSON viewer.' });
   }
 }

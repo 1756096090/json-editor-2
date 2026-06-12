@@ -1,22 +1,24 @@
+# CLAUDE.md
 
-You are an expert in TypeScript, Angular, and scalable web application development. You write functional, maintainable, performant, and accessible code following Angular and TypeScript best practices.
-![1777564324259](image/CLAUDE/1777564324259.png)
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 ---
 
 ## Project Overview
 
-**json-editor-2** is an Angular 21 PWA (Progressive Web App) that provides a suite of JSON tools:
+**json-editor-2** is an Angular 21 PWA that provides a suite of JSON tools:
 - **Workbench** (`/workbench`): dual-pane JSON editor with diff, tabs, auto-fix, YAML/CSV/XML conversion
+- **Editor Lab** (`/editor-lab`): format-agnostic dual-pane editor with version history, per-pane format switching, and inline diff compare
 - **Tool pages** (`/tools/*`): standalone SEO-optimized tools (formatter, validator, viewer, compare, minifier, sorter, cleaner, path tester, schema generator/validator, JSON↔YAML, JSON↔CSV, JSON↔XML, error finder)
 - **Home** (`/`): landing/discovery hub
 
 ### Tech Stack
-- Angular **21.2** (standalone components, signals, `@angular/router` lazy-loaded routes)
+- Angular **21.2** (standalone components, signals, `@angular/router` lazy-loaded routes) + Angular Material + Angular CDK
 - TypeScript **5.9** (strict mode)
 - Monaco Editor (`monaco-editor ^0.55.1`) for code editing
 - `diff` library for text diffing
 - `jsoneditor ^10.4.2` for tree/table views
-- Vitest (`vitest ^4.0.8`) for unit tests — **not Karma/Jasmine**
+- Vitest (via `@angular/build:unit-test`) — **not Karma/Jasmine**
 - Angular Service Worker (`@angular/service-worker`) for PWA
 - Prettier (printWidth 100, singleQuote, angular HTML parser)
 
@@ -24,9 +26,11 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 ```bash
 npm start          # ng serve (dev server)
 npm run build      # ng build (production)
-npm test           # vitest (unit tests)
+npm test           # ng test — runs Vitest via @angular/build:unit-test
 npm run watch      # ng build --watch --configuration development
 ```
+
+To filter tests by file pattern: `npm test -- --reporter=verbose`
 
 ---
 
@@ -34,19 +38,33 @@ npm run watch      # ng build --watch --configuration development
 
 ```
 src/app/
-├── app.ts / app.component.ts     # Root component
+├── app.component.ts              # Root component
 ├── app.config.ts                 # provideRouter, provideServiceWorker
 ├── app.routes.ts                 # All lazy-loaded routes
-├── core/                         # Singleton services
+├── core/
 │   ├── storage.service.ts        # localStorage wrapper
 │   ├── tabs.service.ts           # Left/right tab management (signal-based)
 │   ├── recent-docs.service.ts
 │   ├── monaco-loader.service.ts
 │   ├── json.utils.ts
-│   └── json-error.utils.ts
+│   ├── json-error.utils.ts
+│   └── formats/                  # Format handler system — key extension point
+│       ├── data-format-handler.interface.ts   # DataFormatHandler interface
+│       ├── format-registry.service.ts         # Registry of all handlers
+│       ├── base/base-format-handler.ts
+│       ├── json-format.handler.ts
+│       ├── yaml-format.handler.ts
+│       ├── csv-format.handler.ts
+│       ├── xml-format.handler.ts
+│       └── models/               # ColorRule, PatternResult, FormatterTheme, FormatterType
 ├── features/
-│   ├── home/                     # Landing page component
-│   ├── json-workbench/           # Main editor feature
+│   ├── home/                     # Landing page
+│   ├── editor-lab/               # Format-agnostic dual-pane editor with version history
+│   │   ├── editor-lab.component.ts
+│   │   ├── editor-format-strategies.ts
+│   │   ├── components/editor-lab-pane/
+│   │   └── services/editor-lab-io.service.ts
+│   ├── json-workbench/           # Main JSON editor feature
 │   │   ├── state/workbench.store.ts      # Central signal-based store
 │   │   ├── services/
 │   │   │   ├── workbench-actions.facade.ts
@@ -57,7 +75,6 @@ src/app/
 │   │   │   ├── editor-panel/     # Wraps left/right editing panes
 │   │   │   ├── editor-text/      # Monaco editor wrapper
 │   │   │   ├── editor-diff/      # Monaco diff editor
-│   │   │   ├── toolbar/          # Top action bar
 │   │   │   ├── diff-bar/         # Diff controls
 │   │   │   ├── converted-view/   # YAML/CSV/XML read-only output
 │   │   │   └── inline-error-bar/ # Inline JSON error display
@@ -72,6 +89,7 @@ src/app/
 │   │   └── settings.store.ts     # AppSettings signal store (theme, flags)
 │   └── tools/                    # One component per tool page
 │       ├── tool-page.css         # Shared tool page styles
+│       ├── tool-intro/           # Shared intro block reused by tool pages
 │       └── <tool-name>/
 ├── components/ui/                # Reusable UI components
 │   ├── app-header/
@@ -94,9 +112,12 @@ src/app/
     └── settings-panel/
 ```
 
+### Format Handler System (`core/formats/`)
+`DataFormatHandler` is the interface implemented by all format handlers (JSON, YAML, CSV, XML). Handlers are registered in `FormatRegistryService` and consumed by both `editor-lab` and `json-workbench`. To add a new format: implement `DataFormatHandler`, inject and call `registerFormat()` in `FormatRegistryService`.
+
 ### Key State: `WorkbenchStore` (`state/workbench.store.ts`)
-- `rawText` — current left-panel JSON text (signal)
-- `baselineText` — right-panel / baseline JSON (signal)
+- `rawText` — current left-panel text (signal)
+- `baselineText` — right-panel / baseline text (signal)
 - `leftMode` / `rightMode` — `'text' | 'tree' | 'table' | 'yaml' | 'csv' | 'xml'`
 - `showDiff` — toggle diff mode
 - `diffViewMode` — `'text' | 'tree' | 'table'`
@@ -114,76 +135,39 @@ All localStorage keys use the prefix: `json-we-format:`
 
 ---
 
-## TypeScript Best Practices
-
-- Use strict type checking
-- Prefer type inference when the type is obvious
-- Avoid the `any` type; use `unknown` when type is uncertain
-
----
-
 ## Angular Best Practices
 
-- Always use standalone components over NgModules
-- Must NOT set `standalone: true` inside Angular decorators. It's the default in Angular v20+.
-- Use signals for state management
-- Implement lazy loading for feature routes
-- Do NOT use the `@HostBinding` and `@HostListener` decorators. Put host bindings inside the `host` object of the `@Component` or `@Directive` decorator instead
-- Use `NgOptimizedImage` for all static images.
-  - `NgOptimizedImage` does not work for inline base64 images.
+- Always use standalone components — do NOT set `standalone: true` (it is the default in Angular v20+)
+- Use signals for state management; do NOT use `mutate()`, use `update()` or `set()` instead
+- Use `computed()` for derived state
+- Set `changeDetection: ChangeDetectionStrategy.OnPush` in all `@Component` decorators
+- Use `inject()` function instead of constructor injection
+- Use `input()` and `output()` functions instead of `@Input()` / `@Output()` decorators
+- Do NOT use `@HostBinding` / `@HostListener` — put host bindings in the `host` object of `@Component`
+- Do NOT use `ngClass` — use `[class]` bindings instead
+- Do NOT use `ngStyle` — use `[style]` bindings instead
+- Use `NgOptimizedImage` for static images (does not work for inline base64 images)
+- Use native control flow: `@if`, `@for`, `@switch` — not `*ngIf`, `*ngFor`, `*ngSwitch`
+- Implement lazy loading for all feature routes
+- Prefer Reactive forms over Template-driven forms
+- Do not write arrow functions in templates
+
+## TypeScript Best Practices
+
+- Strict mode is enabled — avoid `any`, use `unknown` when type is uncertain
+- Prefer type inference when the type is obvious
 
 ## Accessibility Requirements
 
-- It MUST pass all AXE checks.
-- It MUST follow all WCAG AA minimums, including focus management, color contrast, and ARIA attributes.
-
-### Components
-
-- Keep components small and focused on a single responsibility
-- Use `input()` and `output()` functions instead of decorators
-- Use `computed()` for derived state
-- Set `changeDetection: ChangeDetectionStrategy.OnPush` in `@Component` decorator
-- Prefer inline templates for small components
-- Prefer Reactive forms instead of Template-driven ones
-- Do NOT use `ngClass`, use `class` bindings instead
-- Do NOT use `ngStyle`, use `style` bindings instead
-- When using external templates/styles, use paths relative to the component TS file.
-
----
-
-## State Management
-
-- Use signals for local component state
-- Use `computed()` for derived state
-- Keep state transformations pure and predictable
-- Do NOT use `mutate` on signals, use `update` or `set` instead
-
----
-
-## Templates
-
-- Keep templates simple and avoid complex logic
-- Use native control flow (`@if`, `@for`, `@switch`) instead of `*ngIf`, `*ngFor`, `*ngSwitch`
-- Use the async pipe to handle observables
-- Do not assume globals like (`new Date()`) are available.
-- Do not write arrow functions in templates (they are not supported).
-
----
-
-## Services
-
-- Design services around a single responsibility
-- Use the `providedIn: 'root'` option for singleton services
-- Use the `inject()` function instead of constructor injection
+- Must pass all AXE checks
+- Must follow WCAG AA minimums: focus management, color contrast, ARIA attributes
 
 ---
 
 ## Testing
 
-- Test runner: **Vitest** (not Karma or Jest)
+- Test runner: **Vitest** (via `@angular/build:unit-test`; `npm test` calls `ng test`)
 - Test files: `*.spec.ts` co-located next to the source file
-- Example: `src/app/features/json-workbench/utils/auto-fix-json.spec.ts`
-- Run tests: `npm test`
 
 ---
 
@@ -199,15 +183,14 @@ All localStorage keys use the prefix: `json-we-format:`
 
 ## Implementation Rules
 
-- **Do NOT create `.md` files** to document changes. Never generate markdown documentation files as output.
-- **Do NOT add features, refactor code, or make "improvements"** beyond what was asked.
-- **Do NOT add docstrings, comments, or type annotations** to code you didn't change.
-- **Do NOT add error handling** for scenarios that can't happen. Only validate at system boundaries.
-- **Do NOT create helpers or abstractions** for one-time operations.
-- **Avoid over-engineering.** Only make changes that are directly requested or clearly necessary.
-- Read files before modifying them. Understand existing code before suggesting changes.
-- Do not create files unless absolutely necessary. Prefer editing existing files.
-- Take local reversible actions freely. For destructive actions (delete files, git reset --hard, etc.) ask the user first.
+- **Do NOT create `.md` files** as output — never generate markdown documentation files
+- **Do NOT add features, refactor, or make "improvements"** beyond what was asked
+- **Do NOT add docstrings, comments, or type annotations** to code you didn't change
+- **Do NOT add error handling** for scenarios that can't happen; only validate at system boundaries
+- **Do NOT create helpers or abstractions** for one-time operations
+- Read files before modifying them; understand existing code before suggesting changes
+- Do not create files unless absolutely necessary; prefer editing existing files
+- Take local reversible actions freely; ask before destructive actions (delete files, git reset --hard, etc.)
 
 ---
 

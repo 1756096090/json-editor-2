@@ -9,7 +9,7 @@
   "start_url": "/workbench",
   "icons": [
     {
-      "src": "favicon.svg",
+      "src": "assets/svgs/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"

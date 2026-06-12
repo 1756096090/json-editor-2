@@ -18,51 +18,29 @@
 
     <div class="editor-panel__actions">
       <ng-content select="[editorPanelActions]"></ng-content>
-      @if (leftMode() === 'text') {
-        <span class="editor-panel__actions-separator" aria-hidden="true"></span>
-        <app-ui-button
-          size="sm"
-          variant="ghost"
-          ariaLabel="Convert selected text to camel case"
-          tooltipText="Selection to camelCase"
-          (pressed)="transformSelectionToCamelCase()"
-        >camel</app-ui-button>
-        <app-ui-button
-          size="sm"
-          variant="ghost"
-          ariaLabel="Convert selected text to uppercase"
-          tooltipText="Selection to uppercase"
-          (pressed)="transformSelectionToUpperCase()"
-        >AA</app-ui-button>
-        <app-ui-button
-          size="sm"
-          variant="ghost"
-          ariaLabel="Convert selected text to lowercase"
-          tooltipText="Selection to lowercase"
-          (pressed)="transformSelectionToLowerCase()"
-        >aa</app-ui-button>
-      }
     </div>
 
     <div class="editor-panel__header-spacer"></div>
 
     <div class="editor-panel__header-end">
-      <div class="editor-panel__mode-selector">
-        <select
-          [value]="leftMode()"
-          (change)="setMode($any($event.target).value)"
-          class="editor-panel__mode-select"
-          aria-label="Panel view mode"
-        >
-          <option value="text">JSON</option>
-          <option value="yaml">YAML</option>
-          <option value="csv">CSV</option>
-          <option value="xml">XML</option>
-          <option value="tree">TREE</option>
-          <option value="table">TABLE</option>
-        </select>
-        <span class="editor-panel__mode-icon"><mat-icon>expand_more</mat-icon></span>
-      </div>
+      @if (showModeSelector()) {
+        <div class="editor-panel__mode-selector">
+          <select
+            [value]="leftMode()"
+            (change)="setMode($any($event.target).value)"
+            class="editor-panel__mode-select"
+            aria-label="Panel view mode"
+          >
+            <option value="text">JSON</option>
+            <option value="yaml">YAML</option>
+            <option value="csv">CSV</option>
+            <option value="xml">XML</option>
+            <option value="tree">TREE</option>
+            <option value="table">TABLE</option>
+          </select>
+          <span class="editor-panel__mode-icon"><mat-icon>expand_more</mat-icon></span>
+        </div>
+      }
 
       @if (leftMode() === 'xml') {
         <div class="editor-panel__encoding-selector">
@@ -80,7 +58,7 @@
         </div>
       }
       
-      @if (leftMode() === 'yaml' || leftMode() === 'csv' || leftMode() === 'xml') {
+      @if (showConvertedExport() && (leftMode() === 'yaml' || leftMode() === 'csv' || leftMode() === 'xml')) {
         <app-ui-button
           size="sm"
           variant="ghost"
@@ -90,13 +68,15 @@
         >↓</app-ui-button>
       }
 
-      <span
-        class="editor-panel__validation-state"
-        [class.editor-panel__validation-state--valid]="isValid()"
-        [class.editor-panel__validation-state--invalid]="!isValid()"
-        [attr.aria-label]="isValid() ? 'Valid JSON' : 'Invalid JSON'"
-        [style.visibility]="leftMode() === 'text' ? 'visible' : 'hidden'"
-      ></span>
+      @if (showValidationState()) {
+        <span
+          class="editor-panel__validation-state"
+          [class.editor-panel__validation-state--valid]="isValid()"
+          [class.editor-panel__validation-state--invalid]="!isValid()"
+          [attr.aria-label]="isValid() ? 'Valid JSON' : 'Invalid JSON'"
+          [style.visibility]="leftMode() === 'text' ? 'visible' : 'hidden'"
+        ></span>
+      }
     </div>
   </header>
 
@@ -110,10 +90,11 @@
           [value]="rawText()"
           [language]="monacoLanguage()"
           [theme]="theme()"
+          [readOnly]="readOnly()"
           [errorPosition]="errorPosition()"
           [isActive]="isActive()"
           [diffDecorations]="diffDecorations()"
-          ariaLabel="JSON editor"
+          [ariaLabel]="textAriaLabel()"
           (valueChange)="onValueChange($event)"
           (focused)="onEditorFocused()"
           (pasted)="onEditorPasted($event)"
@@ -187,8 +168,8 @@
         language="plaintext"
         [theme]="theme()"
         ariaLabel="CSV output (read-only)"
-        emptyTitle="No valid JSON to convert"
-        emptyDescription="Switch to Text mode, paste valid JSON, then come back to CSV view."
+        [emptyTitle]="convertedEmptyTitle()"
+        [emptyDescription]="convertedEmptyDescription()"
       />
     }
     @case ('xml') {

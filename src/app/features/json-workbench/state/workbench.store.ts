@@ -92,18 +92,6 @@ export class WorkbenchStore {
 
   readonly workingJson = computed<JsonValue | null>(() => this.currentJson() ?? this.lastValidJson());
 
-  readonly workingPrettyText = computed<string>(() => {
-    const json = this.workingJson();
-    return json === null ? '' : stringifyJson(json, 2);
-  });
-
-  readonly workingMinifiedText = computed<string>(() => {
-    const json = this.workingJson();
-    return json === null ? '' : stringifyJson(json, 0);
-  });
-
-  readonly baselineExists = computed<boolean>(() => this.baselineText().length > 0);
-
   readonly baselineJson = computed<JsonValue | null>(() => {
     const parsed = parseJson(this.baselineText());
     return parsed.ok ? parsed.value : null;
@@ -166,26 +154,6 @@ export class WorkbenchStore {
   private applyTransform(result: ParseState, setter: (v: string) => void, spaces: number): boolean {
     if (!result.ok) return false;
     setter(stringifyJson(result.value, spaces));
-    return true;
-  }
-
-  /** Format JSON in the active panel. */
-  formatActivePanel(): boolean {
-    return this.activePanel() === 'left' ? this.formatJson() : this.formatBaselineJson();
-  }
-
-  /** Minify JSON in the active panel. */
-  minifyActivePanel(): boolean {
-    return this.activePanel() === 'left' ? this.minifyJson() : this.minifyBaselineJson();
-  }
-
-  resetToBaseline(): boolean {
-    const baseline = this.baselineText();
-    if (!baseline) {
-      return false;
-    }
-
-    this.rawText.set(baseline);
     return true;
   }
 

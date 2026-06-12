@@ -12,7 +12,7 @@ import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
 })
 export class JsonCompareComponent {
   constructor() {
-    inject(Title).setTitle('JSON Compare — Diff Two JSON Documents Side by Side | JSONScan');
+    inject(Title).setTitle('JSON Compare — Diff Two JSON Documents Side by Side | JSON Hunt');
     inject(Meta).updateTag({ name: 'description', content: 'Compare two JSON documents side by side. Highlights every added, removed and changed line. Free online JSON diff and compare tool.' });
   }
 }

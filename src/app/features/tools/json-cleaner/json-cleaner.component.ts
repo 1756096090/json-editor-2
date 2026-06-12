@@ -1,53 +1,15 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Title, Meta } from '@angular/platform-browser';
 import { JsonWorkbenchComponent } from '../../json-workbench/json-workbench.component';
-import { WorkbenchStore, JsonValue } from '../../json-workbench/state/workbench.store';
+import { WorkbenchStore } from '../../json-workbench/state/workbench.store';
+import type { JsonValue } from '../../json-workbench/state/workbench.store';
 import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
-
-interface CleanOptions {
-  removeNull: boolean;
-  removeEmptyStrings: boolean;
-  removeEmptyArrays: boolean;
-  removeEmptyObjects: boolean;
-}
-
-function cleanJson(value: JsonValue, opts: CleanOptions): JsonValue | undefined {
-  if (opts.removeNull && value === null) return undefined;
-  if (opts.removeEmptyStrings && value === '') return undefined;
-
-  if (Array.isArray(value)) {
-    const cleaned = value
-      .map((item) => cleanJson(item, opts))
-      .filter((item): item is JsonValue => item !== undefined);
-    if (opts.removeEmptyArrays && cleaned.length === 0) return undefined;
-    return cleaned;
-  }
-
-  if (value !== null && typeof value === 'object') {
-    const cleaned: Record<string, JsonValue> = {};
-    for (const [k, v] of Object.entries(value)) {
-      const result = cleanJson(v, opts);
-      if (result !== undefined) {
-        cleaned[k] = result;
-      }
-    }
-    if (opts.removeEmptyObjects && Object.keys(cleaned).length === 0) return undefined;
-    return cleaned;
-  }
-
-  return value;
-}
-
-/** Count total key/item slots in a JSON tree (not leaf primitives themselves). */
-function countEntries(value: JsonValue): number {
-  if (Array.isArray(value)) {
-    return value.reduce<number>((n, v) => n + 1 + countEntries(v), 0);
-  }
-  if (value !== null && typeof value === 'object') {
-    return Object.entries(value).reduce<number>((n, [, v]) => n + 1 + countEntries(v), 0);
-  }
-  return 0;
-}
+import {
+  cleanJson,
+  countJsonEntries,
+  DEFAULT_JSON_CLEAN_OPTIONS,
+} from '../../json-workbench/utils/json-cleaner.utils';
+import type { JsonCleanOptions } from '../../json-workbench/utils/json-cleaner.utils';
 
 @Component({
   selector: 'app-json-cleaner',
@@ -120,17 +82,12 @@ function countEntries(value: JsonValue): number {
 export class JsonCleanerComponent {
   readonly store = inject(WorkbenchStore);
 
-  readonly opts = signal<CleanOptions>({
-    removeNull: true,
-    removeEmptyStrings: true,
-    removeEmptyArrays: true,
-    removeEmptyObjects: true,
-  });
+  readonly opts = signal<JsonCleanOptions>({ ...DEFAULT_JSON_CLEAN_OPTIONS });
 
   readonly lastStatus = signal('');
 
   constructor() {
-    inject(Title).setTitle('JSON Cleaner — Remove Nulls & Empty Values | JSONScan');
+    inject(Title).setTitle('JSON Cleaner — Remove Nulls & Empty Values | JSON Hunt');
     inject(Meta).updateTag({
       name: 'description',
       content:
@@ -150,7 +107,7 @@ export class JsonCleanerComponent {
     }
   }
 
-  toggleOpt(key: keyof CleanOptions): void {
+  toggleOpt(key: keyof JsonCleanOptions): void {
     this.opts.update((o) => {
       const updated = { ...o, [key]: !o[key] };
       localStorage.setItem('json-we-format:cleaner-opts', JSON.stringify(updated));
@@ -163,10 +120,10 @@ export class JsonCleanerComponent {
     if (json === null) return;
 
     const opts = this.opts();
-    const before = countEntries(json);
+    const before = countJsonEntries(json);
     const fallback: JsonValue = Array.isArray(json) ? [] : {};
     const result = cleanJson(json, opts) ?? fallback;
-    const after = countEntries(result);
+    const after = countJsonEntries(result);
     const removed = before - after;
 
     this.store.setRawText(JSON.stringify(result, null, 2));

@@ -343,24 +343,6 @@
   outline: none;
 }
 
-.editor-lab-pane__meta {
-  align-items: center;
-  background: color-mix(in srgb, var(--color-panel-bg-soft) 82%, transparent);
-  border-top: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  display: flex;
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  gap: var(--space-3);
-  justify-content: space-between;
-  margin: 0;
-  padding: var(--space-2) var(--space-3);
-}
-
-.editor-lab-pane__meta-item {
-  margin: 0;
-}
-
 .editor-lab-pane__alert {
   font-size: var(--text-sm);
   margin: 0;
@@ -448,10 +430,6 @@
     padding: var(--space-3);
   }
 
-  .editor-lab-pane__meta {
-    padding-left: var(--space-2);
-    padding-right: var(--space-2);
-  }
 }
 
 /* ── Drag & Drop overlay ──────────────────────────────────────────────── */

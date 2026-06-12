@@ -1,1 +1,26 @@
 <div #editorContainer class="editor-text-container"></div>
+
+@if ($any(this).getSelectionToolbarPosition(); as position) {
+  <div
+    class="editor-text-selection-tools"
+    [style.left.px]="position.left"
+    [style.top.px]="position.top"
+    role="toolbar"
+    aria-label="Selected text tools"
+  >
+    <select
+      class="editor-text-selection-tools__select"
+      aria-label="Change selected text case"
+      (change)="onCaseTransformSelected($any($event.target).value); $any($event.target).value = ''"
+    >
+      <option value="">Text case</option>
+      <option value="camel">camelCase</option>
+      <option value="pascal">PascalCase</option>
+      <option value="snake">snake_case</option>
+      <option value="upper-snake">UPPER_SNAKE_CASE</option>
+      <option value="kebab">kebab-case</option>
+      <option value="flat">flatcase</option>
+      <option value="train">Train-Case</option>
+    </select>
+  </div>
+}

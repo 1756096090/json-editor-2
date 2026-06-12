@@ -12,7 +12,7 @@ import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
 })
 export class JsonFormatterComponent {
   constructor() {
-    inject(Title).setTitle('JSON Formatter — Beautify & Format JSON Online | JSONScan');
+    inject(Title).setTitle('JSON Formatter — Beautify & Format JSON Online | JSON Hunt');
     inject(Meta).updateTag({ name: 'description', content: 'Paste your JSON and instantly format and beautify it with proper indentation. Free online JSON formatter.' });
   }
 }

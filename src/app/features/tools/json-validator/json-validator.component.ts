@@ -12,7 +12,7 @@ import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
 })
 export class JsonValidatorComponent {
   constructor() {
-    inject(Title).setTitle('JSON Validator — Validate JSON with Precise Errors | JSONScan');
+    inject(Title).setTitle('JSON Validator — Validate JSON with Precise Errors | JSON Hunt');
     inject(Meta).updateTag({ name: 'description', content: 'Validate any JSON document online. Get clear error messages with exact line and column references. Free JSON validator.' });
   }
 }

@@ -12,7 +12,7 @@ import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
 })
 export class JsonMinifierComponent {
   constructor() {
-    inject(Title).setTitle('JSON Minifier — Compress & Minify JSON Online | JSONScan');
+    inject(Title).setTitle('JSON Minifier — Compress & Minify JSON Online | JSON Hunt');
     inject(Meta).updateTag({ name: 'description', content: 'Remove all whitespace and compress JSON to its smallest form. Ideal for API payloads and config files. Free online JSON minifier.' });
   }
 }

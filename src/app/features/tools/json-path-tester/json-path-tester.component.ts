@@ -23,7 +23,7 @@ export class JsonPathTesterComponent {
   readonly canRun = computed(() => this.store.isValidJson() && this.expression().trim() !== '');
 
   constructor() {
-    inject(Title).setTitle('JSONPath Tester — Query JSON Interactively | JSONScan');
+    inject(Title).setTitle('JSONPath Tester — Query JSON Interactively | JSON Hunt');
     inject(Meta).updateTag({
       name: 'description',
       content:
