@@ -4,6 +4,10 @@
  * Heuristic pipeline that attempts to repair common JSON authoring mistakes.
  * Each step is tried in sequence; the first successful parse wins.
  * The whole pipeline can also be combined for multi-step fixes.
+ *
+ * All transforms that could touch string contents are string-aware: they
+ * tokenize the input and never modify characters inside double-quoted strings
+ * (so URLs like "https://api.com/a//b" survive comment stripping).
  */
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -11,8 +15,12 @@
 export type FixLabel =
   | 'trim'
   | 'bom'
+  | 'code-fence'
+  | 'smart-quotes'
+  | 'comments'
   | 'trailing-commas'
   | 'single-quotes'
+  | 'unquoted-keys'
   | 'close-brackets'
   | 'extract-block'
   | 'combined';
@@ -32,6 +40,7 @@ export type AutoFixResult = AutoFixSuccess | AutoFixFailure;
 
 /**
  * Attempt to fix `input` using a heuristic pipeline.
+ * If the input is already valid JSON it is returned unchanged with no fixes.
  * Returns `AutoFixSuccess` with the corrected text and applied fixes,
  * or `AutoFixFailure` if no fix was found.
  *
@@ -39,7 +48,10 @@ export type AutoFixResult = AutoFixSuccess | AutoFixFailure;
  * @param maxAttempts - Maximum number of single-step iterations (default 10).
  */
 export function tryAutoFixJson(input: string, maxAttempts = 10): AutoFixResult {
-  const isInitiallyValid = looksLikeValidJson(input);
+  // Valid JSON needs no repair — never report it as an error.
+  if (looksLikeValidJson(input)) {
+    return { ok: true, fixedText: input, appliedFixes: [] };
+  }
 
   // ──────────────────────────────────────────────────────────────────────────
   // Phase 1: Try each single-step transform in isolation
@@ -47,8 +59,12 @@ export function tryAutoFixJson(input: string, maxAttempts = 10): AutoFixResult {
   const singleSteps: Array<{ label: FixLabel; fn: (s: string) => string }> = [
     { label: 'trim',            fn: applyTrim },
     { label: 'bom',             fn: applyBom },
+    { label: 'code-fence',      fn: applyCodeFence },
+    { label: 'smart-quotes',    fn: applySmartQuotes },
+    { label: 'comments',        fn: applyComments },
     { label: 'trailing-commas', fn: applyTrailingCommas },
     { label: 'single-quotes',   fn: applySingleQuotes },
+    { label: 'unquoted-keys',   fn: applyUnquotedKeys },
     { label: 'close-brackets',  fn: applyCloseBrackets },
     { label: 'extract-block',   fn: applyExtractBlock },
   ];
@@ -60,33 +76,27 @@ export function tryAutoFixJson(input: string, maxAttempts = 10): AutoFixResult {
     }
   }
 
-  // If input was initially valid and no transforms were applied, nothing to do
-  if (isInitiallyValid) {
-    return { ok: false, reason: 'Input is already valid JSON.' };
-  }
-
   // ──────────────────────────────────────────────────────────────────────────
   // Phase 2: Chain all transforms iteratively (up to maxAttempts passes)
   // ──────────────────────────────────────────────────────────────────────────
   let text = input;
-  const pipeline: Array<(s: string) => string> = [
-    applyTrim,
-    applyBom,
-    applyTrailingCommas,
-    applySingleQuotes,
-    applyCloseBrackets,
-    applyExtractBlock,
-  ];
+  const appliedLabels = new Set<FixLabel>();
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     let changed = false;
-    for (const fn of pipeline) {
-      const next = fn(text);
+    for (const step of singleSteps) {
+      const next = step.fn(text);
       if (next !== text) {
         text = next;
         changed = true;
+        appliedLabels.add(step.label);
         if (looksLikeValidJson(text)) {
-          return { ok: true, fixedText: text, appliedFixes: ['combined'] };
+          const labels = [...appliedLabels];
+          return {
+            ok: true,
+            fixedText: text,
+            appliedFixes: labels.length > 1 ? ['combined'] : labels,
+          };
         }
       }
     }
@@ -105,6 +115,44 @@ function looksLikeValidJson(text: string): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Apply `fn` only to the segments of `text` that are OUTSIDE double-quoted
+ * strings. String contents (including escapes) are copied verbatim, so
+ * transforms can never corrupt values like URLs or embedded symbols.
+ */
+function transformOutsideStrings(text: string, fn: (segment: string) => string): string {
+  let result = '';
+  let segment = '';
+  let i = 0;
+  const len = text.length;
+
+  while (i < len) {
+    const ch = text[i];
+    if (ch === '"') {
+      result += fn(segment);
+      segment = '';
+      // Copy the whole string literal verbatim
+      result += ch;
+      i++;
+      while (i < len) {
+        const c = text[i];
+        if (c === '\\' && i + 1 < len) {
+          result += c + text[i + 1];
+          i += 2;
+          continue;
+        }
+        result += c;
+        i++;
+        if (c === '"') break;
+      }
+    } else {
+      segment += ch;
+      i++;
+    }
+  }
+  return result + fn(segment);
 }
 
 // ── Transforms ────────────────────────────────────────────────────────────────
@@ -131,18 +179,89 @@ function applyBom(text: string): string {
 }
 
 /**
- * Remove trailing commas before `}` or `]`.
- * Handles single and multiple trailing commas, and whitespace/newlines between them.
+ * Strip Markdown code fences (```json … ``` or ``` … ```).
  */
-function applyTrailingCommas(text: string): string {
-  // Loop to handle consecutive trailing commas
-  let prev = '';
-  let result = text;
-  while (prev !== result) {
-    prev = result;
-    result = result.replace(/,(\s*[}\]])/g, '$1');
+function applyCodeFence(text: string): string {
+  const match = text.match(/^\s*```[a-zA-Z0-9_-]*\s*\n([\s\S]*?)\n?\s*```\s*$/);
+  return match ? match[1] : text;
+}
+
+/**
+ * Replace typographic ("smart") quotes with straight quotes.
+ * Runs outside existing double-quoted strings so valid content is untouched.
+ */
+function applySmartQuotes(text: string): string {
+  return transformOutsideStrings(text, (seg) =>
+    seg.replace(/[“”„‟]/g, '"').replace(/[‘’‚‛]/g, "'")
+  );
+}
+
+/**
+ * Remove line comments and block comments.
+ * String-aware: comment markers inside strings (e.g. URLs) are preserved.
+ */
+function applyComments(text: string): string {
+  let result = '';
+  let i = 0;
+  const len = text.length;
+
+  while (i < len) {
+    const ch = text[i];
+    if (ch === '"') {
+      // Copy string literal verbatim
+      result += ch;
+      i++;
+      while (i < len) {
+        const c = text[i];
+        if (c === '\\' && i + 1 < len) {
+          result += c + text[i + 1];
+          i += 2;
+          continue;
+        }
+        result += c;
+        i++;
+        if (c === '"') break;
+      }
+    } else if (ch === '/' && text[i + 1] === '/') {
+      // Line comment — skip to end of line
+      while (i < len && text[i] !== '\n') i++;
+    } else if (ch === '/' && text[i + 1] === '*') {
+      // Block comment — skip to closing */
+      i += 2;
+      while (i < len && !(text[i] === '*' && text[i + 1] === '/')) i++;
+      i += 2;
+    } else {
+      result += ch;
+      i++;
+    }
   }
   return result;
+}
+
+/**
+ * Remove trailing commas before `}` or `]`.
+ * String-aware: commas inside string values are never touched.
+ */
+function applyTrailingCommas(text: string): string {
+  return transformOutsideStrings(text, (seg) => {
+    let prev = '';
+    let result = seg;
+    while (prev !== result) {
+      prev = result;
+      result = result.replace(/,(\s*[}\]])/g, '$1');
+    }
+    return result;
+  });
+}
+
+/**
+ * Quote bare object keys (`{a: 1}` → `{"a": 1}`).
+ * String-aware: identifiers inside string values are never touched.
+ */
+function applyUnquotedKeys(text: string): string {
+  return transformOutsideStrings(text, (seg) =>
+    seg.replace(/([{,]\s*)([A-Za-z_$][\w$]*)(\s*:)/g, '$1"$2"$3')
+  );
 }
 
 /**
@@ -162,7 +281,6 @@ function applySingleQuotes(text: string): string {
       // Start of a single-quoted string — collect until the closing unescaped '
       let str = '"';
       i++;
-      let hasIssue = false;
       while (i < len) {
         const c = text[i];
         if (c === '\\' && i + 1 < len) {
@@ -192,7 +310,6 @@ function applySingleQuotes(text: string): string {
         str += c;
         i++;
       }
-      if (hasIssue) return text; // Bail out if something looked wrong
       result += str;
     } else if (ch === '"') {
       // Already a double-quoted string — copy verbatim, respecting escapes

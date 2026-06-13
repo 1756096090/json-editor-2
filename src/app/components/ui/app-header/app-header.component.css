@@ -10,7 +10,7 @@
   top: 0;
   z-index: var(--z-sticky);
   backdrop-filter: blur(10px);
-  background: white;
+  /* Removed hardcoded `background: white` that broke dark mode */
 }
 
 /* ── Inner layout ───────────────────────────────────────────────── */
@@ -21,7 +21,7 @@
 .header__inner {
   align-items: center;
   display: flex;
-  gap: var(--space-6);
+  gap: var(--space-4);
   height: 100%;
   margin: 0 auto;
   max-width: 1280px;
@@ -44,26 +44,43 @@
 }
 
 .header__logo-mark {
-  height: 70px;
-  width: auto;
+  height: 40px;
+  width: 40px;
   flex-shrink: 0;
   display: block;
-  filter: drop-shadow(0 5px 10px rgb(37 99 235 / 0.28));
+  filter: drop-shadow(0 2px 6px rgb(37 99 235 / 0.22));
+}
+
+/* Wolf outline follows the theme text color → contrast in light AND dark */
+.header__logo-ink {
+  fill: var(--color-text);
+  stroke: var(--color-text);
+}
+
+.header__logo-blue {
+  fill: var(--color-accent);
+  stroke: var(--color-accent);
+}
+
+.header__logo-eye {
+  fill: var(--color-accent);
+  stroke: var(--color-text);
+  stroke-width: 46;
+  paint-order: stroke fill;
 }
 
 .header__brand {
   align-items: baseline;
   display: inline-flex;
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1;
-  text-shadow: 0 1px 0 rgb(255 255 255 / 0.12), 0 8px 20px rgb(15 23 42 / 0.24);
   white-space: nowrap;
 }
 
 .header__brand-json {
-  color: black;
+  color: var(--color-text);
 }
 
 .header__brand-hunt {
@@ -73,8 +90,6 @@
   margin-left: 0.08em;
   position: relative;
 }
-
-
 
 /* ── Primary nav ────────────────────────────────────────────────── */
 .header__nav {
@@ -90,13 +105,14 @@
   border: none;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   cursor: pointer;
   display: inline-flex;
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   gap: var(--space-1);
-  padding: var(--space-1) var(--space-3);
+  min-height: 36px;
+  padding: var(--space-2) var(--space-3);
   text-decoration: none;
   transition: var(--transition-colors);
 }
@@ -154,6 +170,7 @@
   display: flex;
   font-size: var(--text-sm);
   justify-content: space-between;
+  min-height: 36px;
   padding: var(--space-2) var(--space-3);
   text-decoration: none;
   transition: var(--transition-colors);
@@ -177,9 +194,9 @@
   border: 1px solid var(--color-badge-popular-border);
   border-radius: var(--radius-full);
   color: var(--color-badge-popular-text);
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: var(--weight-semibold);
-  padding: 0.05rem 0.4rem;
+  padding: 0.1rem 0.4rem;
   text-transform: lowercase;
 }
 
@@ -221,10 +238,13 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   cursor: pointer;
   display: flex;
   font-size: 1rem;
+  justify-content: center;
+  min-height: 36px;
+  min-width: 36px;
   padding: var(--space-1) var(--space-2);
   transition: var(--transition-colors);
 }
@@ -240,22 +260,23 @@
   outline-offset: var(--focus-ring-offset);
 }
 
-/* ── Mobile: hide nav labels, keep icons ───────────────────────── */
+/* ── Mobile ─────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .header__inner {
-    padding: 0 var(--space-2);
+    padding: 0 var(--space-3);
     gap: var(--space-2);
   }
 
   .header__nav-link {
-    padding: var(--space-1) var(--space-2);
+    padding: var(--space-2) var(--space-2);
+    font-size: var(--text-xs);
   }
 
   .header__logo-mark {
-    height:100px;
+    height: 36px;
   }
 
   .header__brand {
-    font-size: 2rem;
+    font-size: 1.1rem;
   }
 }

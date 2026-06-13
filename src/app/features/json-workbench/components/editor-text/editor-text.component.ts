@@ -72,6 +72,8 @@ export class EditorTextComponent implements OnInit {
   readonly focused = output<void>();
   /** Emitted on paste with the pasted text. */
   readonly pasted = output<string>();
+  /** Emitted (debounced) with the cursor's character offset in the model. */
+  readonly cursorOffsetChange = output<number>();
 
   private readonly containerRef = viewChild.required<ElementRef<HTMLElement>>('editorContainer');
   private readonly loader = inject(MonacoLoaderService);
@@ -82,6 +84,7 @@ export class EditorTextComponent implements OnInit {
   private ignoreNextChange = false;
   private decorationIds: string[] = [];
   private diffDecorationIds: string[] = [];
+  private cursorOffsetTimer: ReturnType<typeof setTimeout> | null = null;
 
   public readonly ready = signal(false);
   public readonly selectionToolbarPosition = signal<SelectionToolbarPosition | null>(null);
@@ -150,8 +153,17 @@ export class EditorTextComponent implements OnInit {
     });
 
     this.destroyRef.onDestroy(() => {
+      if (this.cursorOffsetTimer !== null) clearTimeout(this.cursorOffsetTimer);
       this.editor?.dispose();
     });
+  }
+
+  private scheduleCursorOffset(position: monacoNs.Position): void {
+    if (this.cursorOffsetTimer !== null) clearTimeout(this.cursorOffsetTimer);
+    this.cursorOffsetTimer = setTimeout(() => {
+      const model = this.editor?.getModel();
+      if (model) this.cursorOffsetChange.emit(model.getOffsetAt(position));
+    }, 120);
   }
 
   // ── Public API ───────────────────────────────────────────────────────
@@ -262,6 +274,11 @@ export class EditorTextComponent implements OnInit {
 
     this.editor.onDidChangeCursorSelection(() => {
       this.updateSelectionToolbarPosition();
+    });
+
+    // Debounced cursor offset — keeps path inspection cheap on large documents
+    this.editor.onDidChangeCursorPosition((e) => {
+      this.scheduleCursorOffset(e.position);
     });
 
     this.editor.onDidScrollChange(() => {

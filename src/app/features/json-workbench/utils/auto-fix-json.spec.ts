@@ -3,18 +3,52 @@ import { tryAutoFixJson } from './auto-fix-json';
 describe('tryAutoFixJson', () => {
 
   // ── Already valid ──────────────────────────────────────────────────────────
-  it('returns failure when input is already valid JSON', () => {
+  it('returns success with no fixes when input is already valid JSON', () => {
     const result = tryAutoFixJson('{"a":1}');
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.fixedText).toBe('{"a":1}');
+      expect(result.appliedFixes).toEqual([]);
+    }
+  });
+
+  it('returns the exact input unchanged for valid JSON with formatting', () => {
+    const input = '{\n  "a": 1,\n  "b": [1, 2]\n}';
+    const result = tryAutoFixJson(input);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.fixedText).toBe(input);
+      expect(result.appliedFixes).toEqual([]);
+    }
+  });
+
+  it('returns success with no fixes for plain number string (valid JSON)', () => {
+    const result = tryAutoFixJson('42');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.fixedText).toBe('42');
+      expect(result.appliedFixes).toEqual([]);
+    }
+  });
+
+  it('does not modify valid strings containing apostrophes', () => {
+    const input = '{"a":"it\'s fine"}';
+    const result = tryAutoFixJson(input);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.fixedText).toBe(input);
+      expect(result.appliedFixes).toEqual([]);
+    }
   });
 
   // ── Trim & normalise ───────────────────────────────────────────────────────
-  it('trims surrounding whitespace', () => {
-    const result = tryAutoFixJson('   {"a":1}   ');
+  it('treats whitespace-padded valid JSON as valid without changes', () => {
+    const input = '   {"a":1}   ';
+    const result = tryAutoFixJson(input);
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.fixedText.trim()).toBe('{"a":1}');
-      expect(result.appliedFixes).toContain('trim');
+      expect(result.fixedText).toBe(input);
+      expect(result.appliedFixes).toEqual([]);
     }
   });
 
@@ -29,6 +63,71 @@ describe('tryAutoFixJson', () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.appliedFixes).toContain('bom');
+    }
+  });
+
+  // ── Code fences ────────────────────────────────────────────────────────────
+  it('strips ```json code fences', () => {
+    const result = tryAutoFixJson('```json\n{"a":1}\n```');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(JSON.parse(result.fixedText)).toEqual({ a: 1 });
+      expect(result.appliedFixes).toContain('code-fence');
+    }
+  });
+
+  it('strips bare ``` code fences', () => {
+    const result = tryAutoFixJson('```\n[1,2,3]\n```');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(JSON.parse(result.fixedText)).toEqual([1, 2, 3]);
+    }
+  });
+
+  // ── Smart quotes ───────────────────────────────────────────────────────────
+  it('converts smart double quotes to straight quotes', () => {
+    const result = tryAutoFixJson('{“a”:“b”}');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(JSON.parse(result.fixedText)).toEqual({ a: 'b' });
+      expect(result.appliedFixes).toContain('smart-quotes');
+    }
+  });
+
+  // ── Comments ───────────────────────────────────────────────────────────────
+  it('removes // line comments', () => {
+    const result = tryAutoFixJson('{\n// comment\n"a": 1\n}');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(JSON.parse(result.fixedText)).toEqual({ a: 1 });
+      expect(result.appliedFixes).toContain('comments');
+    }
+  });
+
+  it('removes /* block */ comments', () => {
+    const result = tryAutoFixJson('{ /* note */ "a": 1 }');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(JSON.parse(result.fixedText)).toEqual({ a: 1 });
+    }
+  });
+
+  it('does not break URLs with double slashes inside strings', () => {
+    const input = '{\n// comment\n"url": "https://api.com/a//b"\n}';
+    const result = tryAutoFixJson(input);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(JSON.parse(result.fixedText)).toEqual({ url: 'https://api.com/a//b' });
+    }
+  });
+
+  it('preserves URLs in valid JSON without modification', () => {
+    const input = '{"url":"https://api.com/a//b"}';
+    const result = tryAutoFixJson(input);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.fixedText).toBe(input);
+      expect(result.appliedFixes).toEqual([]);
     }
   });
 
@@ -58,6 +157,14 @@ describe('tryAutoFixJson', () => {
     }
   });
 
+  it('does not touch ",}" sequences inside string values', () => {
+    const result = tryAutoFixJson('{"a": ",}" , "b": 2,}');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(JSON.parse(result.fixedText)).toEqual({ a: ',}', b: 2 });
+    }
+  });
+
   // ── Single quotes ──────────────────────────────────────────────────────────
   it('converts single-quoted keys and values to double quotes', () => {
     const result = tryAutoFixJson("{'a':'b'}");
@@ -68,13 +175,6 @@ describe('tryAutoFixJson', () => {
     }
   });
 
-  it('does not break strings that already contain double quotes', () => {
-    // This has a double quote inside — should still handle gracefully
-    const result = tryAutoFixJson('{"a":"it\'s fine"}');
-    // Already valid after parsing — our fn reports failure (already valid)
-    expect(result.ok).toBe(false);
-  });
-
   it('handles escaped single quotes inside single-quoted strings', () => {
     const input = "{'key': 'it\\'s a test'}";
     const result = tryAutoFixJson(input);
@@ -82,6 +182,24 @@ describe('tryAutoFixJson', () => {
     if (result.ok) {
       const parsed = JSON.parse(result.fixedText);
       expect(parsed['key']).toBe("it's a test");
+    }
+  });
+
+  // ── Unquoted keys ──────────────────────────────────────────────────────────
+  it('quotes bare object keys', () => {
+    const result = tryAutoFixJson('{a: 1, b_c: "x"}');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(JSON.parse(result.fixedText)).toEqual({ a: 1, b_c: 'x' });
+      expect(result.appliedFixes).toContain('unquoted-keys');
+    }
+  });
+
+  it('does not quote identifier-like text inside string values', () => {
+    const result = tryAutoFixJson('{a: "key: value"}');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(JSON.parse(result.fixedText)).toEqual({ a: 'key: value' });
     }
   });
 
@@ -146,6 +264,15 @@ describe('tryAutoFixJson', () => {
     }
   });
 
+  it('fixes fenced JSON with comments and trailing commas', () => {
+    const input = '```json\n{\n  // config\n  "a": 1,\n}\n```';
+    const result = tryAutoFixJson(input);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(JSON.parse(result.fixedText)).toEqual({ a: 1 });
+    }
+  });
+
   // ── Hopeless input ────────────────────────────────────────────────────────
   it('returns failure when no fix is possible', () => {
     const result = tryAutoFixJson('this is not json at all');
@@ -154,12 +281,6 @@ describe('tryAutoFixJson', () => {
 
   it('returns failure for empty string', () => {
     const result = tryAutoFixJson('');
-    expect(result.ok).toBe(false);
-  });
-
-  it('returns failure for plain number string (already valid JSON)', () => {
-    // "42" is valid JSON per spec
-    const result = tryAutoFixJson('42');
     expect(result.ok).toBe(false);
   });
 

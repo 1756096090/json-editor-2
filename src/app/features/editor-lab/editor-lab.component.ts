@@ -2,7 +2,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -17,14 +16,10 @@ import { SegmentItem } from '../../components/ui/segmented-control/segmented-con
 import { StorageService } from '../../core/storage.service';
 import { SplitPaneComponent } from '../../components/ui/split-pane/split-pane.component';
 import { SettingsStore } from '../settings/settings.store';
-import { EditorLabIoService } from './services/editor-lab-io.service';
 import type { DiffLineDecoration } from '../json-workbench/utils/diff-engine.types';
 
 const INITIAL_INPUT_JSON = '';
 const INITIAL_OUTPUT_JSON = '';
-
-const STORAGE_KEY_INPUT_TEXT = 'json-we-format:editor-lab:input-text';
-const STORAGE_KEY_OUTPUT_TEXT = 'json-we-format:editor-lab:output-text';
 
 @Component({
   selector: 'app-editor-lab',
@@ -41,7 +36,6 @@ export class EditorLabComponent {
   private readonly meta = inject(Meta);
   private readonly formatRegistry = inject(FormatRegistryService);
   private readonly storage = inject(StorageService);
-  private readonly io = inject(EditorLabIoService);
   readonly settings = inject(SettingsStore);
 
   private readonly STORAGE_KEY_INPUT_FORMAT = 'json-we-format:editor-lab:input-format';

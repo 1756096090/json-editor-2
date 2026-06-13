@@ -8,6 +8,7 @@
           tooltipText="Open a .json file from disk"
           (pressed)="onOpenFilePressed('left')"
         >
+          <app-ui-icon name="open" [size]="14" />
           Open
         </app-ui-button>
         <app-ui-button
@@ -16,6 +17,7 @@
           tooltipText="Import JSON from a URL"
           (pressed)="onImportUrlPressed('left')"
         >
+          <app-ui-icon name="url" [size]="14" />
           URL
         </app-ui-button>
         <app-ui-button
@@ -24,6 +26,7 @@
           tooltipText="Format input JSON"
           (pressed)="onFormatPanel('left')"
         >
+          <app-ui-icon name="format" [size]="14" />
           Format
         </app-ui-button>
         <app-ui-button
@@ -32,6 +35,7 @@
           tooltipText="Convert JSON input to CSV output"
           (pressed)="onConvertToCsv()"
         >
+          <app-ui-icon name="arrow-right" [size]="14" />
           Convert to CSV
         </app-ui-button>
       } @else {
@@ -42,6 +46,7 @@
           tooltipText="Copy CSV output"
           (pressed)="onCopyCsvOutput()"
         >
+          <app-ui-icon name="copy" [size]="14" />
           Copy CSV
         </app-ui-button>
         <app-ui-button
@@ -51,60 +56,86 @@
           tooltipText="Download CSV output"
           (pressed)="onDownloadCsvOutput()"
         >
+          <app-ui-icon name="download" [size]="14" />
           Download CSV
         </app-ui-button>
       }
     } @else {
-      <app-ui-button
-        size="sm"
-        variant="default"
-        tooltipText="Open a .json file from disk"
-        (pressed)="onOpenFilePressed(panel)"
-      >
-        Open
-      </app-ui-button>
-      <app-ui-button
-        size="sm"
-        variant="ghost"
-        tooltipText="Import JSON from a URL"
-        (pressed)="onImportUrlPressed(panel)"
-      >
-        URL
-      </app-ui-button>
-      <app-ui-button
-        size="sm"
-        variant="accent"
-        tooltipText="Format JSON (Ctrl+Shift+F)"
-        (pressed)="onFormatPanel(panel)"
-      >
-        Format
-      </app-ui-button>
-      <app-ui-button
-        size="sm"
-        variant="ghost"
-        tooltipText="Minify JSON (Ctrl+M)"
-        (pressed)="onMinifyPanel(panel)"
-      >
-        Minify
-      </app-ui-button>
-      <app-ui-button
-        size="sm"
-        variant="ghost"
-        tooltipText="Clean JSON"
-        (pressed)="onCleanPanel(panel)"
-      >
-        Clean
-      </app-ui-button>
-      @if (isJsonPanel(panel)) {
+      <div class="toolbar-group">
+        <app-ui-button
+          size="sm"
+          variant="default"
+          tooltipText="Open a .json file from disk"
+          (pressed)="onOpenFilePressed(panel)"
+        >
+          <app-ui-icon name="open" [size]="14" />
+          Open
+        </app-ui-button>
         <app-ui-button
           size="sm"
           variant="ghost"
-          tooltipText="Sort object keys alphabetically"
-          (pressed)="onSortPanel(panel)"
+          tooltipText="Import JSON from a URL"
+          (pressed)="onImportUrlPressed(panel)"
         >
-          Sort
+          <app-ui-icon name="url" [size]="14" />
+          URL
         </app-ui-button>
-      }
+      </div>
+
+      <span class="toolbar-divider" aria-hidden="true"></span>
+
+      <div class="toolbar-group">
+        <app-ui-button
+          size="sm"
+          variant="accent"
+          tooltipText="Format JSON (Ctrl+Shift+F)"
+          (pressed)="onFormatPanel(panel)"
+        >
+          <app-ui-icon name="format" [size]="14" />
+          Format
+        </app-ui-button>
+        <app-ui-button
+          size="sm"
+          variant="ghost"
+          tooltipText="Minify JSON (Ctrl+M)"
+          (pressed)="onMinifyPanel(panel)"
+        >
+          <app-ui-icon name="minify" [size]="14" />
+          Minify
+        </app-ui-button>
+        <app-ui-button
+          size="sm"
+          variant="ghost"
+          tooltipText="Clean JSON"
+          (pressed)="onCleanPanel(panel)"
+        >
+          <app-ui-icon name="clean" [size]="14" />
+          Clean
+        </app-ui-button>
+        @if (isJsonPanel(panel)) {
+          <app-ui-button
+            size="sm"
+            variant="ghost"
+            tooltipText="Sort object keys alphabetically"
+            (pressed)="onSortPanel(panel)"
+          >
+            <app-ui-icon name="sort" [size]="14" />
+            Sort
+          </app-ui-button>
+        }
+        <app-ui-button
+          size="sm"
+          variant="ghost"
+          tooltipText="Translate string values to another language"
+          (pressed)="onTranslatePressed(panel)"
+        >
+          <app-ui-icon name="translate" [size]="14" />
+          Translate
+        </app-ui-button>
+      </div>
+
+      <span class="toolbar-divider" aria-hidden="true"></span>
+
       <app-ui-button
         size="sm"
         [variant]="store.showDiff() ? 'active' : 'ghost'"
@@ -113,6 +144,7 @@
         [tooltipText]="compareTooltip()"
         (pressed)="onToggleDiffPressed()"
       >
+        <app-ui-icon name="compare" [size]="14" />
         Compare
       </app-ui-button>
     }
@@ -235,6 +267,7 @@
         (fileDropped)="onFileDropped($event)"
         (modeChange)="onLeftModeChanged($event)"
         (focused)="onLeftPanelFocused()"
+        (statusMessage)="onPanelStatus($event)"
       >
         <div editorPanelActions class="workbench__input-actions" role="toolbar" aria-label="Editor actions">
           <ng-container
@@ -268,6 +301,7 @@
         (fileDropped)="onBaselineFileDropped($event)"
         (modeChange)="onRightModeChanged($event)"
         (focused)="onRightPanelFocused()"
+        (statusMessage)="onPanelStatus($event)"
       >
         <div editorPanelActions class="workbench__input-actions" role="toolbar" aria-label="Editor actions">
           <ng-container
@@ -284,7 +318,7 @@
             ariaLabel="Copy editor A to editor B"
             tooltipText="Copy A → B"
             (pressed)="onCopyLeftToRight()"
-          >→</app-ui-button>
+          ><app-ui-icon name="arrow-right" [size]="14" /></app-ui-button>
 
           <app-ui-button
             size="sm"
@@ -292,7 +326,7 @@
             ariaLabel="Copy editor B to editor A"
             tooltipText="Copy B → A"
             (pressed)="onCopyRightToLeft()"
-          >←</app-ui-button>
+          ><app-ui-icon name="arrow-left" [size]="14" /></app-ui-button>
 
           <app-ui-button
             size="sm"
@@ -300,7 +334,7 @@
             ariaLabel="Swap editor panels"
             tooltipText="Swap panels"
             (pressed)="onSwapPanels()"
-          >⇅</app-ui-button>
+          ><app-ui-icon name="swap" [size]="14" /></app-ui-button>
 
           <app-ui-button
             size="sm"
@@ -310,7 +344,7 @@
             ariaLabel="Compare (toggle diff)"
             [tooltipText]="compareTooltip()"
             (pressed)="onToggleDiffPressed()"
-          >⇄</app-ui-button>
+          ><app-ui-icon name="compare" [size]="14" /></app-ui-button>
         </div>
       }
     </app-split-pane>
@@ -325,5 +359,15 @@
     cancelText="Cancelar"
     [showDontAsk]="true"
     (closed)="onPanelTransferConfirmClosed($event)"
+  />
+}
+
+@if (showTranslatePanel()) {
+  <app-json-translate-panel
+    [jsonValue]="translateJsonValue()"
+    [canSendToOther]="translateCanSendToOther()"
+    (applied)="onTranslateApplied($event)"
+    (statusMessage)="onPanelStatus($event)"
+    (closed)="onTranslateClosed()"
   />
 }

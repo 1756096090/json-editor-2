@@ -65,7 +65,7 @@
           ariaLabel="Export as {{ leftMode().toUpperCase() }}"
           [tooltipText]="'Download as .' + leftMode()"
           (pressed)="exportCurrentView()"
-        >↓</app-ui-button>
+        ><app-ui-icon name="download" [size]="14" /></app-ui-button>
       }
 
       @if (showValidationState()) {
@@ -98,6 +98,7 @@
           (valueChange)="onValueChange($event)"
           (focused)="onEditorFocused()"
           (pasted)="onEditorPasted($event)"
+          (cursorOffsetChange)="onCursorOffsetChange($event)"
         />
 
         @if (isEmpty()) {
@@ -121,6 +122,15 @@
           [autoFixEnabled]="autoFixEnabled()"
           (showMe)="onShowMePressed()"
           (autoRepair)="onRepairPressed()"
+        />
+      }
+
+      <!-- ── JSON path inspector ───────────────────────────────── -->
+      @if (showPathInspector() && !isEmpty()) {
+        <app-json-path-bar
+          [text]="rawText()"
+          [cursorOffset]="cursorOffset()"
+          (statusMessage)="onPathStatus($event)"
         />
       }
     }

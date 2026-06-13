@@ -103,7 +103,7 @@
   .split-pane--horizontal .split-pane__gutter:not(.split-pane__gutter--hidden) {
     cursor: row-resize;
     flex-direction: row;
-    height: 6px;
+    height: 12px;
     width: 100%;
   }
 }

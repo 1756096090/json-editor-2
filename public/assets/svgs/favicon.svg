@@ -8,7 +8,7 @@
 <style>
   .logo-ink { fill: #020617; stroke: #020617; }
   .logo-blue { fill: #1469FF; stroke: #1469FF; }
-  .logo-eye { fill: #1469FF; stroke: #020617; }
+  .logo-eye { fill: #1469FF; stroke: #020617; stroke-width: 46; paint-order: stroke fill; }
 </style>
 <rect width="1254" height="1254" rx="180" fill="#FFFFFF"/>
 

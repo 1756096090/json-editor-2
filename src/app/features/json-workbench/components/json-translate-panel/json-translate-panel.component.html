@@ -1,0 +1,139 @@
+<dialog #dialogRef class="translate-panel" aria-labelledby="translate-panel-title" (cancel)="close()">
+  <div class="translate-panel__inner">
+    <header class="translate-panel__header">
+      <h2 id="translate-panel-title" class="translate-panel__title">
+        <app-ui-icon name="translate" [size]="18" />
+        Translate JSON values
+      </h2>
+      <button
+        class="translate-panel__close"
+        type="button"
+        aria-label="Close translation panel"
+        (click)="close()"
+      >
+        <app-ui-icon name="close" [size]="16" />
+      </button>
+    </header>
+
+    @if (!providerEnabled) {
+      <p class="translate-panel__notice" role="status">
+        <app-ui-icon name="warning" [size]="14" />
+        {{ disabledMessage }}
+      </p>
+    }
+
+    <div class="translate-panel__controls">
+      <label class="translate-panel__field">
+        <span class="translate-panel__field-label">From</span>
+        <select
+          class="translate-panel__select"
+          [value]="sourceLang()"
+          (change)="setSource($any($event.target).value)"
+        >
+          @for (lang of languages; track lang.code) {
+            <option [value]="lang.code">{{ lang.label }}</option>
+          }
+        </select>
+      </label>
+
+      <span class="translate-panel__arrow" aria-hidden="true">
+        <app-ui-icon name="arrow-right" [size]="16" />
+      </span>
+
+      <label class="translate-panel__field">
+        <span class="translate-panel__field-label">To</span>
+        <select
+          class="translate-panel__select"
+          [value]="targetLang()"
+          (change)="setTarget($any($event.target).value)"
+        >
+          @for (lang of languages; track lang.code) {
+            @if (lang.code !== 'auto') {
+              <option [value]="lang.code">{{ lang.label }}</option>
+            }
+          }
+        </select>
+      </label>
+    </div>
+
+    <p class="translate-panel__note">Only string values are translated. Keys, numbers, booleans and null stay unchanged.</p>
+
+    <fieldset class="translate-panel__targets">
+      <legend class="translate-panel__field-label">Apply result to</legend>
+      <label class="translate-panel__radio">
+        <input
+          type="radio"
+          name="apply-target"
+          value="same"
+          [checked]="target() === 'same'"
+          (change)="setApplyTarget('same')"
+        />
+        <span>Overwrite this editor</span>
+      </label>
+      <label class="translate-panel__radio" [class.translate-panel__radio--disabled]="!canSendToOther()">
+        <input
+          type="radio"
+          name="apply-target"
+          value="other"
+          [checked]="target() === 'other'"
+          [disabled]="!canSendToOther()"
+          (change)="setApplyTarget('other')"
+        />
+        <span>Send to the other panel</span>
+      </label>
+    </fieldset>
+
+    @if (errorMessage()) {
+      <p class="translate-panel__error" role="alert">
+        <app-ui-icon name="error" [size]="14" />
+        {{ errorMessage() }}
+      </p>
+    }
+
+    @if (stats(); as s) {
+      <p class="translate-panel__stats" role="status">
+        <app-ui-icon name="check" [size]="14" />
+        {{ s.stringsFound }} string {{ s.stringsFound === 1 ? 'value' : 'values' }} found.
+        {{ s.stringsTranslated }} translated.
+        @if (s.errors.length) {
+          {{ s.errors.length }} {{ s.errors.length === 1 ? 'error' : 'errors' }}.
+        }
+      </p>
+    }
+
+    @if (resultText()) {
+      <pre class="translate-panel__result" aria-label="Translated JSON preview">{{ resultText() }}</pre>
+    }
+
+    <footer class="translate-panel__footer">
+      <app-ui-button
+        variant="accent"
+        [disabled]="translating() || !providerEnabled"
+        (pressed)="translate()"
+      >
+        <app-ui-icon name="translate" [size]="14" />
+        {{ translating() ? 'Translating…' : 'Translate' }}
+      </app-ui-button>
+
+      <span class="translate-panel__footer-spacer"></span>
+
+      <app-ui-button
+        variant="ghost"
+        [disabled]="!resultText()"
+        (pressed)="copyResult()"
+      >
+        <app-ui-icon name="copy" [size]="14" />
+        Copy
+      </app-ui-button>
+
+      <app-ui-button
+        variant="default"
+        [disabled]="!resultText()"
+        (pressed)="apply()"
+      >
+        <app-ui-icon name="check" [size]="14" />
+        Apply
+      </app-ui-button>
+    </footer>
+  </div>
+</dialog>

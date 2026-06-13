@@ -20,8 +20,12 @@ export interface AutoFixModalResult {
 const FIX_LABELS: Record<FixLabel, string> = {
   'trim':            'Espacios extra',
   'bom':             'Caracteres ocultos',
+  'code-fence':      'Bloque de código Markdown',
+  'smart-quotes':    'Comillas tipográficas',
+  'comments':        'Comentarios eliminados',
   'trailing-commas': 'Comas extra',
   'single-quotes':   'Comillas simples',
+  'unquoted-keys':   'Claves sin comillas',
   'close-brackets':  'Corchetes sin cerrar',
   'extract-block':   'Bloque JSON extraído',
   'combined':        'Correcciones combinadas',

@@ -42,6 +42,23 @@
   scrollbar-width: thin;
 }
 
+/* ── Reusable toolbar grouping ────────────────────────────────── */
+.toolbar-group {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-1);
+}
+
+.toolbar-divider {
+  align-self: center;
+  background: var(--color-border);
+  flex-shrink: 0;
+  height: 18px;
+  margin: 0 var(--space-1);
+  width: 1px;
+}
+
 /* ── Transfer bar — premium design ─────────────────────────── */
 .workbench__transfer {
   align-items: center;
@@ -81,7 +98,29 @@
   border-radius: var(--radius-sm);
   display: flex;
   gap: var(--space-2);
-  padding: var(--space-1-5) var(--space-2);
+  padding: var(--space-2) var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .url-import-bar {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .url-import-bar__input {
+    min-width: 0;
+    width: 100%;
+    flex: 1 1 100%;
+    order: 3;
+  }
+
+  .url-import-bar__target {
+    order: 2;
+  }
+
+  .url-import-bar__label {
+    order: 1;
+  }
 }
 
 .url-import-bar__label {
@@ -108,9 +147,15 @@
   font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
   line-height: 1;
-  padding: 4px var(--space-2);
-  height: 28px;
+  padding: var(--space-2);
+  height: 36px;
+  min-width: 36px;
   transition: background var(--duration-fast), color var(--duration-fast);
+}
+
+.url-import-bar__target-btn:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
 }
 
 .url-import-bar__target-btn--active {
@@ -126,10 +171,10 @@
   color: var(--color-text);
   flex: 1;
   font-size: var(--text-sm);
-  height: 28px;
+  height: 36px;
   min-width: 0;
   outline: none;
-  padding: 0 var(--space-2);
+  padding: 0 var(--space-3);
   transition: border-color var(--duration-fast);
 }
 

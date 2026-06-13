@@ -1,0 +1,35 @@
+<div class="json-path-bar" role="group" aria-label="JSON path inspector">
+  <span class="json-path-bar__icon" aria-hidden="true">
+    <app-ui-icon name="path" [size]="14" />
+  </span>
+
+  @if (isInvalidJson()) {
+    <span class="json-path-bar__hint json-path-bar__hint--warn">
+      Path unavailable: invalid JSON.
+    </span>
+  } @else if (hasPath()) {
+    <code class="json-path-bar__value" [title]="dotsPath()">{{ dotsPath() }}</code>
+
+    <div class="json-path-bar__actions">
+      <button class="json-path-bar__chip" type="button" title="Copy dot path" (click)="copy('dots')">
+        <app-ui-icon name="copy" [size]="12" />
+        <span>Path</span>
+      </button>
+      <button class="json-path-bar__chip" type="button" title="Copy JavaScript access" (click)="copy('js')">
+        <app-ui-icon name="code" [size]="12" />
+        <span>JS</span>
+      </button>
+      <button class="json-path-bar__chip" type="button" title="Copy null-safe JavaScript access" (click)="copy('js-safe')">
+        <span>JS?.</span>
+      </button>
+      <button class="json-path-bar__chip" type="button" title="Copy Python access" (click)="copy('python')">
+        <span>Python</span>
+      </button>
+      <button class="json-path-bar__chip" type="button" title="Copy Java access" (click)="copy('java')">
+        <span>Java</span>
+      </button>
+    </div>
+  } @else {
+    <span class="json-path-bar__hint">Click a JSON value to inspect its path.</span>
+  }
+</div>

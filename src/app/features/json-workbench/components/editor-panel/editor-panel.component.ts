@@ -21,6 +21,8 @@ import { EditorTextComponent } from '../editor-text/editor-text.component';
 import { InlineErrorBarComponent } from '../inline-error-bar/inline-error-bar.component';
 import { ButtonComponent } from '../../../../components/ui/button/button.component';
 import { ConvertedViewComponent } from '../converted-view/converted-view.component';
+import { JsonPathBarComponent } from '../json-path-bar/json-path-bar.component';
+import { IconComponent } from '../../../../components/ui/icon/icon.component';
 import type { JsonErrorPosition } from '../../../../core/json-error.utils';
 import type { DiffLineDecoration } from '../../utils/diff-engine.types';
 import { jsonToYaml, yamlToJsonValue } from '../../../tools/json-to-yaml/json-yaml.utils';
@@ -47,6 +49,8 @@ const XML_ENCODING_OPTIONS: XmlEncoding[] = [
     InlineErrorBarComponent,
     ButtonComponent,
     ConvertedViewComponent,
+    JsonPathBarComponent,
+    IconComponent,
     MatIconModule,
   ],
   templateUrl: './editor-panel.component.html',
@@ -67,6 +71,7 @@ export class EditorPanelComponent {
   readonly showModeSelector = input<boolean>(true);
   readonly showValidationState = input<boolean>(true);
   readonly showConvertedExport = input<boolean>(true);
+  readonly showPathInspector = input<boolean>(true);
   readonly textAriaLabel = input<string>('JSON editor');
   readonly convertedEmptyTitle = input<string>('No valid JSON to convert');
   readonly convertedEmptyDescription = input<string>(
@@ -94,7 +99,8 @@ export class EditorPanelComponent {
   readonly fileDropped = output<File>();
   readonly modeChange = output<LeftPanelMode>();
   readonly focused = output<void>();
-  readonly textReverted = output<string>();
+  /** Bubbles short status messages (e.g. path copied) up to the workbench toast. */
+  readonly statusMessage = output<string>();
 
   // ── View children ──────────────────────────────────────────────────────────
   private readonly monacoEditor = viewChild<EditorTextComponent>('monacoEditor');
@@ -103,6 +109,9 @@ export class EditorPanelComponent {
   readonly xmlEncodingOptions = XML_ENCODING_OPTIONS;
   readonly xmlEncoding = signal<XmlEncoding>('UTF-8');
   readonly draggingFile = signal(false);
+
+  /** Cursor character offset for the JSON path inspector. Null until first move. */
+  readonly cursorOffset = signal<number | null>(null);
 
   /** YAML representation of the current valid JSON. Empty when JSON is invalid. */
   readonly yamlText = computed(() => {
@@ -179,6 +188,14 @@ export class EditorPanelComponent {
     this.focused.emit();
   }
 
+  onCursorOffsetChange(offset: number): void {
+    this.cursorOffset.set(offset);
+  }
+
+  onPathStatus(message: string): void {
+    this.statusMessage.emit(message);
+  }
+
   onEditorPasted(pastedContent: string): void {
     if (!this.autoFixEnabled()) return;
 
@@ -214,7 +231,6 @@ export class EditorPanelComponent {
     } else if (result.action === 'revert') {
       const revertTo = this.lastValidText() || this.textBeforePaste;
       this.rawTextChange.emit(revertTo);
-      this.textReverted.emit(revertTo);
     }
     this.autoFixProposal.set(null);
     this.autoFixFailureMsg.set(null);
@@ -254,11 +270,6 @@ export class EditorPanelComponent {
   /** Jump to a specific line and column in the editor. */
   jumpTo(line: number, column: number): void {
     this.monacoEditor()?.jumpTo(line, column);
-  }
-
-  /** Focus the Monaco editor. */
-  focusEditor(): void {
-    this.monacoEditor()?.focusEditor();
   }
 
   setMode(mode: string): void {
