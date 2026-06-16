@@ -126,11 +126,13 @@
         <app-ui-button
           size="sm"
           variant="ghost"
-          tooltipText="Translate string values to another language"
-          (pressed)="onTranslatePressed(panel)"
+          [disabled]="true"
+          tooltipText="Translate values — en desarrollo"
+          ariaLabel="Translate values (en desarrollo)"
         >
           <app-ui-icon name="translate" [size]="14" />
           Translate
+          <span class="toolbar-wip-badge">dev</span>
         </app-ui-button>
       </div>
 
@@ -359,6 +361,14 @@
     cancelText="Cancelar"
     [showDontAsk]="true"
     (closed)="onPanelTransferConfirmClosed($event)"
+  />
+}
+
+@if (showCleanPanel()) {
+  <app-json-clean-panel
+    [jsonValue]="cleanJsonValue()"
+    (applied)="onCleanApplied($event)"
+    (closed)="onCleanClosed()"
   />
 }
 

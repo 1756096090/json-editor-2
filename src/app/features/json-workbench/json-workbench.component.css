@@ -59,6 +59,19 @@
   width: 1px;
 }
 
+/* "in development" badge shown inside disabled toolbar buttons */
+.toolbar-wip-badge {
+  background: var(--color-accent-subtle);
+  border-radius: var(--radius-full);
+  color: var(--color-accent);
+  font-size: 0.55rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 0.12rem 0.3rem;
+  text-transform: uppercase;
+}
+
 /* ── Transfer bar — premium design ─────────────────────────── */
 .workbench__transfer {
   align-items: center;

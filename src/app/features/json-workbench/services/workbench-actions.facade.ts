@@ -2,7 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import { WorkbenchStore } from '../state/workbench.store';
 import type { ActivePanel, JsonValue } from '../state/workbench.store';
 import { TabsService } from '../../../core/tabs.service';
-import { cleanJson, countJsonEntries, DEFAULT_JSON_CLEAN_OPTIONS } from '../utils/json-cleaner.utils';
+import {
+  cleanJson,
+  countJsonEntries,
+  DEFAULT_JSON_CLEAN_OPTIONS,
+  type JsonCleanOptions,
+} from '../utils/json-cleaner.utils';
 import { sortJsonKeys } from '../utils/json-sort.utils';
 
 /**
@@ -37,6 +42,11 @@ export class WorkbenchActionsFacade {
   }
 
   cleanPanel(panel: ActivePanel): boolean {
+    return this.cleanPanelWith(panel, DEFAULT_JSON_CLEAN_OPTIONS);
+  }
+
+  /** Clean a panel using a caller-provided set of options. */
+  cleanPanelWith(panel: ActivePanel, options: JsonCleanOptions): boolean {
     const json = panel === 'left' ? this.store.currentJson() : this.store.baselineJson();
     const label = panel === 'left' ? 'Input' : 'Output';
     if (json === null) {
@@ -46,7 +56,7 @@ export class WorkbenchActionsFacade {
 
     const before = countJsonEntries(json);
     const fallback: JsonValue = Array.isArray(json) ? [] : {};
-    const result = cleanJson(json, DEFAULT_JSON_CLEAN_OPTIONS) ?? fallback;
+    const result = cleanJson(json, options) ?? fallback;
     const removed = before - countJsonEntries(result);
     const nextText = JSON.stringify(result, null, 2);
 

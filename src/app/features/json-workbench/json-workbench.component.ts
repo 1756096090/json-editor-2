@@ -30,6 +30,8 @@ import {
   JsonTranslatePanelComponent,
   type TranslateApplyEvent,
 } from './components/json-translate-panel/json-translate-panel.component';
+import { JsonCleanPanelComponent } from './components/json-clean-panel/json-clean-panel.component';
+import type { JsonCleanOptions } from './utils/json-cleaner.utils';
 
 // Facades
 import { WorkbenchActionsFacade } from './services/workbench-actions.facade';
@@ -51,6 +53,7 @@ type WorkbenchPreset = 'default' | 'json-to-csv';
     TabBarComponent,
     IconComponent,
     JsonTranslatePanelComponent,
+    JsonCleanPanelComponent,
   ],
   providers: [LiveDiffService],
   templateUrl: './json-workbench.component.html',
@@ -111,6 +114,13 @@ export class JsonWorkbenchComponent implements OnDestroy {
   readonly urlImportValue = signal('');
   readonly urlImportLoading = signal(false);
   readonly urlImportTarget = signal<'left' | 'right'>('left');
+
+  // ── Clean panel ─────────────────────────────────────────────────────────
+  readonly showCleanPanel = signal(false);
+  private readonly cleanSourcePanel = signal<ActivePanel>('left');
+  readonly cleanJsonValue = computed<JsonValue | null>(() =>
+    this.cleanSourcePanel() === 'left' ? this.store.currentJson() : this.store.baselineJson()
+  );
 
   // ── Translate values panel ──────────────────────────────────────────────
   readonly showTranslatePanel = signal(false);
@@ -320,7 +330,21 @@ export class JsonWorkbenchComponent implements OnDestroy {
 
   onCleanPanel(panel: ActivePanel): void {
     this.store.setActivePanel(panel);
-    this.actions.cleanPanel(panel);
+    const json = panel === 'left' ? this.store.currentJson() : this.store.baselineJson();
+    if (json === null) {
+      this.store.setStatusMessage('Cannot clean invalid JSON.');
+      return;
+    }
+    this.cleanSourcePanel.set(panel);
+    this.showCleanPanel.set(true);
+  }
+
+  onCleanApplied(options: JsonCleanOptions): void {
+    this.actions.cleanPanelWith(this.cleanSourcePanel(), options);
+  }
+
+  onCleanClosed(): void {
+    this.showCleanPanel.set(false);
   }
 
   onSortPanel(panel: ActivePanel): void {

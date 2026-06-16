@@ -8,12 +8,13 @@
     role="toolbar"
     aria-label="Selected text tools"
   >
+    <span class="editor-text-selection-tools__label" aria-hidden="true">Aa</span>
     <select
       class="editor-text-selection-tools__select"
       aria-label="Change selected text case"
       (change)="onCaseTransformSelected($any($event.target).value); $any($event.target).value = ''"
     >
-      <option value="">Text case</option>
+      <option value="">Convert case…</option>
       <option value="camel">camelCase</option>
       <option value="pascal">PascalCase</option>
       <option value="snake">snake_case</option>
@@ -22,5 +23,11 @@
       <option value="flat">flatcase</option>
       <option value="train">Train-Case</option>
     </select>
+    <span class="editor-text-selection-tools__chevron" aria-hidden="true">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 9l6 6 6-6" />
+      </svg>
+    </span>
   </div>
 }

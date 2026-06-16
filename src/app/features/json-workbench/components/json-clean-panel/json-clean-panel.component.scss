@@ -1,0 +1,148 @@
+.sr-only {
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.clean-panel {
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  max-width: 460px;
+  padding: 0;
+  width: calc(100vw - var(--space-6));
+
+  &::backdrop {
+    background: color-mix(in srgb, #000 55%, transparent);
+    backdrop-filter: blur(2px);
+  }
+}
+
+.clean-panel__inner {
+  background: var(--color-surface-overlay, var(--color-surface-raised));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.clean-panel__header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.clean-panel__title {
+  align-items: center;
+  color: var(--color-text);
+  display: flex;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.clean-panel__close {
+  align-items: center;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+
+  &:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 1px;
+  }
+}
+
+.clean-panel__note {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  margin: 0;
+}
+
+.clean-panel__options {
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+}
+
+.clean-panel__option {
+  align-items: flex-start;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  transition: var(--transition-colors);
+
+  &:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--border-strong);
+  }
+
+  input {
+    cursor: pointer;
+    margin-top: 2px;
+  }
+}
+
+.clean-panel__option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.clean-panel__option-label {
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+.clean-panel__option-hint {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.clean-panel__preview {
+  align-items: center;
+  color: var(--color-text-muted);
+  display: flex;
+  font-size: var(--text-sm);
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.clean-panel__footer {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2);
+}
+
+.clean-panel__footer-spacer {
+  flex: 1;
+}

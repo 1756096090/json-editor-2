@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Feature in development — not for indexing yet
+Disallow: /editor-lab
+
+Sitemap: https://jsonworkbench.dev/sitemap.xml

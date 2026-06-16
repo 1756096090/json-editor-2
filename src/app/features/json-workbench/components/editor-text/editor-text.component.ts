@@ -360,16 +360,33 @@ export class EditorTextComponent implements OnInit {
       return;
     }
 
-    const position = this.editor.getScrolledVisiblePosition(selection.getStartPosition());
+    const start = this.editor.getScrolledVisiblePosition(selection.getStartPosition());
+    const end = this.editor.getScrolledVisiblePosition(selection.getEndPosition());
     const layout = this.editor.getLayoutInfo();
-    if (!position) {
+    if (!start || !end) {
       this.selectionToolbarPosition.set(null);
       return;
     }
 
+    const TOOLBAR_WIDTH = 190;
+    const TOOLBAR_HEIGHT = 32;
+    const GAP = 8;
+    const lineHeight = start.height || 18;
+
+    // Prefer floating above the selection's first line; if there's no room,
+    // drop below the selection's last line so the toolbar never covers the text.
+    const roomAbove = start.top - TOOLBAR_HEIGHT - GAP >= 0;
+    const top = roomAbove
+      ? start.top - TOOLBAR_HEIGHT - GAP
+      : end.top + lineHeight + GAP;
+
+    const anchorLeft = roomAbove ? start.left : end.left;
+    const maxLeft = Math.max(layout.width - TOOLBAR_WIDTH - GAP, GAP);
+    const maxTop = Math.max(layout.height - TOOLBAR_HEIGHT - GAP, GAP);
+
     this.selectionToolbarPosition.set({
-      left: Math.min(Math.max(position.left, 8), Math.max(layout.width - 176, 8)),
-      top: Math.max(position.top - 58, 8),
+      left: Math.min(Math.max(anchorLeft, GAP), maxLeft),
+      top: Math.min(Math.max(top, GAP), maxTop),
     });
   }
 

@@ -1,0 +1,59 @@
+<dialog #dialogRef class="clean-panel" aria-labelledby="clean-panel-title" (cancel)="close()">
+  <div class="clean-panel__inner">
+    <header class="clean-panel__header">
+      <h2 id="clean-panel-title" class="clean-panel__title">
+        <app-ui-icon name="clean" [size]="18" />
+        Clean JSON
+      </h2>
+      <button
+        class="clean-panel__close"
+        type="button"
+        aria-label="Close clean panel"
+        (click)="close()"
+      >
+        <app-ui-icon name="close" [size]="16" />
+      </button>
+    </header>
+
+    <p class="clean-panel__note">Choose what to strip. Cleaning runs deeply through nested objects and arrays.</p>
+
+    <fieldset class="clean-panel__options">
+      <legend class="sr-only">Cleaning options</legend>
+      @for (opt of toggles; track opt.key) {
+        <label class="clean-panel__option">
+          <input
+            type="checkbox"
+            [checked]="isChecked(opt.key)"
+            (change)="toggle(opt.key)"
+          />
+          <span class="clean-panel__option-text">
+            <span class="clean-panel__option-label">{{ opt.label }}</span>
+            <span class="clean-panel__option-hint">{{ opt.hint }}</span>
+          </span>
+        </label>
+      }
+    </fieldset>
+
+    <p class="clean-panel__preview" role="status">
+      @if (!anySelected()) {
+        <app-ui-icon name="warning" [size]="14" />
+        Select at least one option.
+      } @else if (previewRemoved() > 0) {
+        <app-ui-icon name="check" [size]="14" />
+        {{ previewRemoved() }} {{ previewRemoved() === 1 ? 'value' : 'values' }} will be removed.
+      } @else {
+        <app-ui-icon name="check" [size]="14" />
+        Nothing to remove with these options.
+      }
+    </p>
+
+    <footer class="clean-panel__footer">
+      <app-ui-button variant="ghost" (pressed)="close()">Cancel</app-ui-button>
+      <span class="clean-panel__footer-spacer"></span>
+      <app-ui-button variant="accent" [disabled]="!anySelected()" (pressed)="apply()">
+        <app-ui-icon name="clean" [size]="14" />
+        Clean
+      </app-ui-button>
+    </footer>
+  </div>
+</dialog>
