@@ -26,10 +26,6 @@ import { TabBarComponent } from '../../components/ui/tab-bar/tab-bar.component';
 import { jsonToCsv } from './utils/convert.utils';
 import { copyTextToClipboard, downloadTextFile } from './utils/file-utils';
 import { IconComponent } from '../../components/ui/icon/icon.component';
-import {
-  JsonTranslatePanelComponent,
-  type TranslateApplyEvent,
-} from './components/json-translate-panel/json-translate-panel.component';
 import { JsonCleanPanelComponent } from './components/json-clean-panel/json-clean-panel.component';
 import type { JsonCleanOptions } from './utils/json-cleaner.utils';
 
@@ -52,7 +48,6 @@ type WorkbenchPreset = 'default' | 'json-to-csv';
     ConfirmDialogComponent,
     TabBarComponent,
     IconComponent,
-    JsonTranslatePanelComponent,
     JsonCleanPanelComponent,
   ],
   providers: [LiveDiffService],
@@ -121,14 +116,6 @@ export class JsonWorkbenchComponent implements OnDestroy {
   readonly cleanJsonValue = computed<JsonValue | null>(() =>
     this.cleanSourcePanel() === 'left' ? this.store.currentJson() : this.store.baselineJson()
   );
-
-  // ── Translate values panel ──────────────────────────────────────────────
-  readonly showTranslatePanel = signal(false);
-  private readonly translateSourcePanel = signal<ActivePanel>('left');
-  readonly translateJsonValue = computed<JsonValue | null>(() =>
-    this.translateSourcePanel() === 'left' ? this.store.workingJson() : this.store.baselineJson()
-  );
-  readonly translateCanSendToOther = computed(() => !this.isCsvConverter() && !this.isMobileLayout());
 
   readonly showConfirmPanelTransfer = signal(false);
   private readonly pendingPanelTransfer = signal<PanelTransferDirection | null>(null);
@@ -356,38 +343,6 @@ export class JsonWorkbenchComponent implements OnDestroy {
     return panel === 'left'
       ? this.store.leftMode() === 'text'
       : this.store.rightMode() === 'text';
-  }
-
-  // ── Translate values ─────────────────────────────────────────────────────
-
-  onTranslatePressed(panel: ActivePanel): void {
-    this.store.setActivePanel(panel);
-    const json = panel === 'left' ? this.store.workingJson() : this.store.baselineJson();
-    if (json === null) {
-      this.store.setStatusMessage('Paste valid JSON before translating.');
-      return;
-    }
-    this.translateSourcePanel.set(panel);
-    this.showTranslatePanel.set(true);
-  }
-
-  onTranslateApplied(event: TranslateApplyEvent): void {
-    const source = this.translateSourcePanel();
-    const writeToLeft =
-      event.target === 'same' ? source === 'left' : source !== 'left';
-
-    if (writeToLeft) {
-      this.store.setRawText(event.text);
-    } else {
-      this.store.setBaselineText(event.text);
-    }
-    this.store.setStatusMessage(
-      event.target === 'same' ? 'Translation applied.' : 'Translation sent to the other panel.'
-    );
-  }
-
-  onTranslateClosed(): void {
-    this.showTranslatePanel.set(false);
   }
 
   onPanelStatus(message: string): void {

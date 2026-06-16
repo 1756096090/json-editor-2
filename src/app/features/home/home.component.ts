@@ -112,25 +112,34 @@ const AVAILABLE_TOOLS: ToolDef[] = [
     state: 'new',
     ctaLabel: 'Validate Schema',
   },
+];
+
+const COMING_SOON_TOOLS: ToolDef[] = [
   {
     name: 'JSONPath Tester',
     description: 'Test JSONPath expressions interactively and see matching results instantly.',
     icon: 'center_focus_strong',
-    route: '/tools/json-path-tester',
-    state: 'new',
-    ctaLabel: 'Test JSONPath',
+    route: '',
+    state: 'coming-soon',
+    ctaLabel: 'Notify me',
   },
   {
     name: 'Schema Generator',
     description: 'Auto-generate a JSON Schema (draft-07) from any JSON document in one click.',
     icon: 'schema',
-    route: '/tools/json-schema-generator',
-    state: 'new',
-    ctaLabel: 'Generate Schema',
+    route: '',
+    state: 'coming-soon',
+    ctaLabel: 'Notify me',
+  },
+  {
+    name: 'Value Translator',
+    description: 'Translate JSON string values between languages while keeping the structure intact.',
+    icon: 'translate',
+    route: '',
+    state: 'coming-soon',
+    ctaLabel: 'Notify me',
   },
 ];
-
-const COMING_SOON_TOOLS: ToolDef[] = [];
 
 @Component({
   selector: 'app-home',

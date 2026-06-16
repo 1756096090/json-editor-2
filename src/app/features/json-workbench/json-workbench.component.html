@@ -123,17 +123,6 @@
             Sort
           </app-ui-button>
         }
-        <app-ui-button
-          size="sm"
-          variant="ghost"
-          [disabled]="true"
-          tooltipText="Translate values — en desarrollo"
-          ariaLabel="Translate values (en desarrollo)"
-        >
-          <app-ui-icon name="translate" [size]="14" />
-          Translate
-          <span class="toolbar-wip-badge">dev</span>
-        </app-ui-button>
       </div>
 
       <span class="toolbar-divider" aria-hidden="true"></span>
@@ -372,12 +361,3 @@
   />
 }
 
-@if (showTranslatePanel()) {
-  <app-json-translate-panel
-    [jsonValue]="translateJsonValue()"
-    [canSendToOther]="translateCanSendToOther()"
-    (applied)="onTranslateApplied($event)"
-    (statusMessage)="onPanelStatus($event)"
-    (closed)="onTranslateClosed()"
-  />
-}
