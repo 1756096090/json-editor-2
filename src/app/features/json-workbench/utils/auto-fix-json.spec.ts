@@ -203,6 +203,65 @@ describe('tryAutoFixJson', () => {
     }
   });
 
+  // ── Missing commas ─────────────────────────────────────────────────────────
+  it('inserts a missing comma between object properties', () => {
+    const result = tryAutoFixJson('{"a":1 "b":2}');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(JSON.parse(result.fixedText)).toEqual({ a: 1, b: 2 });
+    }
+  });
+
+  it('inserts missing commas between array items', () => {
+    const result = tryAutoFixJson('[1 2 3]');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(JSON.parse(result.fixedText)).toEqual([1, 2, 3]);
+    }
+  });
+
+  it('inserts a missing comma between objects in an array', () => {
+    const result = tryAutoFixJson('[{"a":1} {"b":2}]');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(JSON.parse(result.fixedText)).toEqual([{ a: 1 }, { b: 2 }]);
+    }
+  });
+
+  it('inserts a missing comma between string values', () => {
+    const result = tryAutoFixJson('["a" "b"]');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(JSON.parse(result.fixedText)).toEqual(['a', 'b']);
+    }
+  });
+
+  it('does not insert commas inside string values that contain spaces', () => {
+    const result = tryAutoFixJson('{"a":"one two three"}');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.fixedText).toBe('{"a":"one two three"}');
+      expect(result.appliedFixes).toEqual([]);
+    }
+  });
+
+  // ── Missing quotes ─────────────────────────────────────────────────────────
+  it('closes an unterminated string at end of line', () => {
+    const result = tryAutoFixJson('{\n  "a": "hello\n}');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(JSON.parse(result.fixedText)).toEqual({ a: 'hello' });
+    }
+  });
+
+  it('closes an unterminated string at end of input', () => {
+    const result = tryAutoFixJson('{"a": "hello');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(JSON.parse(result.fixedText)).toEqual({ a: 'hello' });
+    }
+  });
+
   // ── Missing closing brackets ───────────────────────────────────────────────
   it('appends missing closing brace', () => {
     const result = tryAutoFixJson('{"a":1');

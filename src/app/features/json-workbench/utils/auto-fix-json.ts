@@ -18,9 +18,11 @@ export type FixLabel =
   | 'code-fence'
   | 'smart-quotes'
   | 'comments'
+  | 'fix-quotes'
   | 'trailing-commas'
   | 'single-quotes'
   | 'unquoted-keys'
+  | 'insert-commas'
   | 'close-brackets'
   | 'extract-block'
   | 'combined';
@@ -62,9 +64,11 @@ export function tryAutoFixJson(input: string, maxAttempts = 10): AutoFixResult {
     { label: 'code-fence',      fn: applyCodeFence },
     { label: 'smart-quotes',    fn: applySmartQuotes },
     { label: 'comments',        fn: applyComments },
+    { label: 'fix-quotes',      fn: applyMissingQuotes },
     { label: 'trailing-commas', fn: applyTrailingCommas },
     { label: 'single-quotes',   fn: applySingleQuotes },
     { label: 'unquoted-keys',   fn: applyUnquotedKeys },
+    { label: 'insert-commas',   fn: applyMissingCommas },
     { label: 'close-brackets',  fn: applyCloseBrackets },
     { label: 'extract-block',   fn: applyExtractBlock },
   ];
@@ -408,4 +412,161 @@ function applyExtractBlock(text: string): string {
   if (stack.length) return text; // Could not balance
   const extracted = text.slice(first, i);
   return extracted === text ? text : extracted;
+}
+
+/**
+ * Close an unterminated string by inserting the missing `"`.
+ * A raw newline or end-of-input reached while inside a string means the closing
+ * quote was dropped — JSON strings cannot span raw newlines, so this only ever
+ * fires on already-broken input.
+ */
+function applyMissingQuotes(text: string): string {
+  let result = '';
+  let i = 0;
+  let inString = false;
+  const len = text.length;
+
+  while (i < len) {
+    const ch = text[i];
+    if (!inString) {
+      result += ch;
+      if (ch === '"') inString = true;
+      i++;
+      continue;
+    }
+    // inside a string
+    if (ch === '\\' && i + 1 < len) {
+      result += ch + text[i + 1];
+      i += 2;
+      continue;
+    }
+    if (ch === '"') {
+      result += ch;
+      inString = false;
+      i++;
+      continue;
+    }
+    if (ch === '\n' || ch === '\r') {
+      // Unterminated at end of line → close the string before the newline
+      result += '"';
+      inString = false;
+      continue; // re-process the newline outside the string
+    }
+    result += ch;
+    i++;
+  }
+
+  if (inString) result += '"'; // Unterminated at end of input
+  return result;
+}
+
+// ── Missing-comma insertion (token-driven) ──────────────────────────────────
+
+type JsonTokenType = 'str' | 'num' | '{' | '}' | '[' | ']' | ':' | ',';
+interface JsonToken {
+  type: JsonTokenType;
+  start: number;
+}
+
+/**
+ * Insert commas that are missing between consecutive values in arrays and
+ * between key/value pairs in objects (e.g. `{"a":1 "b":2}` or `[1 2 3]`).
+ * Operates on a token stream so string contents are never touched.
+ */
+function applyMissingCommas(text: string): string {
+  const tokens = tokenizeJson(text);
+  if (!tokens) return text; // Unterminated string — let fix-quotes handle it first
+
+  const inserts: number[] = [];
+  let i = 0;
+
+  const isValueStart = (t: JsonToken | undefined): boolean =>
+    !!t && (t.type === 'str' || t.type === 'num' || t.type === '{' || t.type === '[');
+
+  const parseValue = (): void => {
+    const t = tokens[i];
+    if (!t) return;
+    if (t.type === '{') { parseObject(); return; }
+    if (t.type === '[') { parseArray(); return; }
+    if (t.type === 'str' || t.type === 'num') { i++; }
+    // structural token where a value was expected → leave for the caller
+  };
+
+  const parseObject = (): void => {
+    i++; // consume '{'
+    while (i < tokens.length && tokens[i].type !== '}') {
+      const before = i;
+      if (tokens[i].type === 'str') i++; else break; // key
+      if (tokens[i] && tokens[i].type === ':') i++; else break;
+      parseValue();
+      if (tokens[i] && tokens[i].type === ',') { i++; continue; }
+      if (!tokens[i] || tokens[i].type === '}') break;
+      if (isValueStart(tokens[i])) { inserts.push(tokens[i].start); continue; }
+      if (i === before) break; // no progress — avoid infinite loop
+    }
+    if (tokens[i] && tokens[i].type === '}') i++;
+  };
+
+  const parseArray = (): void => {
+    i++; // consume '['
+    while (i < tokens.length && tokens[i].type !== ']') {
+      const before = i;
+      parseValue();
+      if (tokens[i] && tokens[i].type === ',') { i++; continue; }
+      if (!tokens[i] || tokens[i].type === ']') break;
+      if (isValueStart(tokens[i])) { inserts.push(tokens[i].start); continue; }
+      if (i === before) break; // no progress — avoid infinite loop
+    }
+    if (tokens[i] && tokens[i].type === ']') i++;
+  };
+
+  parseValue();
+
+  if (inserts.length === 0) return text;
+
+  // Insert from the end so earlier offsets stay valid.
+  let result = text;
+  for (const pos of inserts.sort((a, b) => b - a)) {
+    result = result.slice(0, pos) + ',' + result.slice(pos);
+  }
+  return result;
+}
+
+/** Tokenize JSON-ish text. Returns null if a string literal is unterminated. */
+function tokenizeJson(text: string): JsonToken[] | null {
+  const tokens: JsonToken[] = [];
+  let i = 0;
+  const len = text.length;
+
+  while (i < len) {
+    const ch = text[i];
+    if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') { i++; continue; }
+    if (ch === '{' || ch === '}' || ch === '[' || ch === ']' || ch === ':' || ch === ',') {
+      tokens.push({ type: ch as JsonTokenType, start: i });
+      i++;
+      continue;
+    }
+    if (ch === '"') {
+      const start = i;
+      i++;
+      let closed = false;
+      while (i < len) {
+        const c = text[i];
+        if (c === '\\' && i + 1 < len) { i += 2; continue; }
+        if (c === '"') { i++; closed = true; break; }
+        if (c === '\n' || c === '\r') break; // unterminated
+        i++;
+      }
+      if (!closed) return null;
+      tokens.push({ type: 'str', start });
+      continue;
+    }
+    // number / true / false / null — read until a delimiter
+    const start = i;
+    while (i < len && ' \t\n\r{}[]:,"'.indexOf(text[i]) === -1) i++;
+    if (i === start) { i++; continue; } // stray char
+    tokens.push({ type: 'num', start });
+  }
+
+  return tokens;
 }
