@@ -159,6 +159,7 @@ export class EditorTextComponent implements OnInit {
       if (this.layoutRafId !== null) cancelAnimationFrame(this.layoutRafId);
       this.resizeObserver?.disconnect();
       this.editor?.dispose();
+      this.editor = null;
     });
   }
 
@@ -235,7 +236,9 @@ export class EditorTextComponent implements OnInit {
   refreshLayout(): void {
     if (!this.editor) return;
     const container = this.containerRef().nativeElement;
-    const { width, height } = container.getBoundingClientRect();
+    const rect = container.getBoundingClientRect();
+    const width = Math.floor(rect.width);
+    const height = Math.floor(rect.height);
     if (width > 0 && height > 0) {
       this.editor.layout({ width, height });
     }
@@ -255,11 +258,15 @@ export class EditorTextComponent implements OnInit {
       minimap: { enabled: false },
       glyphMargin: false,
       folding: false,
-      lineNumbersMinChars: 3,
-      fontSize: 14,
-      fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
-      fontLigatures: true,
       lineNumbers: 'on',
+      lineNumbersMinChars: 2,
+      lineDecorationsWidth: 0,
+      overviewRulerLanes: 0,
+      hideCursorInOverviewRuler: true,
+      stickyScroll: { enabled: false },
+      fontSize: 14,
+      fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+      fontLigatures: true,
       renderLineHighlight: 'line',
       scrollBeyondLastLine: false,
       tabSize: 2,
@@ -291,9 +298,12 @@ export class EditorTextComponent implements OnInit {
     });
     this.resizeObserver.observe(container);
 
-    // Initial layout: RAF ensures Angular has painted, setTimeout catches deferred CSS.
+    // Staggered layout calls: RAF + timeouts cover deferred CSS, font loading, and
+    // flex containers that settle asynchronously after the first paint.
     requestAnimationFrame(() => this.refreshLayout());
-    setTimeout(() => this.refreshLayout(), 100);
+    setTimeout(() => this.refreshLayout(), 50);
+    setTimeout(() => this.refreshLayout(), 150);
+    setTimeout(() => this.refreshLayout(), 300);
 
     // Listen for content changes
     this.editor.onDidChangeModelContent(() => {

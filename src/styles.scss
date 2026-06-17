@@ -432,3 +432,52 @@ select {
 .diff-glyph--added::before   { background: var(--success); }
 .diff-glyph--removed::before { background: var(--danger); }
 .diff-glyph--modified::before { background: var(--accent-primary); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   MONACO HARD RESET
+   Protects Monaco's internal DOM from global CSS rules that may come
+   from resets, third-party stylesheets (jsoneditor, etc.) or Angular
+   global styles. Must be at the END of this file to win the cascade.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Hide IME textarea without breaking keyboard / IME input ─────── */
+.monaco-editor textarea.ime-text-area {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  outline: 0 !important;
+  resize: none !important;
+  opacity: 0 !important;
+  /* display/visibility must NOT be changed — Monaco needs the element */
+}
+
+/* ── Gutter background matches the editor surface ────────────────── */
+.monaco-editor .margin {
+  background: inherit !important;
+}
+
+/* ── Line numbers: always visible, use theme foreground ──────────── */
+.monaco-editor .line-numbers {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.monaco-editor .margin-view-overlays {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* ── Monaco uses content-box sizing internally ───────────────────── */
+.monaco-editor,
+.monaco-editor .overflow-guard,
+.monaco-editor .monaco-scrollable-element,
+.monaco-editor .lines-content,
+.monaco-editor .view-lines {
+  box-sizing: content-box !important;
+}
+
+/* ── Global focus-visible must not put a ring on Monaco internals ── */
+.monaco-editor :focus-visible {
+  outline: none !important;
+}

@@ -149,13 +149,16 @@ export class SplitPaneComponent {
     if (typeof window === 'undefined') return;
     try {
       const stored = localStorage.getItem(this.storageKey());
-      if (stored) {
-        const val = parseFloat(stored);
-        if (!isNaN(val) && val >= MIN_PERCENT && val <= MAX_PERCENT) {
-          this.ratio.set(val);
-        }
+      const value = stored ? Number.parseFloat(stored) : 50;
+      if (Number.isFinite(value) && value >= MIN_PERCENT && value <= MAX_PERCENT) {
+        this.ratio.set(value);
+      } else {
+        localStorage.removeItem(this.storageKey());
+        this.ratio.set(50);
       }
-    } catch { /* ignore */ }
+    } catch {
+      this.ratio.set(50);
+    }
   }
 
   private saveRatio(key: string, value: number): void {
