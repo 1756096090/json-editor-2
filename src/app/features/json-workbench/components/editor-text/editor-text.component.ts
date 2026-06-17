@@ -242,6 +242,11 @@ export class EditorTextComponent implements OnInit {
       fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
       fontLigatures: true,
       lineNumbers: 'on',
+      // Compact gutter: avoid the wide empty column before the JSON.
+      lineNumbersMinChars: 3,
+      lineDecorationsWidth: 4,
+      glyphMargin: false,
+      folding: false,
       renderLineHighlight: 'line',
       scrollBeyondLastLine: false,
       tabSize: 2,
@@ -253,8 +258,6 @@ export class EditorTextComponent implements OnInit {
       cursorBlinking: 'smooth',
       cursorSmoothCaretAnimation: 'on',
       formatOnPaste: false,
-      folding: true,
-      glyphMargin: true,
       fixedOverflowWidgets: true,
       padding: { top: 8, bottom: 8 },
       scrollbar: {
@@ -342,7 +345,6 @@ export class EditorTextComponent implements OnInit {
         options: {
           isWholeLine: true,
           className: 'monaco-error-line',
-          glyphMarginClassName: 'monaco-error-glyph',
         },
       },
     ]);

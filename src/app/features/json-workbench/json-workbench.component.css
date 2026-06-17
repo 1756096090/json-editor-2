@@ -39,7 +39,12 @@
   min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
-  scrollbar-width: thin;
+  /* Keep horizontal scroll but hide the gray scrollbar track */
+  scrollbar-width: none;
+}
+
+.workbench__input-actions::-webkit-scrollbar {
+  display: none;
 }
 
 /* ── Reusable toolbar grouping ────────────────────────────────── */
