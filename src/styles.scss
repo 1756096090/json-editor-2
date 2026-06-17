@@ -360,6 +360,21 @@ select {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   THIRD-PARTY OVERRIDES  —  Monaco hidden input
+   Keep Monaco's internal input textarea from ever rendering as a visible
+   gray, resizable box on top of the editor.
+   ═══════════════════════════════════════════════════════════════════ */
+.monaco-editor .inputarea,
+.monaco-editor textarea {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  outline: none !important;
+  resize: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    THIRD-PARTY OVERRIDES  —  jsoneditor dark theme
    ═══════════════════════════════════════════════════════════════════ */
 
