@@ -30,7 +30,11 @@
   min-height: 46px;
   overflow-x: auto;
   overflow-y: hidden;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+}
+
+.editor-panel__header::-webkit-scrollbar {
+  display: none;
 }
 
 .editor-panel__body {
@@ -77,7 +81,11 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding: var(--space-1) 0;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+}
+
+.editor-panel__actions::-webkit-scrollbar {
+  display: none;
 }
 
 .editor-panel__header-spacer {

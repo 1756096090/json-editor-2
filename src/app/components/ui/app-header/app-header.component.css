@@ -44,8 +44,8 @@
 }
 
 .header__logo-mark {
-  height: 40px;
-  width: 40px;
+  height: 70px;
+  width: 70px;
   flex-shrink: 0;
   display: block;
   filter: drop-shadow(0 2px 6px rgb(37 99 235 / 0.22));
