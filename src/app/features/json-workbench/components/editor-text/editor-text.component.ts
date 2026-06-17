@@ -85,6 +85,8 @@ export class EditorTextComponent implements OnInit {
   private decorationIds: string[] = [];
   private diffDecorationIds: string[] = [];
   private cursorOffsetTimer: ReturnType<typeof setTimeout> | null = null;
+  private resizeObserver: ResizeObserver | null = null;
+  private layoutRafId: number | null = null;
 
   public readonly ready = signal(false);
   public readonly selectionToolbarPosition = signal<SelectionToolbarPosition | null>(null);
@@ -154,6 +156,8 @@ export class EditorTextComponent implements OnInit {
 
     this.destroyRef.onDestroy(() => {
       if (this.cursorOffsetTimer !== null) clearTimeout(this.cursorOffsetTimer);
+      if (this.layoutRafId !== null) cancelAnimationFrame(this.layoutRafId);
+      this.resizeObserver?.disconnect();
       this.editor?.dispose();
     });
   }
@@ -226,6 +230,17 @@ export class EditorTextComponent implements OnInit {
     return this.monaco;
   }
 
+  /** Force Monaco to recalculate layout from the container's current bounding rect.
+   *  Call this after programmatic visibility or size changes (tab switch, compare toggle). */
+  refreshLayout(): void {
+    if (!this.editor) return;
+    const container = this.containerRef().nativeElement;
+    const { width, height } = container.getBoundingClientRect();
+    if (width > 0 && height > 0) {
+      this.editor.layout({ width, height });
+    }
+  }
+
   // ── Private ──────────────────────────────────────────────────────────
 
   private createEditor(monaco: MonacoNamespace): void {
@@ -236,8 +251,11 @@ export class EditorTextComponent implements OnInit {
       language: this.language(),
       theme: this.monacoTheme(),
       readOnly: this.readOnly(),
-      automaticLayout: true,
+      automaticLayout: false,
       minimap: { enabled: false },
+      glyphMargin: false,
+      folding: false,
+      lineNumbersMinChars: 3,
       fontSize: 14,
       fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
       fontLigatures: true,
@@ -253,8 +271,6 @@ export class EditorTextComponent implements OnInit {
       cursorBlinking: 'smooth',
       cursorSmoothCaretAnimation: 'on',
       formatOnPaste: false,
-      folding: true,
-      glyphMargin: true,
       fixedOverflowWidgets: true,
       padding: { top: 8, bottom: 8 },
       scrollbar: {
@@ -262,6 +278,22 @@ export class EditorTextComponent implements OnInit {
         horizontalScrollbarSize: 6,
       },
     });
+
+    // ResizeObserver: recalculate Monaco layout whenever the container changes size.
+    // This handles split-pane drags, tab switches, compare toggles, and window resizes
+    // more reliably than Monaco's internal automaticLayout polling.
+    this.resizeObserver = new ResizeObserver(() => {
+      if (this.layoutRafId !== null) cancelAnimationFrame(this.layoutRafId);
+      this.layoutRafId = requestAnimationFrame(() => {
+        this.layoutRafId = null;
+        this.refreshLayout();
+      });
+    });
+    this.resizeObserver.observe(container);
+
+    // Initial layout: RAF ensures Angular has painted, setTimeout catches deferred CSS.
+    requestAnimationFrame(() => this.refreshLayout());
+    setTimeout(() => this.refreshLayout(), 100);
 
     // Listen for content changes
     this.editor.onDidChangeModelContent(() => {
