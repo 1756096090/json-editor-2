@@ -66,26 +66,25 @@
 /* ── Transfer bar — premium design ─────────────────────────── */
 .workbench__transfer {
   align-items: center;
-  background: var(--color-surface-overlay);
-  border: 1px solid var(--color-border);
+  background: var(--bg-elevated, var(--color-surface-overlay));
+  border: 1px solid var(--border-subtle, var(--color-border));
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  padding: var(--space-2);
+  padding: var(--space-1-5);
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: var(--z-dropdown, 10);
   pointer-events: auto;
-  transition: box-shadow var(--duration-fast), border-color var(--duration-fast);
+  transition: border-color var(--duration-fast);
 }
 
 .workbench__transfer:hover {
-  box-shadow: var(--shadow-lg);
-  border-color: var(--color-border-strong);
+  border-color: var(--border-strong, var(--color-border-strong));
 }
 
 @media (max-width: 680px) {

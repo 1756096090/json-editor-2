@@ -148,11 +148,26 @@ export class EditorTextComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loader.load().then((monaco) => {
-      this.monaco = monaco;
-      this.createEditor(monaco);
-      this.ready.set(true);
+    console.info('[Monaco diagnostics] Starting editor load', {
+      editor: this.ariaLabel(),
+      language: this.language(),
+      theme: this.monacoTheme(),
+      documentReadyState: document.readyState,
     });
+
+    void this.loader.load()
+      .then((monaco) => {
+        console.info('[Monaco diagnostics] Module loaded', { editor: this.ariaLabel() });
+        this.monaco = monaco;
+        this.createEditor(monaco);
+        this.ready.set(true);
+      })
+      .catch((error: unknown) => {
+        console.error('[Monaco diagnostics] Module or editor creation failed', {
+          editor: this.ariaLabel(),
+          error,
+        });
+      });
 
     this.destroyRef.onDestroy(() => {
       if (this.cursorOffsetTimer !== null) clearTimeout(this.cursorOffsetTimer);
@@ -300,10 +315,16 @@ export class EditorTextComponent implements OnInit {
 
     // Staggered layout calls: RAF + timeouts cover deferred CSS, font loading, and
     // flex containers that settle asynchronously after the first paint.
-    requestAnimationFrame(() => this.refreshLayout());
+    requestAnimationFrame(() => {
+      this.refreshLayout();
+      this.logEditorDiagnostics('first animation frame');
+    });
     setTimeout(() => this.refreshLayout(), 50);
     setTimeout(() => this.refreshLayout(), 150);
-    setTimeout(() => this.refreshLayout(), 300);
+    setTimeout(() => {
+      this.refreshLayout();
+      this.logEditorDiagnostics('after 300 ms');
+    }, 300);
 
     // Listen for content changes
     this.editor.onDidChangeModelContent(() => {
@@ -345,6 +366,117 @@ export class EditorTextComponent implements OnInit {
 
     // Initial error markers if any
     this.updateErrorMarkers(this.errorPosition());
+  }
+
+  /**
+   * Reports the DOM and CSS information needed to diagnose Monaco production builds.
+   * It intentionally does not log the editor value, pasted data, or model contents.
+   */
+  private logEditorDiagnostics(stage: string): void {
+    if (!this.editor) return;
+
+    const container = this.containerRef().nativeElement;
+    const margin = container.querySelector<HTMLElement>('.monaco-editor .margin');
+    const marginOverlays = container.querySelector<HTMLElement>(
+      '.monaco-editor .margin-view-overlays'
+    );
+    const lineNumber = container.querySelector<HTMLElement>(
+      '.monaco-editor .margin-view-overlays .line-numbers'
+    );
+    const viewLines = container.querySelector<HTMLElement>('.monaco-editor .view-lines');
+    const containerRect = container.getBoundingClientRect();
+    const layout = this.editor.getLayoutInfo();
+    const structuralCssLoaded = this.hasMonacoStructuralCss();
+
+    console.groupCollapsed(
+      `[Monaco diagnostics] ${this.ariaLabel()} — ${stage}`
+    );
+    console.info('Environment', {
+      url: window.location.href,
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      devicePixelRatio: window.devicePixelRatio,
+      documentReadyState: document.readyState,
+    });
+    console.info('Container and Monaco layout', {
+      container: {
+        width: containerRect.width,
+        height: containerRect.height,
+        top: containerRect.top,
+        left: containerRect.left,
+      },
+      editor: {
+        width: layout.width,
+        height: layout.height,
+        glyphMarginWidth: layout.glyphMarginWidth,
+        lineNumbersLeft: layout.lineNumbersLeft,
+        lineNumbersWidth: layout.lineNumbersWidth,
+        decorationsWidth: layout.decorationsWidth,
+        contentLeft: layout.contentLeft,
+      },
+    });
+    console.info('Monaco structural CSS', {
+      loaded: structuralCssLoaded,
+      styleSheets: Array.from(document.styleSheets, (sheet) => sheet.href ?? '[inline]'),
+    });
+    console.info('Computed DOM styles', {
+      margin: this.getDiagnosticStyles(margin),
+      marginOverlays: this.getDiagnosticStyles(marginOverlays),
+      lineNumber: this.getDiagnosticStyles(lineNumber),
+      viewLines: this.getDiagnosticStyles(viewLines),
+    });
+
+    if (!structuralCssLoaded) {
+      console.error(
+        '[Monaco diagnostics] Structural CSS is missing. Expected the selector "' +
+          '.monaco-editor .margin-view-overlays .line-numbers".'
+      );
+    } else if (!lineNumber) {
+      console.warn('[Monaco diagnostics] CSS is present, but Monaco rendered no line-number node.');
+    } else {
+      const styles = getComputedStyle(lineNumber);
+      if (styles.display === 'none' || styles.visibility === 'hidden' || styles.opacity === '0') {
+        console.error('[Monaco diagnostics] The line-number node exists but is hidden.', {
+          display: styles.display,
+          visibility: styles.visibility,
+          opacity: styles.opacity,
+        });
+      }
+    }
+    console.groupEnd();
+  }
+
+  private hasMonacoStructuralCss(): boolean {
+    const expectedSelector = '.monaco-editor .margin-view-overlays .line-numbers';
+
+    for (const styleSheet of Array.from(document.styleSheets)) {
+      try {
+        for (const rule of Array.from(styleSheet.cssRules)) {
+          if (rule.cssText.includes(expectedSelector)) return true;
+        }
+      } catch {
+        // Cross-origin stylesheets cannot expose cssRules; they are unrelated to Monaco.
+      }
+    }
+
+    return false;
+  }
+
+  private getDiagnosticStyles(element: HTMLElement | null): Record<string, string> | null {
+    if (!element) return null;
+    const styles = getComputedStyle(element);
+    const rect = element.getBoundingClientRect();
+
+    return {
+      display: styles.display,
+      position: styles.position,
+      visibility: styles.visibility,
+      opacity: styles.opacity,
+      boxSizing: styles.boxSizing,
+      top: styles.top,
+      left: styles.left,
+      width: `${rect.width}px`,
+      height: `${rect.height}px`,
+    };
   }
 
   private updateErrorMarkers(err: JsonErrorPosition | null): void {
