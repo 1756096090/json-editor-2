@@ -1,4 +1,4 @@
-/**
+﻿/**
  * auto-fix-json.ts
  * ─────────────────────────────────────────────────────────────────────────────
  * Heuristic pipeline that attempts to repair common JSON authoring mistakes.
@@ -8,6 +8,22 @@
  * All transforms that could touch string contents are string-aware: they
  * tokenize the input and never modify characters inside double-quoted strings
  * (so URLs like "https://api.com/a//b" survive comment stripping).
+ *
+ * Fixes handled:
+ *  - Whitespace / BOM / code-fence cleanup
+ *  - Typographic ("smart") quotes
+ *  - Line and block comments (JSONC)
+ *  - Python literals: True → true, False → false, None → null
+ *  - JS undefined → null, NaN → null, Infinity → null
+ *  - Control characters inside strings (\t, \b, \f, U+0000–U+001F)
+ *  - Unterminated strings (closed at raw newline or end-of-input)
+ *  - Trailing commas before } or ]
+ *  - Single-quoted string delimiters
+ *  - Unquoted object keys (identifiers and numeric)
+ *  - Special numeric literals: hex, octal, binary, leading/trailing dot
+ *  - Missing commas between values (token-driven, truncation-tolerant)
+ *  - Missing closing brackets (with truncated-string awareness)
+ *  - JSON block extraction from surrounding prose
  */
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -18,10 +34,14 @@ export type FixLabel =
   | 'code-fence'
   | 'smart-quotes'
   | 'comments'
+  | 'python-literals'
+  | 'undefined-null'
+  | 'control-chars'
   | 'fix-quotes'
   | 'trailing-commas'
   | 'single-quotes'
   | 'unquoted-keys'
+  | 'numeric-literals'
   | 'insert-commas'
   | 'close-brackets'
   | 'extract-block'
@@ -47,10 +67,9 @@ export type AutoFixResult = AutoFixSuccess | AutoFixFailure;
  * or `AutoFixFailure` if no fix was found.
  *
  * @param input - The raw text to fix.
- * @param maxAttempts - Maximum number of single-step iterations (default 10).
+ * @param maxAttempts - Maximum number of chaining iterations (default 10).
  */
 export function tryAutoFixJson(input: string, maxAttempts = 10): AutoFixResult {
-  // Valid JSON needs no repair — never report it as an error.
   if (looksLikeValidJson(input)) {
     return { ok: true, fixedText: input, appliedFixes: [] };
   }
@@ -59,18 +78,22 @@ export function tryAutoFixJson(input: string, maxAttempts = 10): AutoFixResult {
   // Phase 1: Try each single-step transform in isolation
   // ──────────────────────────────────────────────────────────────────────────
   const singleSteps: Array<{ label: FixLabel; fn: (s: string) => string }> = [
-    { label: 'trim',            fn: applyTrim },
-    { label: 'bom',             fn: applyBom },
-    { label: 'code-fence',      fn: applyCodeFence },
-    { label: 'smart-quotes',    fn: applySmartQuotes },
-    { label: 'comments',        fn: applyComments },
-    { label: 'fix-quotes',      fn: applyMissingQuotes },
-    { label: 'trailing-commas', fn: applyTrailingCommas },
-    { label: 'single-quotes',   fn: applySingleQuotes },
-    { label: 'unquoted-keys',   fn: applyUnquotedKeys },
-    { label: 'insert-commas',   fn: applyMissingCommas },
-    { label: 'close-brackets',  fn: applyCloseBrackets },
-    { label: 'extract-block',   fn: applyExtractBlock },
+    { label: 'trim',             fn: applyTrim },
+    { label: 'bom',              fn: applyBom },
+    { label: 'code-fence',       fn: applyCodeFence },
+    { label: 'smart-quotes',     fn: applySmartQuotes },
+    { label: 'comments',         fn: applyComments },
+    { label: 'python-literals',  fn: applyPythonLiterals },
+    { label: 'undefined-null',   fn: applyUndefined },
+    { label: 'control-chars',    fn: applyControlChars },
+    { label: 'fix-quotes',       fn: applyMissingQuotes },
+    { label: 'trailing-commas',  fn: applyTrailingCommas },
+    { label: 'single-quotes',    fn: applySingleQuotes },
+    { label: 'unquoted-keys',    fn: applyUnquotedKeys },
+    { label: 'numeric-literals', fn: applyNumericLiterals },
+    { label: 'insert-commas',    fn: applyMissingCommas },
+    { label: 'close-brackets',   fn: applyCloseBrackets },
+    { label: 'extract-block',    fn: applyExtractBlock },
   ];
 
   for (const step of singleSteps) {
@@ -104,7 +127,7 @@ export function tryAutoFixJson(input: string, maxAttempts = 10): AutoFixResult {
         }
       }
     }
-    if (!changed) break; // No progress — stop early
+    if (!changed) break;
   }
 
   return { ok: false, reason: 'No se pudo reparar el JSON automáticamente.' };
@@ -137,7 +160,6 @@ function transformOutsideStrings(text: string, fn: (segment: string) => string):
     if (ch === '"') {
       result += fn(segment);
       segment = '';
-      // Copy the whole string literal verbatim
       result += ch;
       i++;
       while (i < len) {
@@ -161,76 +183,48 @@ function transformOutsideStrings(text: string, fn: (segment: string) => string):
 
 // ── Transforms ────────────────────────────────────────────────────────────────
 
-/**
- * Trim surrounding whitespace and normalize line endings.
- * Note: BOM (\uFEFF) is handled separately by applyBom.
- */
 function applyTrim(text: string): string {
-  // Normalize line endings first
   let result = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-  // Trim whitespace but preserve BOM at the start (BOM is \uFEFF)
   result = result.replace(/^[\t\n\f\r ]+/, '').replace(/[\t\n\f\r ]+$/, '');
   return result;
 }
 
-/**
- * Strip UTF-8 BOM and zero-width / non-printable characters.
- */
 function applyBom(text: string): string {
-  // BOM (\uFEFF) + common zero-width Unicode chars
   // eslint-disable-next-line no-control-regex
   return text.replace(/^\uFEFF/, '').replace(/[\u200B-\u200D\uFEFF\u0000]/g, '');
 }
 
-/**
- * Strip Markdown code fences (```json … ``` or ``` … ```).
- */
 function applyCodeFence(text: string): string {
   const match = text.match(/^\s*```[a-zA-Z0-9_-]*\s*\n([\s\S]*?)\n?\s*```\s*$/);
   return match ? match[1] : text;
 }
 
-/**
- * Replace typographic ("smart") quotes with straight quotes.
- * Runs outside existing double-quoted strings so valid content is untouched.
- */
 function applySmartQuotes(text: string): string {
   return transformOutsideStrings(text, (seg) =>
-    seg.replace(/[“”„‟]/g, '"').replace(/[‘’‚‛]/g, "'")
+    seg.replace(/[\u201C\u201D\u201E\u201F]/g, '"').replace(/[\u2018\u2019\u201A\u201B]/g, "'")
   );
 }
 
-/**
- * Remove line comments and block comments.
- * String-aware: comment markers inside strings (e.g. URLs) are preserved.
- */
+/** Strip line and block comments (JSONC). String-aware — URLs inside strings are preserved. */
 function applyComments(text: string): string {
   let result = '';
   let i = 0;
   const len = text.length;
-
   while (i < len) {
     const ch = text[i];
     if (ch === '"') {
-      // Copy string literal verbatim
       result += ch;
       i++;
       while (i < len) {
         const c = text[i];
-        if (c === '\\' && i + 1 < len) {
-          result += c + text[i + 1];
-          i += 2;
-          continue;
-        }
+        if (c === '\\' && i + 1 < len) { result += c + text[i + 1]; i += 2; continue; }
         result += c;
         i++;
         if (c === '"') break;
       }
     } else if (ch === '/' && text[i + 1] === '/') {
-      // Line comment — skip to end of line
       while (i < len && text[i] !== '\n') i++;
     } else if (ch === '/' && text[i + 1] === '*') {
-      // Block comment — skip to closing */
       i += 2;
       while (i < len && !(text[i] === '*' && text[i + 1] === '/')) i++;
       i += 2;
@@ -242,176 +236,53 @@ function applyComments(text: string): string {
   return result;
 }
 
-/**
- * Remove trailing commas before `}` or `]`.
- * String-aware: commas inside string values are never touched.
- */
-function applyTrailingCommas(text: string): string {
-  return transformOutsideStrings(text, (seg) => {
-    let prev = '';
-    let result = seg;
-    while (prev !== result) {
-      prev = result;
-      result = result.replace(/,(\s*[}\]])/g, '$1');
-    }
-    return result;
-  });
+/** Python/Ruby literals outside strings: True→true, False→false, None→null. */
+function applyPythonLiterals(text: string): string {
+  return transformOutsideStrings(text, (seg) =>
+    seg
+      .replace(/\bTrue\b/g, 'true')
+      .replace(/\bFalse\b/g, 'false')
+      .replace(/\bNone\b/g, 'null')
+  );
 }
 
-/**
- * Quote bare object keys (`{a: 1}` → `{"a": 1}`).
- * String-aware: identifiers inside string values are never touched.
- */
-function applyUnquotedKeys(text: string): string {
+/** JavaScript non-JSON values outside strings: undefined→null. */
+function applyUndefined(text: string): string {
   return transformOutsideStrings(text, (seg) =>
-    seg.replace(/([{,]\s*)([A-Za-z_$][\w$]*)(\s*:)/g, '$1"$2"$3')
+    seg.replace(/\bundefined\b/g, 'null')
   );
 }
 
 /**
- * Convert single-quoted string delimiters to double-quoted ones.
- * Safely handles only cases where strings are delimited by unescaped single quotes
- * and do not contain literal double quotes that would become invalid.
- *
- * Strategy: tokenize character-by-character to avoid breaking string contents.
+ * Escape control characters (U+0000–U+001F) found inside double-quoted strings.
+ * Raw \n and \r are excluded here — they signal unterminated strings and are
+ * handled by applyMissingQuotes so the string can be closed at the right boundary.
  */
-function applySingleQuotes(text: string): string {
+function applyControlChars(text: string): string {
   let result = '';
   let i = 0;
+  let inString = false;
   const len = text.length;
   while (i < len) {
     const ch = text[i];
-    if (ch === "'") {
-      // Start of a single-quoted string — collect until the closing unescaped '
-      let str = '"';
-      i++;
-      while (i < len) {
-        const c = text[i];
-        if (c === '\\' && i + 1 < len) {
-          const next = text[i + 1];
-          if (next === "'") {
-            // Escaped single quote inside single-quoted string → just single quote in JSON
-            str += "'";
-            i += 2;
-          } else {
-            str += c + next;
-            i += 2;
-          }
-          continue;
-        }
-        if (c === '"') {
-          // Unescaped double quote inside single-quoted string → must escape it
-          str += '\\"';
-          i++;
-          continue;
-        }
-        if (c === "'") {
-          // End of string
-          str += '"';
-          i++;
-          break;
-        }
-        str += c;
-        i++;
-      }
-      result += str;
-    } else if (ch === '"') {
-      // Already a double-quoted string — copy verbatim, respecting escapes
+    if (!inString) {
       result += ch;
+      if (ch === '"') inString = true;
       i++;
-      while (i < len) {
-        const c = text[i];
-        if (c === '\\' && i + 1 < len) {
-          result += c + text[i + 1];
-          i += 2;
-          continue;
-        }
-        result += c;
-        i++;
-        if (c === '"') break;
-      }
     } else {
-      result += ch;
+      if (ch === '\\' && i + 1 < len) { result += ch + text[i + 1]; i += 2; continue; }
+      if (ch === '"') { result += ch; inString = false; i++; continue; }
+      const code = ch.charCodeAt(0);
+      if (code < 0x20 && ch !== '\n' && ch !== '\r') {
+        const named: Record<string, string> = { '\t': '\\t', '\b': '\\b', '\f': '\\f' };
+        result += named[ch] ?? '\\u' + code.toString(16).padStart(4, '0');
+      } else {
+        result += ch;
+      }
       i++;
     }
   }
   return result;
-}
-
-/**
- * Append missing closing brackets/braces using a stack.
- * Only appends — never removes or modifies existing characters.
- */
-function applyCloseBrackets(text: string): string {
-  const stack: string[] = [];
-  let inString = false;
-  let i = 0;
-  const len = text.length;
-
-  while (i < len) {
-    const ch = text[i];
-    if (inString) {
-      if (ch === '\\' && i + 1 < len) {
-        i += 2; // skip escape sequence
-        continue;
-      }
-      if (ch === '"') inString = false;
-    } else {
-      if (ch === '"') {
-        inString = true;
-      } else if (ch === '{') {
-        stack.push('}');
-      } else if (ch === '[') {
-        stack.push(']');
-      } else if (ch === '}' || ch === ']') {
-        if (stack.length && stack[stack.length - 1] === ch) {
-          stack.pop();
-        }
-      }
-    }
-    i++;
-  }
-
-  if (!stack.length) return text; // Already balanced
-  return text + stack.reverse().join('');
-}
-
-/**
- * Extract the first complete top-level JSON object or array from surrounding noise.
- * Useful for JSON embedded in prose or with extra wrapper text.
- */
-function applyExtractBlock(text: string): string {
-  const first = text.search(/[{[]/);
-  if (first === -1) return text;
-
-  const opener = text[first];
-  const closer = opener === '{' ? '}' : ']';
-  const stack: string[] = [closer];
-  let inString = false;
-  let i = first + 1;
-
-  while (i < text.length && stack.length) {
-    const ch = text[i];
-    if (inString) {
-      if (ch === '\\' && i + 1 < text.length) { i += 2; continue; }
-      if (ch === '"') inString = false;
-    } else {
-      if (ch === '"') {
-        inString = true;
-      } else if (ch === '{') {
-        stack.push('}');
-      } else if (ch === '[') {
-        stack.push(']');
-      } else if (ch === '}' || ch === ']') {
-        if (stack[stack.length - 1] === ch) stack.pop();
-      }
-    }
-    i++;
-  }
-
-  if (stack.length) return text; // Could not balance
-  const extracted = text.slice(first, i);
-  return extracted === text ? text : extracted;
 }
 
 /**
@@ -434,20 +305,9 @@ function applyMissingQuotes(text: string): string {
       i++;
       continue;
     }
-    // inside a string
-    if (ch === '\\' && i + 1 < len) {
-      result += ch + text[i + 1];
-      i += 2;
-      continue;
-    }
-    if (ch === '"') {
-      result += ch;
-      inString = false;
-      i++;
-      continue;
-    }
+    if (ch === '\\' && i + 1 < len) { result += ch + text[i + 1]; i += 2; continue; }
+    if (ch === '"') { result += ch; inString = false; i++; continue; }
     if (ch === '\n' || ch === '\r') {
-      // Unterminated at end of line → close the string before the newline
       result += '"';
       inString = false;
       continue; // re-process the newline outside the string
@@ -456,27 +316,215 @@ function applyMissingQuotes(text: string): string {
     i++;
   }
 
-  if (inString) result += '"'; // Unterminated at end of input
+  if (inString) result += '"';
   return result;
 }
 
-// ── Missing-comma insertion (token-driven) ──────────────────────────────────
+/** Remove trailing commas before `}` or `]`. String-aware. */
+function applyTrailingCommas(text: string): string {
+  return transformOutsideStrings(text, (seg) => {
+    let prev = '';
+    let result = seg;
+    while (prev !== result) {
+      prev = result;
+      result = result.replace(/,(\s*[}\]])/g, '$1');
+    }
+    return result;
+  });
+}
+
+/** Convert single-quoted string delimiters to double-quoted ones. */
+function applySingleQuotes(text: string): string {
+  let result = '';
+  let i = 0;
+  const len = text.length;
+  while (i < len) {
+    const ch = text[i];
+    if (ch === "'") {
+      let str = '"';
+      i++;
+      while (i < len) {
+        const c = text[i];
+        if (c === '\\' && i + 1 < len) {
+          const next = text[i + 1];
+          str += next === "'" ? "'" : c + next;
+          i += 2;
+          continue;
+        }
+        if (c === '"') { str += '\\"'; i++; continue; }
+        if (c === "'") { str += '"'; i++; break; }
+        str += c;
+        i++;
+      }
+      result += str;
+    } else if (ch === '"') {
+      result += ch;
+      i++;
+      while (i < len) {
+        const c = text[i];
+        if (c === '\\' && i + 1 < len) { result += c + text[i + 1]; i += 2; continue; }
+        result += c;
+        i++;
+        if (c === '"') break;
+      }
+    } else {
+      result += ch;
+      i++;
+    }
+  }
+  return result;
+}
+
+/**
+ * Quote bare object keys including numeric keys.
+ * {a: 1} → {"a": 1},  {0: "x"} → {"0": "x"}
+ */
+function applyUnquotedKeys(text: string): string {
+  return transformOutsideStrings(text, (seg) =>
+    seg
+      .replace(/([{,]\s*)([A-Za-z_$][\w$.]*)(\s*:)/g, '$1"$2"$3')
+      .replace(/([{,]\s*)(\d+)(\s*:)/g, '$1"$2"$3')
+  );
+}
+
+/**
+ * Replace special numeric literals that JSON does not support:
+ *  - NaN, Infinity, -Infinity → null
+ *  - Hex (0xFF), octal (0o17), binary (0b10) → decimal integer
+ *  - Leading decimal point: .5 → 0.5
+ *  - Trailing decimal point: 1. → 1
+ */
+function applyNumericLiterals(text: string): string {
+  return transformOutsideStrings(text, (seg) =>
+    seg
+      .replace(/\bNaN\b/g, 'null')
+      .replace(/\bInfinity\b/g, 'null')
+      .replace(/-Infinity\b/g, 'null')
+      .replace(/\b0[xX]([0-9a-fA-F]+)\b/g, (_, h) => String(parseInt(h, 16)))
+      .replace(/\b0[oO]([0-7]+)\b/g, (_, o) => String(parseInt(o, 8)))
+      .replace(/\b0[bB]([01]+)\b/g, (_, b) => String(parseInt(b, 2)))
+      // Leading dot: .5 → 0.5  (callback avoids $10/$2 group-index ambiguity)
+      .replace(/(^|[\s,\[{:])(\.\d+)/g, (_, pre, dot) => pre + '0' + dot)
+      // Trailing dot: 1. → 1  (lookahead keeps the delimiter in place)
+      .replace(/(\d+)\.(?=[\s,\]\}\n]|$)/g, '$1')
+  );
+}
+
+/**
+ * Append missing closing brackets/braces and close any unterminated string
+ * that would prevent the brackets from being meaningful.
+ */
+function applyCloseBrackets(text: string): string {
+  const stack: string[] = [];
+  let inString = false;
+  let i = 0;
+  const len = text.length;
+
+  while (i < len) {
+    const ch = text[i];
+    if (inString) {
+      if (ch === '\\' && i + 1 < len) { i += 2; continue; }
+      if (ch === '"') inString = false;
+    } else {
+      if (ch === '"') { inString = true; }
+      else if (ch === '{') { stack.push('}'); }
+      else if (ch === '[') { stack.push(']'); }
+      else if (ch === '}' || ch === ']') {
+        if (stack.length && stack[stack.length - 1] === ch) stack.pop();
+      }
+    }
+    i++;
+  }
+
+  const closeStr = inString ? '"' : '';
+  if (!closeStr && !stack.length) return text;
+  return text + closeStr + stack.reverse().join('');
+}
+
+/**
+ * Extract the first complete top-level JSON object or array from surrounding noise.
+ */
+function applyExtractBlock(text: string): string {
+  const first = text.search(/[{[]/);
+  if (first === -1) return text;
+
+  const opener = text[first];
+  const closer = opener === '{' ? '}' : ']';
+  const stack: string[] = [closer];
+  let inString = false;
+  let i = first + 1;
+
+  while (i < text.length && stack.length) {
+    const ch = text[i];
+    if (inString) {
+      if (ch === '\\' && i + 1 < text.length) { i += 2; continue; }
+      if (ch === '"') inString = false;
+    } else {
+      if (ch === '"') { inString = true; }
+      else if (ch === '{') { stack.push('}'); }
+      else if (ch === '[') { stack.push(']'); }
+      else if ((ch === '}' || ch === ']') && stack[stack.length - 1] === ch) { stack.pop(); }
+    }
+    i++;
+  }
+
+  if (stack.length) return text;
+  const extracted = text.slice(first, i);
+  return extracted === text ? text : extracted;
+}
+
+// ── Missing-comma insertion (token-driven) ────────────────────────────────────
 
 type JsonTokenType = 'str' | 'num' | '{' | '}' | '[' | ']' | ':' | ',';
-interface JsonToken {
-  type: JsonTokenType;
-  start: number;
+interface JsonToken { type: JsonTokenType; start: number; }
+
+/**
+ * Tokenize JSON-ish text into a flat token list.
+ * Unterminated strings are treated as closed at the first raw newline or
+ * end-of-input, allowing comma insertion to work on truncated documents.
+ */
+function tokenizeJson(text: string): JsonToken[] {
+  const tokens: JsonToken[] = [];
+  let i = 0;
+  const len = text.length;
+
+  while (i < len) {
+    const ch = text[i];
+    if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') { i++; continue; }
+    if ('{}[]:,'.includes(ch)) {
+      tokens.push({ type: ch as JsonTokenType, start: i });
+      i++;
+      continue;
+    }
+    if (ch === '"') {
+      const start = i++;
+      while (i < len) {
+        const c = text[i];
+        if (c === '\\' && i + 1 < len) { i += 2; continue; }
+        if (c === '\n' || c === '\r') break; // treat newline as implicit close
+        if (c === '"') { i++; break; }
+        i++;
+      }
+      tokens.push({ type: 'str', start });
+      continue;
+    }
+    const start = i;
+    while (i < len && !' \t\n\r{}[]:,"'.includes(text[i])) i++;
+    if (i > start) tokens.push({ type: 'num', start });
+    else i++;
+  }
+
+  return tokens;
 }
 
 /**
  * Insert commas that are missing between consecutive values in arrays and
  * between key/value pairs in objects (e.g. `{"a":1 "b":2}` or `[1 2 3]`).
  * Operates on a token stream so string contents are never touched.
+ * Tolerates truncated input thanks to the updated tokenizer.
  */
 function applyMissingCommas(text: string): string {
   const tokens = tokenizeJson(text);
-  if (!tokens) return text; // Unterminated string — let fix-quotes handle it first
-
   const inserts: number[] = [];
   let i = 0;
 
@@ -488,23 +536,22 @@ function applyMissingCommas(text: string): string {
     if (!t) return;
     if (t.type === '{') { parseObject(); return; }
     if (t.type === '[') { parseArray(); return; }
-    if (t.type === 'str' || t.type === 'num') { i++; }
-    // structural token where a value was expected → leave for the caller
+    if (t.type === 'str' || t.type === 'num') i++;
   };
 
   const parseObject = (): void => {
     i++; // consume '{'
     while (i < tokens.length && tokens[i].type !== '}') {
       const before = i;
-      if (tokens[i].type === 'str') i++; else break; // key
-      if (tokens[i] && tokens[i].type === ':') i++; else break;
+      if (tokens[i].type === 'str') i++; else break;
+      if (tokens[i]?.type === ':') i++; else break;
       parseValue();
-      if (tokens[i] && tokens[i].type === ',') { i++; continue; }
+      if (tokens[i]?.type === ',') { i++; continue; }
       if (!tokens[i] || tokens[i].type === '}') break;
       if (isValueStart(tokens[i])) { inserts.push(tokens[i].start); continue; }
-      if (i === before) break; // no progress — avoid infinite loop
+      if (i === before) break;
     }
-    if (tokens[i] && tokens[i].type === '}') i++;
+    if (tokens[i]?.type === '}') i++;
   };
 
   const parseArray = (): void => {
@@ -512,61 +559,21 @@ function applyMissingCommas(text: string): string {
     while (i < tokens.length && tokens[i].type !== ']') {
       const before = i;
       parseValue();
-      if (tokens[i] && tokens[i].type === ',') { i++; continue; }
+      if (tokens[i]?.type === ',') { i++; continue; }
       if (!tokens[i] || tokens[i].type === ']') break;
       if (isValueStart(tokens[i])) { inserts.push(tokens[i].start); continue; }
-      if (i === before) break; // no progress — avoid infinite loop
+      if (i === before) break;
     }
-    if (tokens[i] && tokens[i].type === ']') i++;
+    if (tokens[i]?.type === ']') i++;
   };
 
   parseValue();
 
   if (inserts.length === 0) return text;
 
-  // Insert from the end so earlier offsets stay valid.
   let result = text;
   for (const pos of inserts.sort((a, b) => b - a)) {
     result = result.slice(0, pos) + ',' + result.slice(pos);
   }
   return result;
-}
-
-/** Tokenize JSON-ish text. Returns null if a string literal is unterminated. */
-function tokenizeJson(text: string): JsonToken[] | null {
-  const tokens: JsonToken[] = [];
-  let i = 0;
-  const len = text.length;
-
-  while (i < len) {
-    const ch = text[i];
-    if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') { i++; continue; }
-    if (ch === '{' || ch === '}' || ch === '[' || ch === ']' || ch === ':' || ch === ',') {
-      tokens.push({ type: ch as JsonTokenType, start: i });
-      i++;
-      continue;
-    }
-    if (ch === '"') {
-      const start = i;
-      i++;
-      let closed = false;
-      while (i < len) {
-        const c = text[i];
-        if (c === '\\' && i + 1 < len) { i += 2; continue; }
-        if (c === '"') { i++; closed = true; break; }
-        if (c === '\n' || c === '\r') break; // unterminated
-        i++;
-      }
-      if (!closed) return null;
-      tokens.push({ type: 'str', start });
-      continue;
-    }
-    // number / true / false / null — read until a delimiter
-    const start = i;
-    while (i < len && ' \t\n\r{}[]:,"'.indexOf(text[i]) === -1) i++;
-    if (i === start) { i++; continue; } // stray char
-    tokens.push({ type: 'num', start });
-  }
-
-  return tokens;
 }
