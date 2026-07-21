@@ -9,12 +9,26 @@
   min-height: 0;
   min-width: 0;
   overflow: hidden;
+  position: relative;
   transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
 }
 
 .editor-panel--active {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 1px var(--accent-primary), var(--shadow-sm);
+  border-color: var(--color-border);
+  box-shadow: none;
+}
+
+.editor-panel--active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-primary);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  pointer-events: none;
+  z-index: 2;
 }
 
 /* ── Header: compact, clean, premium ──────────────────────── */

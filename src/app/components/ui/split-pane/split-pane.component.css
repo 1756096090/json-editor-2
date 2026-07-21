@@ -55,7 +55,7 @@
   cursor: col-resize;
   flex-direction: column;
   gap: 3px;
-  width: 6px;
+  width: 4px;
 }
 
 .split-pane--vertical .split-pane__gutter {

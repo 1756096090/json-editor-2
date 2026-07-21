@@ -45,7 +45,7 @@
 .tab-bar {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   background: var(--color-surface);
   overflow-x: auto;
   scrollbar-width: none;
@@ -66,29 +66,29 @@
   padding: 0 var(--space-2) 0 var(--space-3);
   min-width: 88px;
   max-width: 200px;
-  height: 34px;
+  height: 32px;
   background: transparent;
   border: 1px solid transparent;
   border-bottom: none;
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-  color: var(--text-secondary);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  color: var(--color-text-muted);
   font-size: var(--text-sm);
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  transition: color 0.15s, background 0.12s;
 }
 
 .tab-bar__tab:hover {
   background: var(--color-surface-hover);
-  color: var(--color-text);
+  color: var(--color-text-secondary);
 }
 
 .tab-bar__tab--active {
   background: var(--bg-editor, var(--color-surface-raised));
   border-color: var(--color-border);
   color: var(--color-text);
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-medium);
 }
 
 /* Accent strip on the active tab */
@@ -98,7 +98,7 @@
   inset: 0 0 auto 0;
   height: 2px;
   background: var(--accent-primary);
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 
 .tab-bar__label {
@@ -139,26 +139,27 @@
 
 .tab-bar__add {
   flex-shrink: 0;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-left: 2px;
-  border: 1px solid transparent;
+  border: none;
   border-radius: var(--radius-sm);
   background: none;
   color: var(--color-text-muted);
-  font-size: 1.1rem;
+  font-size: 1rem;
   line-height: 1;
   cursor: pointer;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  opacity: 0.45;
+  transition: color 0.15s, background 0.12s, opacity 0.15s;
 }
 
 .tab-bar__add:hover {
-  color: var(--color-accent);
+  color: var(--color-text);
   background: var(--color-surface-hover);
-  border-color: var(--color-border);
+  opacity: 1;
 }
 
 .tab-bar__add:focus-visible,
