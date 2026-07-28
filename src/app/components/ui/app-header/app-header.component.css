@@ -48,7 +48,7 @@
   width: 40px;
   flex-shrink: 0;
   display: block;
-  filter: drop-shadow(0 2px 6px rgb(37 99 235 / 0.22));
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.12));
 }
 
 /* Wolf outline follows the theme text color → contrast in light AND dark */
@@ -92,14 +92,20 @@
 }
 
 /* ── Primary nav ────────────────────────────────────────────────── */
+/* Overflow stays `visible` so the tools dropdown is never clipped; links
+   keep their intrinsic width instead of being squashed. */
 .header__nav {
   align-items: center;
   display: flex;
+  flex-wrap: nowrap;
   gap: var(--space-1);
   flex: 1;
+  min-width: 0;
 }
 
 .header__nav-link {
+  flex-shrink: 0;
+  white-space: nowrap;
   align-items: center;
   background: none;
   border: none;
@@ -117,14 +123,15 @@
   transition: var(--transition-colors);
 }
 
-.header__nav-link:hover,
-.header__nav-link--active {
-  background: var(--color-surface);
-  border-color: var(--color-border);
+.header__nav-link:hover {
+  background: var(--color-surface-hover);
   color: var(--color-text);
 }
 
+/* Selected route: filled tint + small rail, not a bright blue outline. */
 .header__nav-link--active {
+  background: var(--color-accent-subtle);
+  color: var(--color-text);
   box-shadow: inset 0 -2px 0 var(--accent-primary);
   font-weight: var(--weight-semibold);
 }
@@ -290,6 +297,14 @@
 }
 
 /* ── Mobile ─────────────────────────────────────────────────────── */
+/* The "en desarrollo" badge is the widest nav element — drop it first so
+   the labels themselves never get clipped. The title/aria still explain it. */
+@media (max-width: 900px) {
+  .header__nav-badge {
+    display: none;
+  }
+}
+
 @media (max-width: 640px) {
   .header__inner {
     padding: 0 var(--space-3);

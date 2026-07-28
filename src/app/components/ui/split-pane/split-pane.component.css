@@ -37,9 +37,11 @@
 }
 
 /* ── Gutter ─────────────────────────────────────────────────────── */
+/* The gutter stays neutral at rest — the panels' own borders already
+   separate them. Blue is reserved for the hover/drag affordance. */
 .split-pane__gutter {
   align-items: center;
-  background: var(--color-border);
+  background: var(--bg-app);
   display: flex;
   flex-shrink: 0;
   justify-content: center;
@@ -77,7 +79,7 @@
 
 /* ── Dots ───────────────────────────────────────────────────────── */
 .split-pane__gutter-dot {
-  background: var(--color-text-muted);
+  background: var(--border-strong);
   border-radius: var(--radius-full);
   height: 3px;
   width: 3px;

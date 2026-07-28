@@ -4,12 +4,9 @@
 }
 
 .editor-lab-pane {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-panel-bg) 94%, var(--color-accent) 6%) 0%,
-      var(--color-panel-bg) 100%);
+  background: var(--color-panel-bg);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -17,23 +14,35 @@
   min-width: 0;
   overflow: hidden;
   position: relative;
-  transition: border-color var(--duration-fast) var(--ease-default),
-    box-shadow var(--duration-fast) var(--ease-default),
-    transform var(--duration-fast) var(--ease-default);
+  transition: border-color var(--duration-fast) var(--ease-default);
+}
+
+/* Active pane: a 2px top rail — no full blue outline, no glow. */
+.editor-lab-pane::before {
+  background: transparent;
+  content: '';
+  height: 2px;
+  inset: 0 0 auto 0;
+  position: absolute;
+  transition: background var(--duration-fast) var(--ease-default);
+  z-index: 2;
+}
+
+.editor-lab-pane--active::before {
+  background: var(--color-accent);
 }
 
 .editor-lab-pane--active {
-  border-color: color-mix(in srgb, var(--color-accent) 72%, var(--color-border));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 55%, transparent), var(--shadow-md);
+  border-color: var(--color-border-strong);
 }
 
 .editor-lab-pane--error {
-  border-color: color-mix(in srgb, var(--color-danger) 72%, var(--color-border));
+  border-color: color-mix(in srgb, var(--color-danger) 55%, var(--color-border));
 }
 
 .editor-lab-pane__header {
   align-items: center;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 72%, transparent) 0%, transparent 100%);
+  background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
   display: flex;
   min-height: 52px;
@@ -46,7 +55,7 @@
   align-items: flex-end;
   display: flex;
   flex-wrap: nowrap;
-  gap: var(--space-2);
+  gap: var(--space-1);
   min-width: 0;
   overflow-x: auto;
   padding-bottom: var(--space-2);
@@ -54,77 +63,118 @@
   width: 100%;
 }
 
+/* Toolbar: grouped by space, not by a box inside the box. */
 .editor-lab-pane__tools {
-    align-items: flex-start;
-    display: flex;
-    width: 100%;
-    gap: var(--space-2);
-    margin-left: auto;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    padding: var(--space-2);
+  align-items: center;
+  display: flex;
+  width: 100%;
+  gap: var(--space-1);
+  margin-left: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 0 var(--space-2);
+  scrollbar-width: none;
+}
+
+.editor-lab-pane__tools::-webkit-scrollbar {
+  display: none;
 }
 
 .editor-lab-pane__tool-button {
   appearance: none;
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   cursor: pointer;
+  flex-shrink: 0;
   font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
-  padding: var(--space-1) var(--space-2);
+  line-height: 1;
+  min-height: var(--control-height-sm);
+  padding: 0 var(--space-2);
   transition: var(--transition-colors);
+  white-space: nowrap;
 }
 
-.editor-lab-pane__tool-button:hover {
+.editor-lab-pane__tool-button:hover:not(:disabled) {
   background: var(--color-surface-hover);
-  border-color: color-mix(in srgb, var(--color-accent) 60%, var(--color-border));
+  border-color: var(--color-border);
   color: var(--color-text);
 }
 
+.editor-lab-pane__tool-button:active:not(:disabled) {
+  background: var(--color-surface-active);
+}
+
 .editor-lab-pane__tool-button:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 
 .editor-lab-pane__tool-button:disabled {
+  color: var(--color-text-dim);
   cursor: not-allowed;
-  opacity: 0.35;
+}
+
+/* The single primary action in this toolbar. */
+.editor-lab-pane__tool-button--primary {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--accent-on-primary);
+}
+
+.editor-lab-pane__tool-button--primary:hover:not(:disabled),
+.editor-lab-pane__tool-button--primary:active:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--accent-on-primary);
+}
+
+.editor-lab-pane__tool-button--primary:disabled {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-dim);
 }
 
 .editor-lab-pane__tool-button--ghost {
-  border-color: transparent;
-  color: var(--color-text-muted);
+  color: var(--color-text-dim);
 }
 
-.editor-lab-pane__tool-button--ghost:hover {
-  border-color: var(--color-border);
+.editor-lab-pane__tool-button--ghost:hover:not(:disabled) {
   color: var(--color-text);
 }
 
 .editor-lab-pane__tab {
   align-items: stretch;
-  background: var(--color-surface);
+  background: transparent;
   border: 1px solid transparent;
   border-bottom: 0;
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   display: inline-flex;
   flex: 0 0 auto;
   max-width: 100%;
   overflow: hidden;
+  position: relative;
   transition: var(--transition-colors);
 }
 
-.editor-lab-pane__tab:hover {
+.editor-lab-pane__tab:hover:not(.editor-lab-pane__tab--active) {
   background: var(--color-surface-hover);
 }
 
+/* Active tab reads as continuous with the editor surface below. */
 .editor-lab-pane__tab--active {
   background: var(--color-panel-bg);
   border-color: var(--color-border);
-  box-shadow: inset 0 2px 0 color-mix(in srgb, var(--color-accent) 70%, transparent);
+}
+
+.editor-lab-pane__tab--active::before {
+  background: var(--color-accent);
+  content: '';
+  height: 2px;
+  inset: 0 0 auto 0;
+  position: absolute;
 }
 
 .editor-lab-pane__tab-select,
@@ -133,23 +183,36 @@
   appearance: none;
   background: transparent;
   border: 0;
-  color: var(--color-text);
+  color: var(--color-text-secondary);
   cursor: pointer;
 }
 
 .editor-lab-pane__tab-select {
   font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-medium);
+  min-height: var(--control-height-md);
   min-width: 0;
-  padding: var(--space-2) var(--space-3);
+  padding: 0 var(--space-3);
   white-space: nowrap;
 }
 
+.editor-lab-pane__tab--active .editor-lab-pane__tab-select {
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
+}
+
 .editor-lab-pane__tab-close {
-  color: var(--color-text-muted);
+  color: var(--color-text-dim);
   font-size: var(--text-sm);
   line-height: 1;
+  opacity: 0.6;
   padding: 0 var(--space-2);
+  transition: var(--transition-colors), opacity var(--duration-fast) var(--ease-default);
+}
+
+.editor-lab-pane__tab:hover .editor-lab-pane__tab-close,
+.editor-lab-pane__tab--active .editor-lab-pane__tab-close {
+  opacity: 1;
 }
 
 .editor-lab-pane__tab-close:hover {
@@ -158,21 +221,26 @@
 
 .editor-lab-pane__tab-add {
   align-items: center;
-  background: color-mix(in srgb, var(--color-accent) 15%, var(--color-surface));
-  border: 1px dashed color-mix(in srgb, var(--color-accent) 50%, var(--color-border));
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-radius: var(--radius-sm);
   display: inline-flex;
   flex: 0 0 auto;
-  font-size: var(--text-lg);
+  font-size: var(--text-md);
   justify-content: center;
-  min-height: 38px;
-  min-width: 40px;
-  transition: var(--transition-colors), var(--transition-transform);
+  min-height: var(--control-height-md);
+  min-width: 34px;
+  transition: var(--transition-colors);
 }
 
 .editor-lab-pane__tab-add:hover {
-  background: color-mix(in srgb, var(--color-accent) 24%, var(--color-surface-hover));
-  transform: translateY(-1px);
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.editor-lab-pane__tab-select:focus-visible,
+.editor-lab-pane__tab-close:focus-visible,
+.editor-lab-pane__tab-add:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
 }
 
 .editor-lab-pane__surface {
@@ -192,9 +260,9 @@
 }
 
 .editor-lab-pane__gutter {
-  background: color-mix(in srgb, var(--color-panel-bg-soft) 88%, transparent);
-  border-right: 1px solid var(--color-border);
-  color: var(--color-text-muted);
+  background: var(--editor-gutter-bg);
+  border-right: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  color: var(--color-text-dim);
   flex: 0 0 56px;
   font-family: var(--font-mono);
   font-size: 0.9rem;
@@ -280,9 +348,7 @@
 }
 
 .editor-lab-pane__highlight {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-panel-bg-soft) 60%, transparent) 0%, transparent 100%),
-    var(--color-panel-bg);
+  background: var(--color-panel-bg);
   inset: 0;
   margin: 0;
   overflow: hidden;
@@ -344,63 +410,41 @@
 }
 
 .editor-lab-pane__alert {
-  font-size: var(--text-sm);
+  align-items: center;
+  display: flex;
+  font-size: var(--text-xs);
+  gap: var(--space-2);
   margin: 0;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-1-5) var(--space-3);
+}
+
+/* Status is carried by an icon glyph + text, never by colour alone. */
+.editor-lab-pane__alert::before {
+  border-radius: var(--radius-full);
+  content: '';
+  flex-shrink: 0;
+  height: 7px;
+  width: 7px;
 }
 
 .editor-lab-pane__alert--error {
-  background: color-mix(in srgb, var(--color-danger) 12%, var(--color-panel-bg));
+  background: var(--color-danger-subtle);
   border-top: 1px solid color-mix(in srgb, var(--color-danger) 28%, var(--color-border));
   color: var(--color-danger);
 }
 
+.editor-lab-pane__alert--error::before {
+  background: var(--color-danger);
+}
+
 .editor-lab-pane__alert--valid {
-  background: color-mix(in srgb, var(--color-success, #22c55e) 10%, var(--color-panel-bg));
-  border-top: 1px solid color-mix(in srgb, var(--color-success, #22c55e) 25%, var(--color-border));
-  color: var(--color-success, #22c55e);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
 }
 
-[data-theme='dark'] .editor-lab-pane {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-panel-bg) 74%, #f3f7fd 26%) 0%,
-      color-mix(in srgb, var(--color-panel-bg) 80%, #eef4fb 20%) 100%);
-  border-color: color-mix(in srgb, var(--color-border) 62%, #9fb2c6);
-}
-
-[data-theme='dark'] .editor-lab-pane__header {
-  background: linear-gradient(180deg,
-    color-mix(in srgb, var(--color-surface) 64%, #eaf1f9 36%) 0%,
-    color-mix(in srgb, var(--color-panel-bg-soft) 82%, #eaf1f9 18%) 100%);
-}
-
-[data-theme='dark'] .editor-lab-pane__tools {
-  background: color-mix(in srgb, var(--color-panel-bg-soft) 72%, #edf3fa 28%);
-  border-color: color-mix(in srgb, var(--color-border) 62%, #9fb2c6);
-}
-
-[data-theme='dark'] .editor-lab-pane__tab {
-  background: color-mix(in srgb, var(--color-surface) 66%, #eaf1f9 34%);
-}
-
-[data-theme='dark'] .editor-lab-pane__tab--active {
-  background: color-mix(in srgb, var(--color-panel-bg) 76%, #f5f8fc 24%);
-  border-color: color-mix(in srgb, var(--color-border) 60%, #a6b8cb);
-}
-
-[data-theme='dark'] .editor-lab-pane__gutter {
-  background: color-mix(in srgb, var(--color-panel-bg-soft) 68%, #edf3fa 32%);
-  color: color-mix(in srgb, var(--color-text-muted) 70%, #d1dbe6);
-}
-
-[data-theme='dark'] .editor-lab-pane__highlight {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-panel-bg-soft) 62%, #edf3fa 38%) 0%, transparent 100%),
-    color-mix(in srgb, var(--color-panel-bg) 74%, #f4f8fd 26%);
-}
-
-[data-theme='dark'] .editor-lab-pane__tree-shell {
-  background: color-mix(in srgb, var(--color-panel-bg) 74%, #f4f8fd 26%);
+.editor-lab-pane__alert--valid::before {
+  background: var(--color-success);
 }
 
 @media (max-width: 900px) {
@@ -441,7 +485,7 @@
 
 .editor-lab-pane__drop-overlay {
   align-items: center;
-  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-panel-bg) 88%);
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-panel-bg));
   border-radius: var(--radius-md);
   bottom: 0;
   color: var(--color-accent);
@@ -460,10 +504,8 @@
 
 /* ── Toolbar divider ──────────────────────────────────────────────────── */
 
+/* Groups are separated by space, not by a visible rule. */
 .editor-lab-pane__tool-divider {
-  background: var(--color-border);
   flex-shrink: 0;
-  height: 16px;
-  margin: 0 var(--space-1);
-  width: 1px;
+  width: var(--space-3);
 }

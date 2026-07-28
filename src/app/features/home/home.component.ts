@@ -35,7 +35,7 @@ const AVAILABLE_TOOLS: ToolDef[] = [
   {
     name: 'JSON Error Finder',
     description: 'Find and fix JSON syntax errors with precise line/column references.',
-    icon: 'warning',
+    icon: 'find_in_page',
     route: '/tools/json-error-finder',
     state: 'new',
     ctaLabel: 'Open Error Finder',

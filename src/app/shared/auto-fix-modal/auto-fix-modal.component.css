@@ -231,11 +231,11 @@
 }
 
 [data-theme='light'] .afm__btn--secondary {
-  background: #f4f5f7;
-  color: #444;
-  border-color: #ccc;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
 }
 
 [data-theme='light'] .afm__btn--secondary:hover {
-  background: #eaedf2;
+  background: var(--color-surface-hover);
 }

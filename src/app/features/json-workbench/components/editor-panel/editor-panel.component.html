@@ -73,7 +73,9 @@
           class="editor-panel__validation-state"
           [class.editor-panel__validation-state--valid]="isValid()"
           [class.editor-panel__validation-state--invalid]="!isValid()"
+          role="img"
           [attr.aria-label]="isValid() ? 'Valid JSON' : 'Invalid JSON'"
+          [attr.title]="isValid() ? 'Valid JSON' : 'Invalid JSON'"
           [style.visibility]="leftMode() === 'text' ? 'visible' : 'hidden'"
         ></span>
       }

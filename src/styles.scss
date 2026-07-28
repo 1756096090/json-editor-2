@@ -46,11 +46,11 @@
   --radius-xl: 1rem;
   --radius-full: 999px;
 
-  /* ── Shadows ─────────────────────────────────────────────────── */
-  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.06);
-  --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.04);
-  --shadow-md: 0 4px 6px rgb(0 0 0 / 0.07), 0 2px 4px rgb(0 0 0 / 0.04);
-  --shadow-lg: 0 10px 15px rgb(0 0 0 / 0.08), 0 4px 6px rgb(0 0 0 / 0.04);
+  /* ── Shadows — discreet by default; depth comes from borders ─── */
+  --shadow-xs: 0 1px 1px rgb(0 0 0 / 0.04);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 2px 6px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 8px 24px rgb(0 0 0 / 0.12);
 
   /* ── Z-index scale ───────────────────────────────────────────── */
   --z-base: 0;
@@ -72,8 +72,13 @@
   --transition-transform: transform var(--duration-fast) var(--ease-default);
 
   /* ── Focus ring ──────────────────────────────────────────────── */
-  --focus-ring: 2px solid var(--accent-primary);
+  --focus-ring: 2px solid var(--color-focus-ring);
   --focus-ring-offset: 2px;
+
+  /* ── Control sizing (WCAG-friendly hit areas) ────────────────── */
+  --control-height-sm: 30px;
+  --control-height-md: 34px;
+  --control-height-lg: 38px;
 
   /* ── Surfaces (semantic naming) ─────────────────────────────── */
   --surface-hover: var(--color-surface-hover);
@@ -92,9 +97,9 @@
   --color-badge-recommended-text: var(--color-accent);
   --color-badge-recommended-border: color-mix(in srgb, var(--color-accent) 40%, transparent);
 
-  --color-badge-soon-bg: #f3f4f6;
-  --color-badge-soon-text: #6b7280;
-  --color-badge-soon-border: #d1d5db;
+  --color-badge-soon-bg: var(--bg-hover);
+  --color-badge-soon-text: var(--text-secondary);
+  --color-badge-soon-border: var(--border-subtle);
 
   --color-badge-pro-bg: #fef3c7;
   --color-badge-pro-text: #92400e;
@@ -127,35 +132,42 @@
 /* ── Light theme ─────────────────────────────────────────────────── */
 :root,
 [data-theme='light'] {
-  --bg-app: #f8fafc;
+  /* Three surface levels only: app → panel → editor/elevated */
+  --bg-app: #f6f8fa;
   --bg-topbar: #ffffff;
-  --bg-panel: #f1f5f9;
+  --bg-panel: #f6f8fa;
   --bg-editor: #ffffff;
-  --bg-active: #e2e8f0;
-  --bg-overlay: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-hover: #eef2f7;
+  --bg-active: #e8f1ff;
+  --bg-overlay: var(--bg-elevated);
 
-  --border-subtle: #cbd5e1;
-  --border-strong: #64748b;
+  --border-subtle: #d8dee7;
+  --border-strong: #b8c2cf;
 
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-dim: #64748b;
+  --text-primary: #172033;
+  --text-secondary: #526077;
+  --text-dim: #7a8799;
 
-  --accent-primary: #2563eb;
-  --accent-primary-strong: #1d4ed8;
+  --accent-primary: #2563d9;
+  --accent-hover: #1f55bd;
+  /* Legacy alias — same concept as --accent-hover */
+  --accent-primary-strong: var(--accent-hover);
+  --accent-subtle: rgb(37 99 217 / 0.1);
   --accent-on-primary: #ffffff;
-  --success: #15803d;
-  --warning: #b45309;
-  --danger: #dc2626;
+  --success: #197f43;
+  --warning: #9a6200;
+  --danger: #c9333d;
 
-  --editor-selection: #dbeafe;
-  --editor-active-line: #f8fafc;
+  --editor-selection: #d6e6ff;
+  --editor-active-line: #f6f8fa;
+  --editor-gutter-bg: #f1f4f8;
 
-  --json-key: #0ea5e9;
-  --json-string: #c2410c;
-  --json-number: #7c3aed;
-  --json-boolean: #be185d;
-  --json-null: #dc2626;
+  --json-key: #0969a8;
+  --json-string: #9a4d12;
+  --json-number: #6f42c1;
+  --json-boolean: #a62d68;
+  --json-null: #cf222e;
   --json-punctuation: #64748b;
 
   --color-bg: var(--bg-app);
@@ -169,14 +181,14 @@
   --color-panel-bg: var(--bg-editor);
   --color-panel-bg-soft: var(--bg-panel);
   --color-surface: var(--bg-panel);
-  --color-surface-raised: var(--bg-editor);
-  --color-surface-sunken: #e2e8f0;
+  --color-surface-raised: var(--bg-elevated);
+  --color-surface-sunken: var(--bg-app);
   --color-surface-overlay: var(--bg-overlay);
-  --color-surface-hover: #e2e8f0;
+  --color-surface-hover: var(--bg-hover);
   --color-surface-active: var(--bg-active);
   --color-accent: var(--accent-primary);
   --color-accent-muted: color-mix(in srgb, var(--accent-primary) 45%, transparent);
-  --color-accent-subtle: color-mix(in srgb, var(--accent-primary) 12%, var(--bg-editor));
+  --color-accent-subtle: var(--accent-subtle);
   --color-danger: var(--danger);
   --color-error: var(--danger);
   --color-error-border: color-mix(in srgb, var(--danger) 45%, var(--border-subtle));
@@ -204,36 +216,49 @@
 
 /* ── Dark theme ──────────────────────────────────────────────────── */
 [data-theme='dark'] {
-  --bg-app: #0f1117;
-  --bg-topbar: #111827;
-  --bg-panel: #151a21;
-  --bg-editor: #1b2230;
-  --bg-active: #222a3a;
-  --bg-overlay: #151a21;
+  /* Three surface levels only: app → panel → editor/elevated */
+  --bg-app: #0f141c;
+  --bg-topbar: #121923;
+  --bg-panel: #151d29;
+  --bg-editor: #18212e;
+  --bg-elevated: #1c2634;
+  --bg-hover: #222e3e;
+  --bg-active: rgb(74 137 255 / 0.12);
+  --bg-overlay: var(--bg-elevated);
 
-  --border-subtle: #2d3748;
-  --border-strong: #5b6b80;
+  --border-subtle: #2a3545;
+  --border-strong: #3b4a5e;
 
-  --text-primary: #e6edf3;
-  --text-secondary: #9aa4b2;
-  --text-dim: #6b7280;
+  --text-primary: #e6edf5;
+  --text-secondary: #a9b5c5;
+  --text-dim: #748196;
 
-  --accent-primary: #3b82f6;
-  --accent-primary-strong: #60a5fa;
-  --accent-on-primary: #ffffff;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
+  --accent-primary: #5794f7;
+  --accent-hover: #74a7f8;
+  /* Legacy alias — same concept as --accent-hover */
+  --accent-primary-strong: var(--accent-hover);
+  --accent-subtle: rgb(87 148 247 / 0.12);
+  --accent-on-primary: #0b1220;
+  --success: #4ac07a;
+  --warning: #d9a441;
+  --danger: #e5707a;
 
-  --editor-selection: #1e3a5f;
-  --editor-active-line: #141c28;
+  --editor-selection: #26405f;
+  --editor-active-line: #1d2735;
+  --editor-gutter-bg: #141c27;
 
-  --json-key: #7dd3fc;
-  --json-string: #fdba74;
-  --json-number: #c4b5fd;
-  --json-boolean: #f9a8d4;
-  --json-null: #f87171;
-  --json-punctuation: #9aa4b2;
+  --json-key: #79b8e8;
+  --json-string: #a8c97f;
+  --json-number: #c0a5df;
+  --json-boolean: #dca16d;
+  --json-null: #df7f87;
+  --json-punctuation: #9ba8b8;
+
+  /* Dark surfaces need deeper shadows to read as elevation */
+  --shadow-xs: 0 1px 1px rgb(0 0 0 / 0.3);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 2px 8px rgb(0 0 0 / 0.45);
+  --shadow-lg: 0 10px 28px rgb(0 0 0 / 0.55);
 
   --color-bg: var(--bg-app);
   --color-text: var(--text-primary);
@@ -246,14 +271,14 @@
   --color-panel-bg: var(--bg-editor);
   --color-panel-bg-soft: var(--bg-panel);
   --color-surface: var(--bg-panel);
-  --color-surface-raised: var(--bg-active);
-  --color-surface-sunken: #0b1220;
+  --color-surface-raised: var(--bg-elevated);
+  --color-surface-sunken: var(--bg-app);
   --color-surface-overlay: var(--bg-overlay);
-  --color-surface-hover: #202938;
+  --color-surface-hover: var(--bg-hover);
   --color-surface-active: var(--bg-active);
   --color-accent: var(--accent-primary);
-  --color-accent-muted: color-mix(in srgb, var(--accent-primary-strong) 48%, transparent);
-  --color-accent-subtle: color-mix(in srgb, var(--accent-primary) 14%, var(--bg-editor));
+  --color-accent-muted: color-mix(in srgb, var(--accent-hover) 48%, transparent);
+  --color-accent-subtle: var(--accent-subtle);
   --color-danger: var(--danger);
   --color-error: var(--danger);
   --color-error-border: color-mix(in srgb, var(--danger) 48%, var(--border-subtle));
@@ -287,9 +312,9 @@
   --color-badge-popular-text: #fde68a;
   --color-badge-popular-border: #78350f;
 
-  --color-badge-soon-bg: #2d2d30;
-  --color-badge-soon-text: #9ca3af;
-  --color-badge-soon-border: #505050;
+  --color-badge-soon-bg: var(--bg-hover);
+  --color-badge-soon-text: var(--text-secondary);
+  --color-badge-soon-border: var(--border-strong);
 
   --color-badge-pro-bg: #451a03;
   --color-badge-pro-text: #fcd34d;
@@ -338,6 +363,19 @@ select {
 :focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-ring-offset);
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────── */
+/* !important is required here: it must beat component-level transitions. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ── Scrollbar styling ───────────────────────────────────────────── */

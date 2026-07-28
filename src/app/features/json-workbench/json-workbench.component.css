@@ -55,12 +55,13 @@
   gap: var(--space-1);
 }
 
+/* Groups read as groups through spacing; the rule itself stays very faint. */
 .toolbar-divider {
   align-self: center;
-  background: var(--color-border);
+  background: color-mix(in srgb, var(--color-border) 55%, transparent);
   flex-shrink: 0;
-  height: 18px;
-  margin: 0 var(--space-1);
+  height: 16px;
+  margin: 0 var(--space-2);
   width: 1px;
 }
 
@@ -165,7 +166,6 @@
 
 .url-import-bar__target-btn--active {
   background: var(--accent-primary);
-  box-shadow: inset 0 -2px 0 var(--accent-primary-strong);
   color: var(--accent-on-primary);
 }
 
@@ -225,8 +225,7 @@
 
 .workbench__conversion-step--active {
   background: var(--color-accent-subtle);
-  border-color: color-mix(in srgb, var(--accent-primary) 45%, var(--color-border));
-  box-shadow: inset 0 -2px 0 var(--accent-primary);
+  border-color: transparent;
   color: var(--text-primary);
 }
 
