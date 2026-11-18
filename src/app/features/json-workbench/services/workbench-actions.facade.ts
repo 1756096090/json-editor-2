@@ -9,6 +9,7 @@ import {
   type JsonCleanOptions,
 } from '../utils/json-cleaner.utils';
 import { sortJsonKeys } from '../utils/json-sort.utils';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * Facade for common editor actions (format, minify, clean, transfer, swap).
@@ -18,14 +19,20 @@ import { sortJsonKeys } from '../utils/json-sort.utils';
 export class WorkbenchActionsFacade {
   private readonly store = inject(WorkbenchStore);
   private readonly tabs = inject(TabsService);
+  private readonly i18n = inject(I18nService);
+
+  private panelName(panel: ActivePanel): string {
+    return this.i18n.t(panel === 'left' ? 'panel.input' : 'panel.output');
+  }
 
   /** Format JSON in specific panel */
   formatPanel(panel: ActivePanel): boolean {
     const success = panel === 'left'
       ? this.store.formatJson()
       : this.store.formatBaselineJson();
-    const label = panel === 'left' ? 'Input' : 'Output';
-    const msg = success ? `${label} formatted.` : `Cannot format invalid JSON.`;
+    const msg = success
+      ? this.i18n.t('act.formatted', { panel: this.panelName(panel) })
+      : this.i18n.t('act.cannotFormat');
     this.store.setStatusMessage(msg);
     return success;
   }
@@ -35,8 +42,9 @@ export class WorkbenchActionsFacade {
     const success = panel === 'left'
       ? this.store.minifyJson()
       : this.store.minifyBaselineJson();
-    const label = panel === 'left' ? 'Input' : 'Output';
-    const msg = success ? `${label} minified.` : `Cannot minify invalid JSON.`;
+    const msg = success
+      ? this.i18n.t('act.minified', { panel: this.panelName(panel) })
+      : this.i18n.t('act.cannotMinify');
     this.store.setStatusMessage(msg);
     return success;
   }
@@ -48,9 +56,9 @@ export class WorkbenchActionsFacade {
   /** Clean a panel using a caller-provided set of options. */
   cleanPanelWith(panel: ActivePanel, options: JsonCleanOptions): boolean {
     const json = panel === 'left' ? this.store.currentJson() : this.store.baselineJson();
-    const label = panel === 'left' ? 'Input' : 'Output';
+    const label = this.panelName(panel);
     if (json === null) {
-      this.store.setStatusMessage('Cannot clean invalid JSON.');
+      this.store.setStatusMessage(this.i18n.t('wb.cannotClean'));
       return false;
     }
 
@@ -68,17 +76,17 @@ export class WorkbenchActionsFacade {
 
     this.store.setStatusMessage(
       removed > 0
-        ? `${label} cleaned. Removed ${removed} empty ${removed === 1 ? 'value' : 'values'}.`
-        : `${label} cleaned. Nothing to remove.`,
+        ? this.i18n.t(removed === 1 ? 'act.cleanedOne' : 'act.cleanedMany', { panel: label, n: removed })
+        : this.i18n.t('act.cleanedNothing', { panel: label }),
     );
     return true;
   }
 
   sortPanel(panel: ActivePanel): boolean {
     const json = panel === 'left' ? this.store.currentJson() : this.store.baselineJson();
-    const label = panel === 'left' ? 'Input' : 'Output';
+    const label = this.panelName(panel);
     if (json === null) {
-      this.store.setStatusMessage('Cannot sort invalid JSON.');
+      this.store.setStatusMessage(this.i18n.t('act.cannotSort'));
       return false;
     }
 
@@ -91,20 +99,20 @@ export class WorkbenchActionsFacade {
       this.store.setBaselineText(nextText);
     }
 
-    this.store.setStatusMessage(`${label} keys sorted alphabetically.`);
+    this.store.setStatusMessage(this.i18n.t('act.sorted', { panel: label }));
     return true;
   }
 
   /** Transfer left panel content to right */
   copyLeftToRight(): void {
     this.store.setBaselineText(this.store.rawText());
-    this.store.setStatusMessage('Input copied to Output.');
+    this.store.setStatusMessage(this.i18n.t('act.copiedInToOut'));
   }
 
   /** Transfer right panel content to left */
   copyRightToLeft(): void {
     this.store.setRawText(this.store.baselineText());
-    this.store.setStatusMessage('Output copied to Input.');
+    this.store.setStatusMessage(this.i18n.t('act.copiedOutToIn'));
   }
 
   /** Swap left and right panel content & labels */

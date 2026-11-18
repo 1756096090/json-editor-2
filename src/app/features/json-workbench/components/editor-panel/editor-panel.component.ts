@@ -7,6 +7,7 @@
   output,
   signal,
   viewChild,
+  inject,
 } from '@angular/core';
 import { JsonTreeViewComponent } from '../../../../components/ui/json-tree-view/json-tree-view.component';
 import { JsonTableViewComponent } from '../../../../components/ui/json-table-view/json-table-view.component';
@@ -29,6 +30,8 @@ import { jsonToYaml, yamlToJsonValue } from '../../../tools/json-to-yaml/json-ya
 import { jsonToCsv, jsonToXml, type XmlEncoding } from '../../utils/convert.utils';
 import { copyTextToClipboard, documentFileName, downloadTextFile } from '../../utils/file-utils';
 import type { AppThemeId } from '../../../../core/themes/app-themes';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 const XML_ENCODING_OPTIONS: XmlEncoding[] = [
   'UTF-8',
@@ -41,7 +44,7 @@ const XML_ENCODING_OPTIONS: XmlEncoding[] = [
 @Component({
   selector: 'app-editor-panel',
   imports: [
-    JsonTreeViewComponent,
+    TranslatePipe, JsonTreeViewComponent,
     JsonTableViewComponent,
     EmptyStateComponent,
     AutoFixModalComponent,
@@ -58,6 +61,7 @@ const XML_ENCODING_OPTIONS: XmlEncoding[] = [
   encapsulation: ViewEncapsulation.None,
 })
 export class EditorPanelComponent {
+  protected readonly i18n = inject(I18nService);
   // ── Inputs ─────────────────────────────────────────────────────────────────
   readonly rawText = input<string>('');
   readonly panelTitle = input<string>('Editor');
@@ -73,10 +77,9 @@ export class EditorPanelComponent {
   readonly showConvertedExport = input<boolean>(true);
   readonly showPathInspector = input<boolean>(true);
   readonly textAriaLabel = input<string>('JSON editor');
-  readonly convertedEmptyTitle = input<string>('No valid JSON to convert');
-  readonly convertedEmptyDescription = input<string>(
-    'Switch to Text mode, paste valid JSON, then come back to this view.'
-  );
+  /** Null → translated default. */
+  readonly convertedEmptyTitle = input<string | null>(null);
+  readonly convertedEmptyDescription = input<string | null>(null);
 
   // ── Error inputs ───────────────────────────────────────────────────────
   readonly errorPosition = input<JsonErrorPosition | null>(null);
@@ -195,9 +198,9 @@ export class EditorPanelComponent {
 
     try {
       await copyTextToClipboard(text);
-      this.statusMessage.emit('Content copied to clipboard.');
+      this.statusMessage.emit(this.i18n.t('ep.copied'));
     } catch {
-      this.statusMessage.emit('Copy failed. Please try again.');
+      this.statusMessage.emit(this.i18n.t('ep.copyFailed'));
     }
   }
 
@@ -240,7 +243,7 @@ export class EditorPanelComponent {
         this.autoFixProposal.set(result);
       } else {
         const parseError =
-          e instanceof SyntaxError ? e.message : 'JSON inválido';
+          e instanceof SyntaxError ? e.message : this.i18n.t('error.invalidJson');
         this.autoFixFailureMsg.set(parseError);
       }
     }
@@ -268,7 +271,7 @@ export class EditorPanelComponent {
     this.pastedText = text;
     this.textBeforePaste = text;
 
-    let parseError = 'JSON inválido';
+    let parseError = this.i18n.t('error.invalidJson');
     try {
       JSON.parse(text);
     } catch (e) {

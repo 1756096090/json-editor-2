@@ -5,75 +5,75 @@
         <app-ui-button
           size="sm"
           variant="default"
-          tooltipText="Open a .json file from disk"
+          [tooltipText]="'wb.openTooltip' | t"
           (pressed)="onOpenFilePressed('left')"
         >
           <app-ui-icon name="open" [size]="14" />
-          Open
+          {{ 'wb.open' | t }}
         </app-ui-button>
         <app-ui-button
           size="sm"
           variant="ghost"
-          tooltipText="Format input JSON"
+          [tooltipText]="'wb.formatInputTooltip' | t"
           (pressed)="onFormatPanel('left')"
         >
           <app-ui-icon name="format" [size]="14" />
-          Beautify
+          {{ 'wb.beautify' | t }}
         </app-ui-button>
         <app-ui-button
           size="sm"
           variant="accent"
-          tooltipText="Convert JSON input to CSV output"
+          [tooltipText]="'wb.convertCsvTooltip' | t"
           (pressed)="onConvertToCsv()"
         >
           <app-ui-icon name="arrow-right" [size]="14" />
-          Convert to CSV
+          {{ 'wb.convertCsv' | t }}
         </app-ui-button>
       } @else {
-        <app-ui-button size="sm" variant="default" [disabled]="!hasCsvOutput()" tooltipText="Copy CSV output" ariaLabel="Copy CSV output" (pressed)="onCopyCsvOutput()">
+        <app-ui-button size="sm" variant="default" [disabled]="!hasCsvOutput()" [tooltipText]="'wb.copyCsvTooltip' | t" [ariaLabel]="'wb.copyCsvTooltip' | t" (pressed)="onCopyCsvOutput()">
           <app-ui-icon name="copy" [size]="14" />
         </app-ui-button>
-        <app-ui-button size="sm" variant="ghost" [disabled]="!hasCsvOutput()" tooltipText="Download CSV output" (pressed)="onDownloadCsvOutput()">
-          <app-ui-icon name="download" [size]="14" /> Download CSV
+        <app-ui-button size="sm" variant="ghost" [disabled]="!hasCsvOutput()" [tooltipText]="'wb.downloadCsvTooltip' | t" (pressed)="onDownloadCsvOutput()">
+          <app-ui-icon name="download" [size]="14" /> {{ 'wb.downloadCsv' | t }}
         </app-ui-button>
       }
     } @else {
-      <app-ui-button size="sm" variant="accent" tooltipText="Format JSON (Ctrl+Shift+F)" (pressed)="onFormatPanel(panel)">
-        <app-ui-icon name="format" [size]="12" /> Beautify
+      <app-ui-button size="sm" variant="accent" [tooltipText]="'wb.formatTooltip' | t" (pressed)="onFormatPanel(panel)">
+        <app-ui-icon name="format" [size]="12" /> {{ 'wb.beautify' | t }}
       </app-ui-button>
-      <app-ui-button size="sm" variant="ghost" tooltipText="Open a .json file from disk" (pressed)="onOpenFilePressed(panel)">
-        <app-ui-icon name="open" [size]="12" /> Open
+      <app-ui-button size="sm" variant="ghost" [tooltipText]="'wb.openTooltip' | t" (pressed)="onOpenFilePressed(panel)">
+        <app-ui-icon name="open" [size]="12" /> {{ 'wb.open' | t }}
       </app-ui-button>
-      <app-ui-button size="sm" variant="ghost" tooltipText="Minify JSON (Ctrl+M)" (pressed)="onMinifyPanel(panel)">
-        <app-ui-icon name="minify" [size]="12" /> Minify
+      <app-ui-button size="sm" variant="ghost" [tooltipText]="'wb.minifyTooltip' | t" (pressed)="onMinifyPanel(panel)">
+        <app-ui-icon name="minify" [size]="12" /> {{ 'wb.minify' | t }}
       </app-ui-button>
-      <app-ui-button size="sm" variant="ghost" tooltipText="Clean JSON" (pressed)="onCleanPanel(panel)">
-        <app-ui-icon name="clean" [size]="12" /> Clean
+      <app-ui-button size="sm" variant="ghost" [tooltipText]="'clean.title' | t" (pressed)="onCleanPanel(panel)">
+        <app-ui-icon name="clean" [size]="12" /> {{ 'wb.clean' | t }}
       </app-ui-button>
       @if (isJsonPanel(panel)) {
         <app-ui-button size="sm" variant="ghost" [disabled]="isMobileLayout()"
-          tooltipText="Generar JSON Schema en el panel contrario; si tiene contenido, crear una pestaña nueva"
+          [tooltipText]="'wb.schemaTooltip' | t"
           (pressed)="onGenerateSchema(panel)">
-          <app-ui-icon name="wand" [size]="12" /> Schema
+          <app-ui-icon name="wand" [size]="12" /> {{ 'wb.schema' | t }}
         </app-ui-button>
         @if (panel === 'left' ? store.leftError() : store.rightError()) {
-          <app-ui-button size="sm" variant="ghost" tooltipText="Reparar JSON: revisar la corrección antes de aplicarla" (pressed)="onRepairPanel(panel)">
-            <app-ui-icon name="repair" [size]="12" /> Reparar
+          <app-ui-button size="sm" variant="ghost" [tooltipText]="'wb.repairTooltip' | t" (pressed)="onRepairPanel(panel)">
+            <app-ui-icon name="repair" [size]="12" /> {{ 'wb.repair' | t }}
           </app-ui-button>
         }
       }
       @if (isJsonPanel(panel)) {
-        <app-ui-button size="sm" variant="ghost" tooltipText="Sort object keys alphabetically" (pressed)="onSortPanel(panel)">
-          <app-ui-icon name="sort" [size]="12" /> Sort
+        <app-ui-button size="sm" variant="ghost" [tooltipText]="'wb.sortTooltip' | t" (pressed)="onSortPanel(panel)">
+          <app-ui-icon name="sort" [size]="12" /> {{ 'wb.sort' | t }}
         </app-ui-button>
       }
       <app-ui-button size="sm" [variant]="store.showDiff() ? 'active' : 'ghost'"
         [ariaPressed]="store.showDiff()" [disabled]="!canComparePanels()" [tooltipText]="compareTooltip()" (pressed)="onToggleDiffPressed()">
-        <app-ui-icon name="compare" [size]="12" /> Compare
+        <app-ui-icon name="compare" [size]="12" /> {{ 'wb.compare' | t }}
       </app-ui-button>
-      <app-ui-button size="sm" variant="ghost" tooltipText="Exportar el contenido del panel en el formato seleccionado"
+      <app-ui-button size="sm" variant="ghost" [tooltipText]="'wb.exportTooltip' | t"
         (pressed)="onExportPanel(panel)">
-        <app-ui-icon name="download" [size]="12" /> Exportar
+        <app-ui-icon name="download" [size]="12" /> {{ 'wb.export' | t }}
       </app-ui-button>
     }
   </ng-template>
@@ -92,12 +92,12 @@
   <app-toast [message]="store.statusMessage()" />
 
   @if (isCsvConverter()) {
-    <div class="workbench__conversion-flow" aria-label="JSON to CSV workflow">
-      <span class="workbench__conversion-step workbench__conversion-step--active">1. Input JSON</span>
+    <div class="workbench__conversion-flow" [attr.aria-label]="'wb.csvFlowAria' | t">
+      <span class="workbench__conversion-step workbench__conversion-step--active">{{ 'wb.csvStep1' | t }}</span>
       <span class="workbench__conversion-arrow" aria-hidden="true">→</span>
-      <span class="workbench__conversion-step">2. Convert</span>
+      <span class="workbench__conversion-step">{{ 'wb.csvStep2' | t }}</span>
       <span class="workbench__conversion-arrow" aria-hidden="true">→</span>
-      <span class="workbench__conversion-step" [class.workbench__conversion-step--active]="hasCsvOutput()">3. CSV Output</span>
+      <span class="workbench__conversion-step" [class.workbench__conversion-step--active]="hasCsvOutput()">{{ 'wb.csvStep3' | t }}</span>
     </div>
   } @else {
     <div class="workbench__dual-tabs">
@@ -148,7 +148,7 @@
         [autoFixEnabled]="settings.autoFixOnPasteEnabled()"
         [diffDecorations]="leftDiffDecorations()"
         [showModeSelector]="!isCsvConverter()"
-        [textAriaLabel]="isCsvConverter() ? 'JSON input editor' : 'JSON editor'"
+        [textAriaLabel]="(isCsvConverter() ? 'wb.inputEditorAria' : 'wb.editorAria') | t"
         (rawTextChange)="onRawTextChanged($event)"
         (fileDropped)="onFileDropped($event)"
         (modeChange)="onLeftModeChanged($event)"
@@ -182,8 +182,8 @@
         [showModeSelector]="!isCsvConverter()"
         [showValidationState]="!isCsvConverter()"
         [showConvertedExport]="!isCsvConverter()"
-        [convertedEmptyTitle]="isCsvConverter() ? 'No CSV output yet' : 'No valid JSON to convert'"
-        [convertedEmptyDescription]="isCsvConverter() ? 'Paste valid JSON on the left, then click Convert to CSV.' : 'Switch to Text mode, paste valid JSON, then come back to CSV view.'"
+        [convertedEmptyTitle]="(isCsvConverter() ? 'wb.noCsvTitle' : 'wb.noValidJsonTitle') | t"
+        [convertedEmptyDescription]="(isCsvConverter() ? 'wb.noCsvDesc' : 'wb.switchToTextCsv') | t"
         (rawTextChange)="onBaselineTextChanged($event)"
         (fileDropped)="onBaselineFileDropped($event)"
         (modeChange)="onRightModeChanged($event)"
@@ -199,49 +199,49 @@
       </app-editor-panel>
     </app-split-pane>
       @if (!isCsvConverter() && !isMobileLayout()) {
-        <div class="workbench__transfer" [style.left.%]="splitRatio()" role="toolbar" aria-label="Transfer actions">
+        <div class="workbench__transfer" [style.left.%]="splitRatio()" role="toolbar" [attr.aria-label]="'wb.transferAria' | t">
           <button
             class="workbench__transfer-toggle"
             type="button"
             [attr.aria-expanded]="transferActionsVisible()"
-            [attr.aria-label]="transferActionsVisible() ? 'Ocultar acciones' : 'Mostrar acciones'"
-            [appTooltip]="transferActionsVisible() ? 'Ocultar acciones' : 'Mostrar acciones'"
+            [attr.aria-label]="(transferActionsVisible() ? 'wb.hideActions' : 'wb.showActions') | t"
+            [appTooltip]="(transferActionsVisible() ? 'wb.hideActions' : 'wb.showActions') | t"
             (click)="transferActionsVisible.set(!transferActionsVisible())"
           >{{ transferActionsVisible() ? '×' : '⋮' }}</button>
           @if (transferActionsVisible()) {
           <app-ui-button
             size="sm"
             variant="ghost"
-            ariaLabel="Copy editor A to editor B"
-            tooltipText="Copiar el contenido de A a B"
+            [ariaLabel]="'wb.copyAtoBAria' | t"
+            [tooltipText]="'wb.copyAtoBTooltip' | t"
             (pressed)="onCopyLeftToRight()"
           ><app-ui-icon name="arrow-right" [size]="14" /><span class="workbench__transfer-label">A→B</span></app-ui-button>
 
           <app-ui-button
             size="sm"
             variant="ghost"
-            ariaLabel="Copy editor B to editor A"
-            tooltipText="Copiar el contenido de B a A"
+            [ariaLabel]="'wb.copyBtoAAria' | t"
+            [tooltipText]="'wb.copyBtoATooltip' | t"
             (pressed)="onCopyRightToLeft()"
           ><app-ui-icon name="arrow-left" [size]="14" /><span class="workbench__transfer-label">B→A</span></app-ui-button>
 
           <app-ui-button
             size="sm"
             variant="ghost"
-            ariaLabel="Swap editor panels"
-            tooltipText="Intercambiar el contenido de los paneles"
+            [ariaLabel]="'wb.swapAria' | t"
+            [tooltipText]="'wb.swapTooltip' | t"
             (pressed)="onSwapPanels()"
-          ><app-ui-icon name="swap" [size]="14" /><span class="workbench__transfer-label">Swap</span></app-ui-button>
+          ><app-ui-icon name="swap" [size]="14" /><span class="workbench__transfer-label">{{ 'wb.swap' | t }}</span></app-ui-button>
 
           <app-ui-button
             size="sm"
             [variant]="store.showDiff() ? 'active' : 'ghost'"
             [ariaPressed]="store.showDiff()"
             [disabled]="!canComparePanels()"
-            ariaLabel="Compare (toggle diff)"
-            tooltipText="Activar o desactivar la comparación entre paneles"
+            [ariaLabel]="'wb.diffAria' | t"
+            [tooltipText]="'wb.diffTooltip' | t"
             (pressed)="onToggleDiffPressed()"
-          ><app-ui-icon name="compare" [size]="14" /><span class="workbench__transfer-label">Diff</span></app-ui-button>
+          ><app-ui-icon name="compare" [size]="14" /><span class="workbench__transfer-label">{{ 'wb.diff' | t }}</span></app-ui-button>
           }
         </div>
       }
@@ -257,10 +257,10 @@
 
 @if (showConfirmPanelTransfer()) {
   <app-confirm-dialog
-    title="Confirmar copia"
+    [title]="'wb.confirmCopyTitle' | t"
     [message]="panelTransferConfirmMessage()"
-    confirmText="Copiar"
-    cancelText="Cancelar"
+    [confirmText]="'common.copy' | t"
+    [cancelText]="'common.cancel' | t"
     [showDontAsk]="true"
     (closed)="onPanelTransferConfirmClosed($event)"
   />

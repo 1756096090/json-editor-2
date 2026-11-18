@@ -35,6 +35,8 @@ import type { JsonCleanOptions } from './utils/json-cleaner.utils';
 // Facades
 import { WorkbenchActionsFacade } from './services/workbench-actions.facade';
 import { PanelOperationsFacade } from './services/panel-operations.facade';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 
 type PanelTransferDirection = 'left-to-right' | 'right-to-left';
 type WorkbenchPreset = 'default' | 'json-to-csv';
@@ -42,7 +44,7 @@ type WorkbenchPreset = 'default' | 'json-to-csv';
 @Component({
   selector: 'app-json-workbench',
   imports: [
-    DiffBarComponent,
+    TranslatePipe, DiffBarComponent,
     EditorPanelComponent,
     SplitPaneComponent,
     NgTemplateOutlet,
@@ -64,6 +66,7 @@ type WorkbenchPreset = 'default' | 'json-to-csv';
   }
 })
 export class JsonWorkbenchComponent implements OnDestroy {
+  protected readonly i18n = inject(I18nService);
   readonly preset = input<WorkbenchPreset>('default');
 
   // ── Core services ────────────────────────────────────────────────────────
@@ -92,11 +95,11 @@ export class JsonWorkbenchComponent implements OnDestroy {
   readonly rightPanelLabel = signal('');
   readonly leftDisplayTabs = computed<Tab[]>(() => this.toDisplayTabs(this.tabs.leftTabs()));
   readonly rightDisplayTabs = computed<Tab[]>(() => this.toDisplayTabs(this.tabs.rightTabs()));
-  readonly leftDocumentName = computed(() => this.leftDisplayTabs().find(tab => tab.id === this.tabs.leftActiveId())?.label ?? 'document');
-  readonly rightDocumentName = computed(() => this.rightDisplayTabs().find(tab => tab.id === this.tabs.rightActiveId())?.label ?? 'document');
+  readonly leftDocumentName = computed(() => this.leftDisplayTabs().find(tab => tab.id === this.tabs.leftActiveId())?.label ?? this.i18n.t('wb.document'));
+  readonly rightDocumentName = computed(() => this.rightDisplayTabs().find(tab => tab.id === this.tabs.rightActiveId())?.label ?? this.i18n.t('wb.document'));
   readonly isCsvConverter = computed(() => this.preset() === 'json-to-csv');
-  readonly leftPanelTitle = computed(() => this.isCsvConverter() ? 'Input JSON' : '');
-  readonly rightPanelTitle = computed(() => this.isCsvConverter() ? 'CSV Output' : '');
+  readonly leftPanelTitle = computed(() => this.isCsvConverter() ? this.i18n.t('wb.inputTitle') : '');
+  readonly rightPanelTitle = computed(() => this.isCsvConverter() ? this.i18n.t('wb.csvOutputTitle') : '');
   readonly leftPanelMode = computed<LeftPanelMode>(() => this.isCsvConverter() ? 'text' : this.store.leftMode());
   readonly rightPanelMode = computed<LeftPanelMode>(() => this.isCsvConverter() ? 'csv' : this.store.rightMode());
 
@@ -124,8 +127,8 @@ export class JsonWorkbenchComponent implements OnDestroy {
   private readonly pendingPanelTransfer = signal<PanelTransferDirection | null>(null);
   readonly panelTransferConfirmMessage = computed(() => (
     this.pendingPanelTransfer() === 'right-to-left'
-      ? 'This will replace editor A with the current content from editor B.'
-      : 'This will replace editor B with the current content from editor A.'
+      ? this.i18n.t('wb.replaceAWithB')
+      : this.i18n.t('wb.replaceBWithA')
   ));
 
   // ── Diff navigation state ────────────────────────────────────────────────────
@@ -140,10 +143,10 @@ export class JsonWorkbenchComponent implements OnDestroy {
   readonly canComparePanels = computed(() => !this.isMobileLayout() && this.panelsHaveSameMode());
   readonly compareTooltip = computed(() => (
     this.isMobileLayout()
-      ? 'Compare is available in two-panel view'
+      ? this.i18n.t('wb.compareTwoPanel')
       : this.panelsHaveSameMode()
-        ? 'Compare (Ctrl+Shift+D)'
-        : 'Select the same type in both panels to compare'
+        ? this.i18n.t('wb.compareShortcut')
+        : this.i18n.t('wb.compareSameType')
   ));
 
   /** Diff decorations for each panel (empty when diff is OFF).
@@ -198,7 +201,7 @@ export class JsonWorkbenchComponent implements OnDestroy {
         this.store.showDiff.set(false);
         this.diffService.clear();
         this.currentHunkIndex.set(-1);
-        this.store.setStatusMessage('Compare is only available when both panels use the same type.');
+        this.store.setStatusMessage(this.i18n.t('wb.compareOnlySame'));
       }
     });
 
@@ -270,40 +273,40 @@ export class JsonWorkbenchComponent implements OnDestroy {
     if (json === null) {
       this.csvOutputJson.set(null);
       this.csvOutputSource.set('');
-      this.store.setStatusMessage('Paste valid JSON before converting to CSV.');
+      this.store.setStatusMessage(this.i18n.t('wb.pasteBeforeCsv'));
       return;
     }
 
     this.csvOutputJson.set(json);
     this.csvOutputSource.set(this.store.rawText());
     const rows = this.csvOutputText().split('\n').filter(Boolean).length;
-    this.store.setStatusMessage(`CSV ready. ${rows} ${rows === 1 ? 'row' : 'rows'} generated.`);
+    this.store.setStatusMessage(this.i18n.t(rows === 1 ? 'wb.csvReadyOne' : 'wb.csvReadyMany', { n: rows }));
   }
 
   async onCopyCsvOutput(): Promise<void> {
     const csv = this.csvOutputText();
     if (!csv) {
-      this.store.setStatusMessage('Convert valid JSON before copying CSV.');
+      this.store.setStatusMessage(this.i18n.t('wb.convertBeforeCopy'));
       return;
     }
 
     try {
       await copyTextToClipboard(csv);
-      this.store.setStatusMessage('CSV copied to clipboard.');
+      this.store.setStatusMessage(this.i18n.t('wb.csvCopied'));
     } catch (error) {
-      this.store.setStatusMessage(this.toActionError('Copy CSV failed', error));
+      this.store.setStatusMessage(this.toActionError(this.i18n.t('wb.copyCsvFailed'), error));
     }
   }
 
   onDownloadCsvOutput(): void {
     const csv = this.csvOutputText();
     if (!csv) {
-      this.store.setStatusMessage('Convert valid JSON before downloading CSV.');
+      this.store.setStatusMessage(this.i18n.t('wb.convertBeforeDownload'));
       return;
     }
 
     downloadTextFile(documentFileName(this.rightDocumentName(), 'csv'), csv, 'text/csv');
-    this.store.setStatusMessage('CSV download started.');
+    this.store.setStatusMessage(this.i18n.t('wb.csvDownloadStarted'));
   }
 
   // ── Per-panel format / minify / copy ─────────────────────────────────────────
@@ -322,7 +325,7 @@ export class JsonWorkbenchComponent implements OnDestroy {
     this.store.setActivePanel(panel);
     const json = panel === 'left' ? this.store.currentJson() : this.store.baselineJson();
     if (json === null) {
-      this.store.setStatusMessage('Cannot clean invalid JSON.');
+      this.store.setStatusMessage(this.i18n.t('wb.cannotClean'));
       return;
     }
     this.cleanSourcePanel.set(panel);
@@ -348,7 +351,7 @@ export class JsonWorkbenchComponent implements OnDestroy {
     try {
       schema = JSON.stringify(generateSchema(JSON.parse(source)), null, 2);
     } catch {
-      this.store.setStatusMessage('Introduce un JSON válido para generar su esquema.');
+      this.store.setStatusMessage(this.i18n.t('wb.schemaNeedsJson'));
       return;
     }
 
@@ -365,7 +368,7 @@ export class JsonWorkbenchComponent implements OnDestroy {
       this.tabs.saveLeftContent(this.tabs.leftActiveId(), schema);
     }
     this.store.setActivePanel(target);
-    this.store.setStatusMessage('Esquema generado en el panel contrario. Los documentos existentes se conservan.');
+    this.store.setStatusMessage(this.i18n.t('wb.schemaGenerated'));
   }
 
   onRepairPanel(panel: ActivePanel): void {
@@ -439,7 +442,7 @@ export class JsonWorkbenchComponent implements OnDestroy {
   onToggleDiffPressed(): void {
     if (this.isCsvConverter()) return;
     if (!this.store.showDiff() && !this.canComparePanels()) {
-      this.store.setStatusMessage('Choose the same type in both panels before comparing.');
+      this.store.setStatusMessage(this.i18n.t('wb.chooseSameType'));
       return;
     }
 
@@ -515,8 +518,8 @@ export class JsonWorkbenchComponent implements OnDestroy {
   }
 
   private toActionError(prefix: string, error: unknown): string {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error.';
-    return `${prefix}: ${errorMessage}`;
+    const errorMessage = error instanceof Error ? error.message : this.i18n.t('wb.unknownError');
+    return this.i18n.t('wb.actionError', { action: prefix, error: errorMessage });
   }
 
   private toDisplayTabs(tabs: Tab[]): Tab[] {

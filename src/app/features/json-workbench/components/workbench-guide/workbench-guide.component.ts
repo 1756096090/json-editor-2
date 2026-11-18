@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, ElementRef, signal, viewChild } from '@angular/core';
 import { IconComponent } from '../../../../components/ui/icon/icon.component';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-workbench-guide',
-  imports: [IconComponent],
+  imports: [TranslatePipe, IconComponent],
   templateUrl: './workbench-guide.component.html',
   styleUrl: './workbench-guide.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,13 +42,13 @@ export class WorkbenchGuideComponent {
   }
 
   readonly features = [
-    { icon: 'open', title: 'Carga tus datos', tools: 'Open · Pegar · Arrastrar archivos', benefit: 'Abre un archivo local, arrástralo al editor o pega el contenido para empezar.' },
-    { icon: 'format', title: 'De ilegible a claro', tools: 'Format · Minify · Sort', benefit: 'Da formato a una respuesta, compacta un payload y ordena claves sin editar línea por línea.' },
-    { icon: 'repair', title: 'Encuentra y corrige errores', tools: 'Validación · Ubicación del error · Reparación', benefit: 'Salta a la línea del problema y revisa las reparaciones sugeridas antes de aplicarlas.' },
-    { icon: 'clean', title: 'Prepara un payload', tools: 'Clean · Opciones de limpieza', benefit: 'Elimina valores nulos y estructuras vacías de forma recursiva sin recorrer cada objeto.' },
-    { icon: 'compare', title: 'Detecta qué cambió', tools: 'Compare · Dos paneles · Intercambiar', benefit: 'Contrasta respuestas o configuraciones y localiza diferencias sin alternar entre ventanas.' },
-    { icon: 'code', title: 'Cambia de formato', tools: 'JSON · YAML · CSV · XML', benefit: 'Reutiliza tus datos en otros formatos y exporta el resultado sin escribir un conversor.' },
-    { icon: 'tree', title: 'Explora estructuras grandes', tools: 'Tree · Table · Rutas JSON · Buscar', benefit: 'Inspecciona objetos y copia la ruta de una propiedad para usarla en tu código.' },
-    { icon: 'copy', title: 'Mantén el contexto', tools: 'Pestañas · Copiar · Transferir entre paneles', benefit: 'Trabaja con varios documentos y lleva el resultado a tu proyecto sin seleccionar todo a mano.' },
+    { icon: 'open', title: 'guide.f1.title', tools: 'guide.f1.tools', benefit: 'guide.f1.benefit' },
+    { icon: 'format', title: 'guide.f2.title', tools: 'guide.f2.tools', benefit: 'guide.f2.benefit' },
+    { icon: 'repair', title: 'guide.f3.title', tools: 'guide.f3.tools', benefit: 'guide.f3.benefit' },
+    { icon: 'clean', title: 'guide.f4.title', tools: 'guide.f4.tools', benefit: 'guide.f4.benefit' },
+    { icon: 'compare', title: 'guide.f5.title', tools: 'guide.f5.tools', benefit: 'guide.f5.benefit' },
+    { icon: 'code', title: 'guide.f6.title', tools: 'guide.f6.tools', benefit: 'guide.f6.benefit' },
+    { icon: 'tree', title: 'guide.f7.title', tools: 'guide.f7.tools', benefit: 'guide.f7.benefit' },
+    { icon: 'copy', title: 'guide.f8.title', tools: 'guide.f8.tools', benefit: 'guide.f8.benefit' },
   ] as const;
 }
