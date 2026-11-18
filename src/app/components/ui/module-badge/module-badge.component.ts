@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import type { TranslationKey } from '../../../core/i18n/en';
 
 /**
  * Module state badge — communicates the availability state of a tool or feature.
@@ -19,19 +21,21 @@ export type ModuleState =
   | 'experimental'
   | 'locked';
 
-const STATE_LABELS: Record<ModuleState, string> = {
-  active: '',
-  'most-used': 'most used',
-  recommended: 'recommended',
-  new: 'new',
-  'coming-soon': 'coming soon',
-  premium: 'pro',
-  experimental: 'beta',
-  locked: 'locked',
+/** Translation key per state; `active` shows no badge. */
+const STATE_LABELS: Record<ModuleState, TranslationKey | null> = {
+  active: null,
+  'most-used': 'badge.mostUsed',
+  recommended: 'badge.recommended',
+  new: 'badge.new',
+  'coming-soon': 'badge.comingSoon',
+  premium: 'badge.premium',
+  experimental: 'badge.experimental',
+  locked: 'badge.locked',
 };
 
 @Component({
   selector: 'app-module-badge',
+  imports: [TranslatePipe],
   templateUrl: './module-badge.component.html',
   styleUrl: './module-badge.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +43,6 @@ const STATE_LABELS: Record<ModuleState, string> = {
 export class ModuleBadgeComponent {
   readonly state = input.required<ModuleState>();
 
-  readonly label = computed(() => STATE_LABELS[this.state()]);
+  readonly labelKey = computed(() => STATE_LABELS[this.state()]);
   readonly badgeClass = computed(() => `module-badge--${this.state()}`);
 }

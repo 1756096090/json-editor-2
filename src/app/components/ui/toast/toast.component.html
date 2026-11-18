@@ -1,13 +1,13 @@
 <div class="toast-container" aria-live="polite" aria-atomic="false">
   @for (toast of toasts(); track trackById($index, toast)) {
     <div class="toast__item" [class]="getTypeClass(toast.type)" role="status">
-      <span class="toast__icon" aria-hidden="true"><mat-icon>{{ getIcon(toast.type) }}</mat-icon></span>
+      <span class="toast__icon" aria-hidden="true"><app-ui-icon [name]="getIcon(toast.type)" [size]="16" /></span>
       <span class="toast__text">{{ toast.text }}</span>
       <button
         type="button"
         class="toast__close"
         (click)="dismiss(toast.id)"
-        aria-label="Dismiss notification"
+        [attr.aria-label]="'toast.dismiss' | t"
       >&times;</button>
       <div class="toast__progress" [class]="'toast__progress--' + toast.type"></div>
     </div>

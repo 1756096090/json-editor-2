@@ -14,6 +14,15 @@ export function evaluateJsonPath(root: unknown, expression: string): PathResult[
   if (!trimmed.startsWith('$')) {
     throw new Error('JSONPath expression must start with $');
   }
+  // Validate the complete expression even when a previous segment has no matches.
+  const segment = /(?:\.{1,2}(?:[A-Za-z_$][\w$-]*|\*)|(?:\.\.)?\[\s*(?:\*|-?\d+(?:\s*,\s*-?\d+)*|-?\d*\s*:\s*-?\d*|'[^'\\]*'|"[^"\\]*")\s*\])/y;
+  let offset = 1;
+  while (offset < trimmed.length) {
+    segment.lastIndex = offset;
+    const match = segment.exec(trimmed);
+    if (!match) throw new Error(`Invalid or unsupported JSONPath syntax at character ${offset + 1}. Use keys, wildcards, indices, slices or recursive descent.`);
+    offset = segment.lastIndex;
+  }
   const results: PathResult[] = [];
   evaluate(root, trimmed.slice(1), '$', results);
   return results;
@@ -48,7 +57,7 @@ function evaluate(node: unknown, expr: string, currentPath: string, results: Pat
       return;
     }
 
-    if (isObject(node) && segment in node) {
+    if (isObject(node) && Object.hasOwn(node, segment)) {
       evaluate(node[segment], remaining, `${currentPath}.${segment}`, results);
     }
     return;
@@ -65,7 +74,7 @@ function evaluate(node: unknown, expr: string, currentPath: string, results: Pat
     // Quoted key: ['key'] or ["key"]
     if ((inner.startsWith("'") && inner.endsWith("'")) || (inner.startsWith('"') && inner.endsWith('"'))) {
       const key = inner.slice(1, -1);
-      if (isObject(node) && key in node) {
+      if (isObject(node) && Object.hasOwn(node, key)) {
         evaluate(node[key], remaining, `${currentPath}['${key}']`, results);
       }
       return;
@@ -86,8 +95,8 @@ function evaluate(node: unknown, expr: string, currentPath: string, results: Pat
       if (!Array.isArray(node)) return;
       const [startStr, endStr] = inner.split(':');
       const len = node.length;
-      const start = startStr ? resolveIndex(parseInt(startStr, 10), len) : 0;
-      const end   = endStr   ? resolveIndex(parseInt(endStr, 10),   len) : len;
+      const start = startStr.trim() ? Math.max(0, resolveIndex(parseInt(startStr, 10), len)) : 0;
+      const end   = endStr.trim() ? resolveIndex(parseInt(endStr, 10), len) : len;
       for (let i = start; i < end && i < len; i++) {
         evaluate(node[i], remaining, `${currentPath}[${i}]`, results);
       }

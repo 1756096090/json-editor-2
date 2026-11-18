@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal, inject } from '@angular/core';
+import { TooltipDirective } from '../../../../components/ui/tooltip/tooltip.directive';
 import { IconComponent } from '../../../../components/ui/icon/icon.component';
 import {
   formatPathDots,
@@ -10,17 +11,21 @@ import {
   type JsonPathSegment,
 } from '../../utils/json-path-inspector';
 import { copyTextToClipboard } from '../../utils/file-utils';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 type PathFlavor = 'dots' | 'js' | 'js-safe' | 'python' | 'java';
 
 @Component({
   selector: 'app-json-path-bar',
-  imports: [IconComponent],
+  imports: [TranslatePipe, IconComponent, TooltipDirective],
   templateUrl: './json-path-bar.component.html',
   styleUrl: './json-path-bar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class JsonPathBarComponent {
+  protected readonly i18n = inject(I18nService);
+  readonly helpVisible = signal(false);
   /** Current JSON text in the editor. */
   readonly text = input<string>('');
   /** Character offset of the cursor, or null when unknown. */
@@ -66,9 +71,9 @@ export class JsonPathBarComponent {
     const label = this.labelFor(flavor);
     try {
       await this.clipboardWriter(value);
-      this.statusMessage.emit(`${label} path copied.`);
+      this.statusMessage.emit(this.i18n.t('path.copied', { label }));
     } catch {
-      this.statusMessage.emit('Copy failed.');
+      this.statusMessage.emit(this.i18n.t('common.copyFailed'));
     }
   }
 
@@ -84,9 +89,9 @@ export class JsonPathBarComponent {
 
   private labelFor(flavor: PathFlavor): string {
     switch (flavor) {
-      case 'dots': return 'Path';
+      case 'dots': return this.i18n.t('path.path');
       case 'js': return 'JS';
-      case 'js-safe': return 'JS safe';
+      case 'js-safe': return this.i18n.t('path.jsSafe');
       case 'python': return 'Python';
       case 'java': return 'Java';
     }

@@ -4,9 +4,10 @@ import {
   ViewEncapsulation,
   computed,
   input,
-  signal
-} from '@angular/core';
+  signal, inject } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 export interface TreeNode {
   key: string;
@@ -19,13 +20,14 @@ export interface TreeNode {
 
 @Component({
   selector: 'app-json-tree-view',
-  imports: [NgTemplateOutlet],
+  imports: [TranslatePipe, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   templateUrl: './json-tree-view.component.html',
   styleUrl: './json-tree-view.component.css'
 })
 export class JsonTreeViewComponent {
+  protected readonly i18n = inject(I18nService);
   readonly jsonValue = input<unknown>(null);
 
   readonly collapsedPaths = signal<Set<string>>(new Set());
@@ -73,8 +75,9 @@ export class JsonTreeViewComponent {
   }
 
   getCollapsedSummary(node: TreeNode): string {
-    if (node.type === 'object') return `{…} ${node.children.length} keys`;
-    if (node.type === 'array') return `[…] ${node.children.length} items`;
+    const n = node.children.length;
+    if (node.type === 'object') return `{…} ${this.i18n.t('tree.keys', { n })}`;
+    if (node.type === 'array') return `[…] ${this.i18n.t('tree.items', { n })}`;
     return '';
   }
 

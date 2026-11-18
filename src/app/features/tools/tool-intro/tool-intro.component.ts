@@ -4,6 +4,7 @@ import {
   input,
   signal,
 } from '@angular/core';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * Shared collapsible intro block for all tool pages.
@@ -17,6 +18,7 @@ import {
  */
 @Component({
   selector: 'app-tool-intro',
+  imports: [TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'tool-intro-host' },
   templateUrl: './tool-intro.component.html',

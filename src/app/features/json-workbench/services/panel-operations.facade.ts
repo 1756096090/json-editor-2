@@ -82,39 +82,6 @@ export class PanelOperationsFacade {
     }
   }
 
-  async loadFromUrl(rawUrl: string, target: 'left' | 'right'): Promise<void> {
-    const url = this.parseHttpUrl(rawUrl);
-    if (!url) {
-      this.store.setStatusMessage('Invalid URL — must start with http:// or https://');
-      return;
-    }
-
-    try {
-      const response = await fetch(rawUrl);
-      if (!response.ok) {
-        this.store.setStatusMessage(`HTTP ${response.status}: ${response.statusText}`);
-        return;
-      }
-      const text = await response.text();
-      JSON.parse(text); // validate JSON before loading
-      const sizeKb = (new TextEncoder().encode(text).length / 1024).toFixed(1);
-
-      if (target === 'right') {
-        this.store.setBaselineText(text);
-      } else {
-        this.setLeftPanelContent(text, url.hostname + url.pathname);
-      }
-      this.store.setStatusMessage(`Loaded from URL — ${sizeKb} KB`);
-    } catch (error) {
-      const msg = error instanceof SyntaxError
-        ? 'Response is not valid JSON.'
-        : this.toActionError('URL import failed', error);
-      this.store.setStatusMessage(msg);
-    }
-  }
-
-  // ── Panel mode ────────────────────────────────────────────────────────
-
   setLeftMode(mode: string): void {
     this.store.setLeftMode(mode as any);
   }
@@ -128,15 +95,6 @@ export class PanelOperationsFacade {
   private setLeftPanelContent(content: string, label: string): void {
     this.store.setRawText(content);
     this.recentDocs.push(label, content);
-  }
-
-  private parseHttpUrl(rawUrl: string): URL | null {
-    try {
-      const url = new URL(rawUrl);
-      return (url.protocol === 'http:' || url.protocol === 'https:') ? url : null;
-    } catch {
-      return null;
-    }
   }
 
   private toActionError(prefix: string, error: unknown): string {

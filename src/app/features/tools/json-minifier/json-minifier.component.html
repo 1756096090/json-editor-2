@@ -1,7 +1,6 @@
 <div class="tool-page">
-  <app-tool-intro title="JSON Minifier">
-    <span slot="subtitle">Remove all whitespace and compress your JSON to its smallest possible
-      form — ideal for API payloads and config files.</span>
+  <app-tool-intro [title]="'tools.minifier.title' | t">
+    <span slot="subtitle">{{ 'tools.minifier.subtitle' | t }}</span>
   </app-tool-intro>
   <app-json-workbench />
 </div>

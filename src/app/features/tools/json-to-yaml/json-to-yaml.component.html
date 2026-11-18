@@ -1,17 +1,14 @@
 <div class="tool-page">
   <div class="tool-page__intro">
-    <h1 class="tool-page__title">JSON to YAML</h1>
-    <p class="tool-page__subtitle">
-      Convert any JSON document to clean, readable YAML in one click.
-      Perfect for Kubernetes configs, CI pipelines and infrastructure files.
-    </p>
+    <h1 class="tool-page__title">{{ 'yaml.title' | t }}</h1>
+    <p class="tool-page__subtitle">{{ 'yaml.subtitle' | t }}</p>
   </div>
 
   <div class="yaml-workspace">
     <!-- Toolbar -->
-    <div class="yaml-toolbar" role="toolbar" aria-label="JSON to YAML actions">
+    <div class="yaml-toolbar" role="toolbar" [attr.aria-label]="'yaml.actionsAria' | t">
       <app-ui-button size="sm" variant="accent" (pressed)="convert()">
-        Convert →
+        {{ 'yaml.convert' | t }}
       </app-ui-button>
 
       <div class="yaml-toolbar__sep" aria-hidden="true"></div>
@@ -21,14 +18,14 @@
         variant="ghost"
         [disabled]="!yamlOutput()"
         (pressed)="copyYaml()"
-      >Copy YAML</app-ui-button>
+      >{{ 'yaml.copy' | t }}</app-ui-button>
 
       <app-ui-button
         size="sm"
         variant="ghost"
         [disabled]="!yamlOutput()"
         (pressed)="downloadYaml()"
-      >Download .yaml</app-ui-button>
+      >{{ 'yaml.download' | t }}</app-ui-button>
 
       @if (errorMsg()) {
         <span class="yaml-toolbar__error" role="alert">{{ errorMsg() }}</span>
@@ -42,14 +39,14 @@
       <!-- Left: JSON input -->
       <div class="yaml-panel">
         <div class="yaml-panel__header">
-          <h2 class="yaml-panel__title">JSON Input</h2>
+          <h2 class="yaml-panel__title">{{ 'yaml.input' | t }}</h2>
         </div>
         <div class="yaml-panel__body">
           <app-editor-text
             language="json"
             [value]="jsonInput()"
             [theme]="monacoTheme()"
-            ariaLabel="JSON input editor"
+            [ariaLabel]="'yaml.inputAria' | t"
             (valueChange)="onJsonChange($event)"
           />
         </div>
@@ -58,7 +55,7 @@
       <!-- Right: YAML output (read-only) -->
       <div class="yaml-panel">
         <div class="yaml-panel__header">
-          <h2 class="yaml-panel__title">YAML Output</h2>
+          <h2 class="yaml-panel__title">{{ 'yaml.output' | t }}</h2>
         </div>
         <div class="yaml-panel__body">
           <app-editor-text
@@ -66,7 +63,7 @@
             [value]="yamlOutput()"
             [readOnly]="true"
             [theme]="monacoTheme()"
-            ariaLabel="YAML output (read-only)"
+            [ariaLabel]="'yaml.outputAria' | t"
           />
         </div>
       </div>

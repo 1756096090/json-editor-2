@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Title, Meta } from '@angular/platform-browser';
 import { JsonWorkbenchComponent } from '../../json-workbench/json-workbench.component';
 import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-json-formatter',
-  imports: [JsonWorkbenchComponent, ToolIntroComponent],
+  imports: [TranslatePipe, JsonWorkbenchComponent, ToolIntroComponent],
   templateUrl: './json-formatter.component.html',
   styleUrl: '../tool-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

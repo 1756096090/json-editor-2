@@ -9,6 +9,7 @@ import {
   signal,
   viewChild
 } from '@angular/core';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 export interface ConfirmDialogResult {
   confirmed: boolean;
@@ -17,6 +18,7 @@ export interface ConfirmDialogResult {
 
 @Component({
   selector: 'app-confirm-dialog',
+  imports: [TranslatePipe],
   templateUrl: './confirm-dialog.component.html',
   styleUrl: './confirm-dialog.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,10 +27,11 @@ export interface ConfirmDialogResult {
   }
 })
 export class ConfirmDialogComponent implements OnInit, OnDestroy {
-  readonly title         = input<string>('Confirmar');
-  readonly message       = input<string>('¿Deseas continuar?');
-  readonly confirmText   = input<string>('Confirmar');
-  readonly cancelText    = input<string>('Cancelar');
+  /** Null → a translated default. */
+  readonly title         = input<string | null>(null);
+  readonly message       = input<string | null>(null);
+  readonly confirmText   = input<string | null>(null);
+  readonly cancelText    = input<string | null>(null);
   readonly showDontAsk   = input<boolean>(false);
   readonly warningText   = input<string>('');
   readonly confirmDisabled = input<boolean>(false);

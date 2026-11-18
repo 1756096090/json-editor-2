@@ -1,35 +1,50 @@
-<div class="json-path-bar" role="group" aria-label="JSON path inspector">
+<div class="json-path-bar" role="group" [attr.aria-label]="'path.aria' | t">
   <span class="json-path-bar__icon" aria-hidden="true">
     <app-ui-icon name="path" [size]="14" />
   </span>
 
   @if (isInvalidJson()) {
     <span class="json-path-bar__hint json-path-bar__hint--warn">
-      Path unavailable: invalid JSON.
+      {{ 'path.invalid' | t }}
     </span>
   } @else if (hasPath()) {
     <code class="json-path-bar__value" [title]="dotsPath()">{{ dotsPath() }}</code>
 
     <div class="json-path-bar__actions">
-      <button class="json-path-bar__chip" type="button" title="Copy dot path" (click)="copy('dots')">
+      <button class="json-path-bar__chip" type="button" [appTooltip]="'path.copyDots' | t" (click)="copy('dots')">
         <app-ui-icon name="copy" [size]="12" />
-        <span>Path</span>
+        <span>{{ 'path.path' | t }}</span>
       </button>
-      <button class="json-path-bar__chip" type="button" title="Copy JavaScript access" (click)="copy('js')">
+      <button class="json-path-bar__chip" type="button" [appTooltip]="'path.copyJs' | t" (click)="copy('js')">
         <app-ui-icon name="code" [size]="12" />
         <span>JS</span>
       </button>
-      <button class="json-path-bar__chip" type="button" title="Copy null-safe JavaScript access" (click)="copy('js-safe')">
+      <button class="json-path-bar__chip" type="button" [appTooltip]="'path.copyJsSafe' | t" (click)="copy('js-safe')">
         <span>JS?.</span>
       </button>
-      <button class="json-path-bar__chip" type="button" title="Copy Python access" (click)="copy('python')">
+      <button class="json-path-bar__chip" type="button" [appTooltip]="'path.copyPython' | t" (click)="copy('python')">
         <span>Python</span>
       </button>
-      <button class="json-path-bar__chip" type="button" title="Copy Java access" (click)="copy('java')">
+      <button class="json-path-bar__chip" type="button" [appTooltip]="'path.copyJava' | t" (click)="copy('java')">
         <span>Java</span>
       </button>
     </div>
   } @else {
-    <span class="json-path-bar__hint">Click a JSON value to inspect its path.</span>
+    <span class="json-path-bar__hint">{{ 'path.hint' | t }}</span>
   }
+  <button class="json-path-bar__chip json-path-bar__help-toggle" type="button"
+    [attr.aria-expanded]="helpVisible()" [attr.aria-label]="'path.helpAria' | t"
+    [appTooltip]="'path.helpTooltip' | t"
+    (click)="helpVisible.set(!helpVisible())">
+    <app-ui-icon name="help" [size]="12" />
+  </button>
 </div>
+@if (helpVisible()) {
+  <div class="json-path-bar__help">
+    <strong>{{ 'path.helpTitle' | t }}</strong>
+    <p>{{ 'path.help1' | t }}</p>
+    <p>{{ 'path.help2a' | t }} <code>users.0.name</code>{{ 'path.help2b' | t }} <code>data.users[0].name</code>: <code>[0]</code> {{ 'path.help2c' | t }}</p>
+    <p>{{ 'path.help3a' | t }} <strong>{{ 'path.path' | t }}</strong> {{ 'path.help3b' | t }} <strong>JS</strong>, <strong>JS?.</strong>, <strong>Python</strong> {{ 'path.help3or' | t }} <strong>Java</strong> {{ 'path.help3c' | t }} <strong>JS?.</strong> {{ 'path.help3d' | t }}</p>
+    <p>{{ 'path.help4' | t }}</p>
+  </div>
+}

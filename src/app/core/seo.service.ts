@@ -1,89 +1,38 @@
 import { DOCUMENT } from '@angular/common';
-import { Injectable, inject } from '@angular/core';
+import { Injectable, effect, inject, signal } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
+import { I18nService } from './i18n/i18n.service';
+import type { TranslationKey } from './i18n/en';
 
 export const SITE_URL = 'https://jsonworkbench.dev';
 const DEFAULT_IMAGE = `${SITE_URL}/assets/og-image.png`;
 
 interface RouteSeo {
-  title: string;
-  description: string;
+  title: TranslationKey;
+  description: TranslationKey;
 }
 
-/** Per-route metadata. Keys are normalized paths without trailing slash. */
+/** Per-route metadata (translation keys). Keys are normalized paths without trailing slash. */
 const ROUTE_SEO: Record<string, RouteSeo> = {
-  '': {
-    title: 'JSON Hunt — Format, Validate & Compare JSON',
-    description:
-      'The professional JSON workspace for developers. Format, validate, compare, minify and convert JSON. Fast, clean and distraction-free.',
-  },
-  '/workbench': {
-    title: 'JSON Workbench — Dual-pane JSON Editor | JSON Hunt',
-    description:
-      'A full dual-pane JSON workspace: format, minify, clean, sort, compare with live diff, import from URL and convert to YAML, CSV or XML.',
-  },
-  '/tools/json-formatter': {
-    title: 'JSON Formatter — Beautify & Format JSON Online | JSON Hunt',
-    description:
-      'Paste your JSON and instantly format and beautify it with proper indentation. Free online JSON formatter.',
-  },
-  '/tools/json-validator': {
-    title: 'JSON Validator — Check & Fix JSON Errors Online | JSON Hunt',
-    description:
-      'Validate JSON and pinpoint syntax errors with line and column. Free online JSON validator with auto-fix.',
-  },
-  '/tools/json-error-finder': {
-    title: 'JSON Error Finder — Locate JSON Syntax Errors | JSON Hunt',
-    description: 'Find and explain JSON syntax errors fast. Free online JSON error finder.',
-  },
-  '/tools/json-viewer': {
-    title: 'JSON Viewer — Explore JSON as Tree or Table | JSON Hunt',
-    description:
-      'View and explore JSON as an interactive tree or table. Navigate complex nested structures. Free online JSON viewer.',
-  },
-  '/tools/json-compare': {
-    title: 'JSON Compare — Diff Two JSON Documents | JSON Hunt',
-    description: 'Compare two JSON documents side by side with a live diff. Free online JSON compare tool.',
-  },
-  '/tools/json-minifier': {
-    title: 'JSON Minifier — Compress JSON Online | JSON Hunt',
-    description: 'Minify and compress JSON by removing whitespace. Free online JSON minifier.',
-  },
-  '/tools/json-to-yaml': {
-    title: 'JSON to YAML Converter — Online | JSON Hunt',
-    description: 'Convert JSON to YAML instantly in your browser. Free online JSON to YAML converter.',
-  },
-  '/tools/json-to-csv': {
-    title: 'JSON to CSV Converter — Online | JSON Hunt',
-    description: 'Convert JSON arrays to CSV instantly. Free online JSON to CSV converter.',
-  },
-  '/tools/json-to-xml': {
-    title: 'JSON to XML Converter — Online | JSON Hunt',
-    description: 'Convert JSON to XML with selectable encoding. Free online JSON to XML converter.',
-  },
-  '/tools/json-cleaner': {
-    title: 'JSON Cleaner — Remove Nulls & Empty Values | JSON Hunt',
-    description:
-      'Clean JSON by removing null values, empty strings, arrays and objects. Free online JSON cleaner.',
-  },
-  '/tools/json-sorter': {
-    title: 'JSON Sorter — Sort JSON Keys Alphabetically | JSON Hunt',
-    description: 'Sort JSON object keys alphabetically, deeply. Free online JSON sorter.',
-  },
-  '/tools/json-schema-validator': {
-    title: 'JSON Schema Validator — Validate Against a Schema | JSON Hunt',
-    description: 'Validate JSON against a JSON Schema and see detailed errors. Free online JSON schema validator.',
-  },
-  '/tools/json-path-tester': {
-    title: 'JSON Path Tester — Query JSON with JSONPath | JSON Hunt',
-    description: 'Test JSONPath expressions against your JSON and preview matches. Free online JSON path tester.',
-  },
-  '/tools/json-schema-generator': {
-    title: 'JSON Schema Generator — Infer a Schema from JSON | JSON Hunt',
-    description: 'Generate a JSON Schema automatically from a sample JSON document. Free online JSON schema generator.',
-  },
+  '': { title: 'seo.home.title', description: 'seo.home.desc' },
+  '/workbench': { title: 'seo.workbench.title', description: 'seo.workbench.desc' },
+  '/editor-lab': { title: 'seo.editorLab.title', description: 'seo.editorLab.desc' },
+  '/tools/json-formatter': { title: 'seo.formatter.title', description: 'seo.formatter.desc' },
+  '/tools/json-validator': { title: 'seo.validator.title', description: 'seo.validator.desc' },
+  '/tools/json-error-finder': { title: 'seo.errorFinder.title', description: 'seo.errorFinder.desc' },
+  '/tools/json-viewer': { title: 'seo.viewer.title', description: 'seo.viewer.desc' },
+  '/tools/json-compare': { title: 'seo.compare.title', description: 'seo.compare.desc' },
+  '/tools/json-minifier': { title: 'seo.minifier.title', description: 'seo.minifier.desc' },
+  '/tools/json-to-yaml': { title: 'seo.toYaml.title', description: 'seo.toYaml.desc' },
+  '/tools/json-to-csv': { title: 'seo.toCsv.title', description: 'seo.toCsv.desc' },
+  '/tools/json-to-xml': { title: 'seo.toXml.title', description: 'seo.toXml.desc' },
+  '/tools/json-cleaner': { title: 'seo.cleaner.title', description: 'seo.cleaner.desc' },
+  '/tools/json-sorter': { title: 'seo.sorter.title', description: 'seo.sorter.desc' },
+  '/tools/json-schema-validator': { title: 'seo.schemaValidator.title', description: 'seo.schemaValidator.desc' },
+  '/tools/json-path-tester': { title: 'seo.pathTester.title', description: 'seo.pathTester.desc' },
+  '/tools/json-schema-generator': { title: 'seo.schemaGenerator.title', description: 'seo.schemaGenerator.desc' },
 };
 
 /**
@@ -96,17 +45,29 @@ export class SeoService {
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
   private readonly document = inject(DOCUMENT);
+  private readonly i18n = inject(I18nService);
+  private readonly currentUrl = signal<string | null>(null);
+
+  constructor() {
+    // Re-apply on navigation and whenever the UI language changes.
+    effect(() => {
+      const url = this.currentUrl();
+      this.i18n.lang();
+      if (url !== null) this.apply(url);
+    });
+  }
 
   /** Subscribe to navigation and update head tags. Idempotent. */
   init(): void {
     this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
-      .subscribe((e) => this.apply(e.urlAfterRedirects));
+      .subscribe((e) => this.currentUrl.set(e.urlAfterRedirects));
   }
 
   private apply(url: string): void {
     const path = normalizePath(url);
-    const seo = ROUTE_SEO[path] ?? ROUTE_SEO[''];
+    const keys = ROUTE_SEO[path] ?? ROUTE_SEO[''];
+    const seo = { title: this.i18n.t(keys.title), description: this.i18n.t(keys.description) };
     const canonical = `${SITE_URL}${path}`;
 
     this.title.setTitle(seo.title);

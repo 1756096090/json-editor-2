@@ -2,7 +2,7 @@
   #container
   [class]="containerClass()"
   role="group"
-  aria-label="Resizable split panel"
+  [attr.aria-label]="'split.groupAria' | t"
 >
   <div class="split-pane__panel split-pane__left" [style]="leftStyle()">
     <ng-content select="[split-start]" />
@@ -10,6 +10,8 @@
 
   <div
     class="split-pane__gutter"
+    [style.width.px]="direction() === 'horizontal' ? gutterSize() : null"
+    [style.height.px]="direction() === 'vertical' ? gutterSize() : null"
     [class.split-pane__gutter--hidden]="hideEnd()"
     role="separator"
     [attr.aria-orientation]="direction()"
@@ -17,11 +19,13 @@
     aria-valuemin="20"
     aria-valuemax="80"
     tabindex="0"
-    aria-label="Resize panels — use arrow keys or double-click to reset"
-    title="Drag to resize · Double-click to reset · Arrow keys to adjust"
+    [attr.aria-label]="'split.gutterAria' | t"
+    [appTooltip]="'split.gutterTooltip' | t"
     (pointerdown)="onGutterPointerDown($event)"
     (pointermove)="onGutterPointerMove($event)"
     (pointerup)="onGutterPointerUp($event)"
+    (pointercancel)="onGutterPointerUp($event)"
+    (lostpointercapture)="onGutterPointerUp($event)"
     (dblclick)="resetRatio()"
     (keydown)="onGutterKeydown($event)"
   >

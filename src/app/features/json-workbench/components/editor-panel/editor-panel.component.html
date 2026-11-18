@@ -23,6 +23,16 @@
     <div class="editor-panel__header-spacer"></div>
 
     <div class="editor-panel__header-end">
+      <app-ui-button
+        size="sm"
+        variant="ghost"
+        ariaLabel="Copy editor content to clipboard"
+        tooltipText="Copy content to clipboard"
+        [disabled]="!copyText()"
+        (pressed)="onCopy()"
+      >
+        <app-ui-icon name="copy" [size]="14" />
+      </app-ui-button>
       @if (showModeSelector()) {
         <div class="editor-panel__mode-selector">
           <select
@@ -38,7 +48,7 @@
             <option value="tree">TREE</option>
             <option value="table">TABLE</option>
           </select>
-          <span class="editor-panel__mode-icon"><mat-icon>expand_more</mat-icon></span>
+          <span class="editor-panel__mode-icon" aria-hidden="true"><app-ui-icon name="chevron-down" [size]="14" /></span>
         </div>
       }
 
@@ -54,7 +64,7 @@
               <option [value]="encoding">{{ encoding }}</option>
             }
           </select>
-          <span class="editor-panel__encoding-icon"><mat-icon>expand_more</mat-icon></span>
+          <span class="editor-panel__encoding-icon" aria-hidden="true"><app-ui-icon name="chevron-down" [size]="14" /></span>
         </div>
       }
       
@@ -105,7 +115,7 @@
 
         @if (isEmpty()) {
           <div class="editor-panel__empty-hint" aria-hidden="true">
-            <span class="editor-panel__empty-hint-icon"><mat-icon>data_object</mat-icon></span>
+            <span class="editor-panel__empty-hint-icon"><app-ui-icon name="braces" [size]="36" /></span>
             <p class="editor-panel__empty-hint-text">
               Paste JSON, drop a file, or start typing
             </p>
@@ -117,17 +127,15 @@
         }
       </div>
 
-      <!-- ── Inline error bar ──────────────────────────────────── -->
+      <!-- ── JSON path inspector ───────────────────────────────── -->
       @if (errorPosition(); as err) {
         <app-inline-error-bar
           [error]="err"
-          [autoFixEnabled]="autoFixEnabled()"
+          [autoFixEnabled]="!readOnly()"
           (showMe)="onShowMePressed()"
           (autoRepair)="onRepairPressed()"
         />
       }
-
-      <!-- ── JSON path inspector ───────────────────────────────── -->
       @if (showPathInspector() && !isEmpty()) {
         <app-json-path-bar
           [text]="rawText()"

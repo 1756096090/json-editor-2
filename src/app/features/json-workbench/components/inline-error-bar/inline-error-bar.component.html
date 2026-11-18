@@ -1,30 +1,31 @@
 <div class="error-bar" role="alert" aria-live="assertive">
-  <span class="error-bar__icon" aria-hidden="true"><mat-icon>warning</mat-icon></span>
+  <span class="error-bar__icon" aria-hidden="true"><app-ui-icon name="warning" [size]="16" /></span>
   <span class="error-bar__message">
+    <strong>{{ 'error.invalidJson' | t }}</strong>
     {{ error().message }}
     <span class="error-bar__pos">
-      (line {{ error().line }}, col {{ error().column }})
+      {{ 'error.position' | t: { line: error().line, column: error().column } }}
     </span>
   </span>
   <div class="error-bar__actions">
     <button
       type="button"
       class="error-bar__btn error-bar__btn--show"
-      title="Scroll to error position"
-      aria-label="Show me the error"
+      [appTooltip]="'error.showTooltip' | t"
+      [attr.aria-label]="'error.showAria' | t"
       (click)="showMe.emit()"
     >
-      Show me
+      {{ 'error.show' | t }}
     </button>
     @if (autoFixEnabled()) {
       <button
         type="button"
         class="error-bar__btn error-bar__btn--repair"
-        title="Attempt automatic JSON repair"
-        aria-label="Auto repair JSON"
+        [appTooltip]="'error.repairTooltip' | t"
+        [attr.aria-label]="'error.repairAria' | t"
         (click)="autoRepair.emit()"
       >
-        Auto repair
+        {{ 'error.repair' | t }}
       </button>
     }
   </div>

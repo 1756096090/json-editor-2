@@ -1,6 +1,6 @@
 <div class="table-view">
   @if (isEmpty() || emptyMessage()) {
-    <div class="table-view__empty">{{ emptyMessage() || 'No data to display' }}</div>
+    <div class="table-view__empty">{{ emptyMessage() || ('table.noData' | t) }}</div>
   } @else {
     <div class="table-view__wrap">
       <table class="table-view__table">

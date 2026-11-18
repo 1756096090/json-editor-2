@@ -28,16 +28,26 @@
   <meta name="twitter:image" content="https://jsonworkbench.dev/assets/og-image.png">
 
   <!-- Theme color for browser chrome -->
-  <meta name="theme-color" content="#1e1e1e" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#f3f3f3" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121923" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 
   <link rel="icon" type="image/svg+xml" href="/assets/svgs/favicon.svg">
-  <link rel="shortcut icon" type="image/svg+xml" href="/assets/svgs/favicon.svg">
-  <link rel="apple-touch-icon" href="/assets/svgs/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="32x32">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
 
-  <!-- Material Icons -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- Apply the saved theme before Angular boots so there is no flash of the wrong theme.
+       Keep in sync with SettingsStore.applyTheme() and DARK_THEMES in core/themes/app-themes.ts. -->
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var dark = ['visual-studio-dark', 'one-dark-pro', 'dracula', 'jetbrains-islands-dark'];
+      var s = {};
+      try { s = JSON.parse(localStorage.getItem('json-we-format:settings') || '{}') || {}; } catch (e) {}
+      root.setAttribute('data-theme', s.themeMode === 'dark' ? 'dark' : 'light');
+      root.setAttribute('data-dark-theme', dark.indexOf(s.darkTheme) >= 0 ? s.darkTheme : dark[0]);
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

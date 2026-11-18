@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { ButtonComponent } from '../../../../components/ui/button/button.component';
 import type { DiffResult } from '../../utils/diff-engine';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-diff-bar',
-  imports: [ButtonComponent],
+  imports: [TranslatePipe, ButtonComponent],
   templateUrl: './diff-bar.component.html',
   styleUrl: './diff-bar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

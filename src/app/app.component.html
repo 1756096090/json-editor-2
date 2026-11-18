@@ -1,2 +1,11 @@
-﻿<app-header />
-<router-outlet />
+<app-header />
+<div class="app__body">
+  <div class="app__content">
+    <router-outlet />
+  </div>
+  @if (showToolSidebarAd()) {
+    <div class="app__aside">
+      <app-ad-slot placement="sidebar" />
+    </div>
+  }
+</div>

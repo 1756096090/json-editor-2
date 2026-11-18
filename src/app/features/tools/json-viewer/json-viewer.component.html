@@ -1,7 +1,6 @@
 <div class="tool-page">
-  <app-tool-intro title="JSON Viewer">
-    <span slot="subtitle">Explore any JSON as an interactive tree or table.
-      Expand, collapse and inspect nested structures with ease.</span>
+  <app-tool-intro [title]="'tools.viewer.title' | t">
+    <span slot="subtitle">{{ 'tools.viewer.subtitle' | t }}</span>
   </app-tool-intro>
   <app-json-workbench />
 </div>

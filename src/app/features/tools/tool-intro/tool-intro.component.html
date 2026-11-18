@@ -15,18 +15,10 @@
     <button
       class="tool-intro__dismiss"
       type="button"
-      aria-label="Hide introduction"
-      title="Hide introduction"
+      [attr.aria-label]="'intro.hide' | t"
+      [title]="'intro.hide' | t"
       (click)="collapsed.set(true)"
     >×</button>
 
   </div>
-} @else {
-  <button
-    class="tool-intro__restore"
-    type="button"
-    aria-label="Show introduction"
-    title="Show introduction"
-    (click)="collapsed.set(false)"
-  >ℹ Show intro</button>
 }

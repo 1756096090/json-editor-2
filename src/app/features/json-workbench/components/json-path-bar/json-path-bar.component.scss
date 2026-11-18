@@ -73,6 +73,21 @@
   outline-offset: -1px;
 }
 
+.json-path-bar__help-toggle { flex-shrink: 0; margin-left: auto; }
+.json-path-bar__help {
+  padding: 10px 12px;
+  max-height: 190px;
+  overflow-y: auto;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  line-height: 1.6;
+  p { margin: 6px 0 0; }
+  strong { color: var(--color-text); }
+  code { color: var(--color-accent); }
+}
+
 @media (max-width: 560px) {
   .json-path-bar__value {
     flex-basis: 100%;

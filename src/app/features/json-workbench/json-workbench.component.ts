@@ -1,4 +1,4 @@
-﻿import {
+import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
@@ -24,9 +24,12 @@ import { DiffLineDecoration } from './utils/diff-engine.types';
 import { Tab, TabsService } from '../../core/tabs.service';
 import { TabBarComponent } from '../../components/ui/tab-bar/tab-bar.component';
 import { jsonToCsv } from './utils/convert.utils';
-import { copyTextToClipboard, downloadTextFile } from './utils/file-utils';
+import { copyTextToClipboard, documentFileName, downloadTextFile } from './utils/file-utils';
 import { IconComponent } from '../../components/ui/icon/icon.component';
 import { JsonCleanPanelComponent } from './components/json-clean-panel/json-clean-panel.component';
+import { TooltipDirective } from '../../components/ui/tooltip/tooltip.directive';
+import { WorkbenchGuideComponent } from './components/workbench-guide/workbench-guide.component';
+import { generateSchema } from '../tools/json-schema-generator/schema-generator';
 import type { JsonCleanOptions } from './utils/json-cleaner.utils';
 
 // Facades
@@ -49,6 +52,8 @@ type WorkbenchPreset = 'default' | 'json-to-csv';
     TabBarComponent,
     IconComponent,
     JsonCleanPanelComponent,
+    TooltipDirective,
+    WorkbenchGuideComponent,
   ],
   providers: [LiveDiffService],
   templateUrl: './json-workbench.component.html',
@@ -80,12 +85,15 @@ export class JsonWorkbenchComponent implements OnDestroy {
 
   // ── Split pane ratio (synced from SplitPaneComponent) ───────────────────
   readonly splitRatio = signal(50);
+  readonly transferActionsVisible = signal(true);
 
   // ── Panel labels (editable) ────────────────────────────────────────────
   readonly leftPanelLabel = signal('');
   readonly rightPanelLabel = signal('');
   readonly leftDisplayTabs = computed<Tab[]>(() => this.toDisplayTabs(this.tabs.leftTabs()));
   readonly rightDisplayTabs = computed<Tab[]>(() => this.toDisplayTabs(this.tabs.rightTabs()));
+  readonly leftDocumentName = computed(() => this.leftDisplayTabs().find(tab => tab.id === this.tabs.leftActiveId())?.label ?? 'document');
+  readonly rightDocumentName = computed(() => this.rightDisplayTabs().find(tab => tab.id === this.tabs.rightActiveId())?.label ?? 'document');
   readonly isCsvConverter = computed(() => this.preset() === 'json-to-csv');
   readonly leftPanelTitle = computed(() => this.isCsvConverter() ? 'Input JSON' : '');
   readonly rightPanelTitle = computed(() => this.isCsvConverter() ? 'CSV Output' : '');
@@ -104,11 +112,6 @@ export class JsonWorkbenchComponent implements OnDestroy {
   });
   readonly hasCsvOutput = computed(() => this.csvOutputText().length > 0);
 
-  // ── URL import ───────────────────────────────────────────────────────────
-  readonly showUrlImport = signal(false);
-  readonly urlImportValue = signal('');
-  readonly urlImportLoading = signal(false);
-  readonly urlImportTarget = signal<'left' | 'right'>('left');
 
   // ── Clean panel ─────────────────────────────────────────────────────────
   readonly showCleanPanel = signal(false);
@@ -132,7 +135,7 @@ export class JsonWorkbenchComponent implements OnDestroy {
   readonly hunkCount = computed(() => this.hunks().length);
 
   /** Derived theme for Monaco editors. */
-  readonly monacoTheme = computed<'dark' | 'light'>(() => this.store.themeMode());
+  readonly monacoTheme = computed(() => this.settings.activeTheme());
   readonly panelsHaveSameMode = computed(() => this.store.leftMode() === this.store.rightMode());
   readonly canComparePanels = computed(() => !this.isMobileLayout() && this.panelsHaveSameMode());
   readonly compareTooltip = computed(() => (
@@ -299,7 +302,7 @@ export class JsonWorkbenchComponent implements OnDestroy {
       return;
     }
 
-    downloadTextFile('output.csv', csv, 'text/csv');
+    downloadTextFile(documentFileName(this.rightDocumentName(), 'csv'), csv, 'text/csv');
     this.store.setStatusMessage('CSV download started.');
   }
 
@@ -337,6 +340,41 @@ export class JsonWorkbenchComponent implements OnDestroy {
   onSortPanel(panel: ActivePanel): void {
     this.store.setActivePanel(panel);
     this.actions.sortPanel(panel);
+  }
+
+  onGenerateSchema(panel: ActivePanel): void {
+    const source = panel === 'left' ? this.store.rawText() : this.store.baselineText();
+    let schema: string;
+    try {
+      schema = JSON.stringify(generateSchema(JSON.parse(source)), null, 2);
+    } catch {
+      this.store.setStatusMessage('Introduce un JSON válido para generar su esquema.');
+      return;
+    }
+
+    const target: ActivePanel = panel === 'left' ? 'right' : 'left';
+    if (target === 'right') {
+      if (this.store.baselineText().trim()) this.operations.addRightTab();
+      this.store.setRightMode('text');
+      this.store.setBaselineText(schema);
+      this.tabs.saveRightContent(this.tabs.rightActiveId(), schema);
+    } else {
+      if (this.store.rawText().trim()) this.operations.addLeftTab();
+      this.store.setLeftMode('text');
+      this.store.setRawText(schema);
+      this.tabs.saveLeftContent(this.tabs.leftActiveId(), schema);
+    }
+    this.store.setActivePanel(target);
+    this.store.setStatusMessage('Esquema generado en el panel contrario. Los documentos existentes se conservan.');
+  }
+
+  onRepairPanel(panel: ActivePanel): void {
+    this.store.setActivePanel(panel);
+    (panel === 'left' ? this.leftPanel() : this.rightPanel())?.onRepairPressed();
+  }
+
+  onExportPanel(panel: ActivePanel): void {
+    (panel === 'left' ? this.leftPanel() : this.rightPanel())?.exportCurrentView();
   }
 
   isJsonPanel(panel: ActivePanel): boolean {
@@ -435,39 +473,6 @@ export class JsonWorkbenchComponent implements OnDestroy {
     }
   }
 
-  // ── URL import ────────────────────────────────────────────────────────────
-
-  onImportUrlPressed(panel: ActivePanel = this.store.activePanel()): void {
-    const target = this.isCsvConverter() ? 'left' : panel;
-    this.store.setActivePanel(target);
-    this.showUrlImport.update((v) => !v);
-    this.urlImportValue.set('');
-    this.urlImportTarget.set(target);
-  }
-
-  async onUrlImportSubmit(): Promise<void> {
-    const rawUrl = this.urlImportValue().trim();
-    if (!rawUrl) return;
-
-    this.urlImportLoading.set(true);
-    try {
-      await this.operations.loadFromUrl(rawUrl, this.urlImportTarget());
-      this.showUrlImport.set(false);
-      this.urlImportValue.set('');
-    } catch (error) {
-      this.store.setStatusMessage(this.toActionError('URL import failed', error));
-    } finally {
-      this.urlImportLoading.set(false);
-    }
-  }
-
-  onUrlImportCancel(): void {
-    this.showUrlImport.set(false);
-    this.urlImportValue.set('');
-    this.urlImportTarget.set('left');
-  }
-
-  // ── Tab operations ────────────────────────────────────────────────────────
 
   onLeftTabSwitch(newId: string): void {
     this.operations.switchLeftTab(newId);

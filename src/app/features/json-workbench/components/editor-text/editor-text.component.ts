@@ -23,23 +23,25 @@ import { MonacoLoaderService, type MonacoNamespace } from '../../../../core/mona
 import type { JsonErrorPosition } from '../../../../core/json-error.utils';
 import type { DiffLineDecoration } from '../../utils/diff-engine.types';
 import type * as monacoNs from 'monaco-editor';
+import { type AppThemeId, monacoThemeName } from '../../../../core/themes/app-themes';
+import {
+  CASE_TRANSFORMS,
+  type CaseTarget,
+  findCaseTarget,
+  isCaseTransform,
+  transformCase,
+} from '../../../../core/case-transform';
+import { SettingsStore } from '../../../settings/settings.store';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 
 interface SelectionToolbarPosition {
   left: number;
   top: number;
 }
 
-type CaseTransform =
-  | 'camel'
-  | 'pascal'
-  | 'snake'
-  | 'upper-snake'
-  | 'kebab'
-  | 'flat'
-  | 'train';
-
 @Component({
   selector: 'app-editor-text',
+  imports: [TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './editor-text.component.html',
   styleUrl: './editor-text.component.css',
@@ -56,7 +58,7 @@ export class EditorTextComponent implements OnInit {
   /** Monaco language identifier (e.g. 'json', 'yaml', 'plaintext'). */
   readonly language = input<string>('json');
   /** Theme: 'dark' or 'light' — maps to custom Monaco themes. */
-  readonly theme = input<'dark' | 'light'>('dark');
+  readonly theme = input<AppThemeId>('light');
   /** Error position to highlight inline. Null = no error. */
   readonly errorPosition = input<JsonErrorPosition | null>(null);
   /** Whether this panel is the active (focused) one. */
@@ -78,6 +80,15 @@ export class EditorTextComponent implements OnInit {
   private readonly containerRef = viewChild.required<ElementRef<HTMLElement>>('editorContainer');
   private readonly loader = inject(MonacoLoaderService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly settings = inject(SettingsStore);
+
+  /** Case formats offered in the selection tool (configurable in Settings). */
+  readonly caseOptions = computed(() =>
+    CASE_TRANSFORMS.filter((option) => this.settings.caseFormats().includes(option.id))
+  );
+  readonly caseToolEnabled = computed(
+    () => this.settings.caseToolbarEnabled() && this.caseOptions().length > 0
+  );
 
   private monaco: MonacoNamespace | null = null;
   private editor: monacoNs.editor.IStandaloneCodeEditor | null = null;
@@ -89,9 +100,7 @@ export class EditorTextComponent implements OnInit {
   public readonly ready = signal(false);
   public readonly selectionToolbarPosition = signal<SelectionToolbarPosition | null>(null);
 
-  private readonly monacoTheme = computed(() =>
-    this.theme() === 'dark' ? 'json-we-dark' : 'json-we-light'
-  );
+  private readonly monacoTheme = computed(() => monacoThemeName(this.theme()));
 
   constructor() {
     // React to external value changes — but only if editor is ready
@@ -207,9 +216,23 @@ export class EditorTextComponent implements OnInit {
     return true;
   }
 
+  /** Rewrites only the selected key/value text (never its quotes) in the chosen case. */
   onCaseTransformSelected(value: string): void {
-    if (!value) return;
-    this.transformSelection((selectedText) => transformCase(selectedText, value as CaseTransform));
+    if (!this.editor || !this.monaco || !isCaseTransform(value)) return;
+    const model = this.editor.getModel();
+    const selection = this.editor.getSelection();
+    if (!model || !selection) return;
+    const target = this.getCaseTarget(model, selection);
+    if (!target) return;
+
+    const line = selection.startLineNumber;
+    const range = new this.monaco.Range(line, target.start + 1, line, target.end + 1);
+    const replacement = transformCase(model.getValueInRange(range), value);
+    this.editor.executeEdits('case-transform', [{ range, text: replacement, forceMoveMarkers: true }]);
+    this.editor.setSelection(
+      new this.monaco.Selection(line, target.start + 1, line, target.start + 1 + replacement.length)
+    );
+    this.editor.focus();
   }
 
   public getSelectionToolbarPosition(): SelectionToolbarPosition | null {
@@ -242,11 +265,13 @@ export class EditorTextComponent implements OnInit {
       fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
       fontLigatures: true,
       lineNumbers: 'on',
-      // Compact gutter: avoid the wide empty column before the JSON.
-      lineNumbersMinChars: 3,
-      lineDecorationsWidth: 4,
+      // Leave a little room before the right-aligned line numbers.
+      lineNumbersMinChars: 4,
+      lineDecorationsWidth: 16,
       glyphMargin: false,
-      folding: false,
+      folding: true,
+      showFoldingControls: 'always',
+      foldingHighlight: true,
       renderLineHighlight: 'line',
       scrollBeyondLastLine: false,
       tabSize: 2,
@@ -357,7 +382,8 @@ export class EditorTextComponent implements OnInit {
     }
 
     const selection = this.editor.getSelection();
-    if (!selection || selection.isEmpty()) {
+    const model = this.editor.getModel();
+    if (!this.caseToolEnabled() || !selection || !model || !this.getCaseTarget(model, selection)) {
       this.selectionToolbarPosition.set(null);
       return;
     }
@@ -392,6 +418,20 @@ export class EditorTextComponent implements OnInit {
     });
   }
 
+  /** The selection qualifies only when it is one key or value on a single line. */
+  private getCaseTarget(
+    model: monacoNs.editor.ITextModel,
+    selection: monacoNs.Selection
+  ): CaseTarget | null {
+    if (selection.isEmpty() || selection.startLineNumber !== selection.endLineNumber) return null;
+    return findCaseTarget(
+      model.getLineContent(selection.startLineNumber),
+      selection.startColumn - 1,
+      selection.endColumn - 1,
+      model.getLanguageId()
+    );
+  }
+
   private clearErrorDecorations(): void {
     if (this.editor && this.decorationIds.length) {
       this.decorationIds = this.editor.deltaDecorations(this.decorationIds, []);
@@ -420,62 +460,20 @@ export class EditorTextComponent implements OnInit {
       return {
         range: {
           startLineNumber: d.lineNumber,
-          startColumn: 1,
+          startColumn: d.startColumn ?? 1,
           endLineNumber: d.lineNumber,
-          endColumn: 1,
+          endColumn: d.endColumn ?? 1,
         },
         options: {
-          isWholeLine: true,
-          className: cssClass,
-          glyphMarginClassName: glyphClass,
+          isWholeLine: d.startColumn === undefined,
+          className: d.startColumn === undefined ? cssClass : undefined,
+          inlineClassName: d.startColumn !== undefined ? `diff-inline--${d.kind}` : undefined,
+          hoverMessage: { value: d.kind === 'removed' ? '− Eliminado respecto a la referencia' : '+ Añadido respecto a la referencia' },
+          glyphMarginClassName: d.startColumn === undefined ? glyphClass : undefined,
         },
       };
     });
 
     this.diffDecorationIds = this.editor.deltaDecorations(this.diffDecorationIds, monacoDecos);
   }
-}
-
-function transformCase(value: string, transform: CaseTransform): string {
-  const words = getCaseWords(value);
-  if (words.length === 0) return value;
-
-  switch (transform) {
-    case 'camel':
-      return joinCamel(words, false);
-    case 'pascal':
-      return joinCamel(words, true);
-    case 'snake':
-      return words.map((word) => word.toLowerCase()).join('_');
-    case 'upper-snake':
-      return words.map((word) => word.toUpperCase()).join('_');
-    case 'kebab':
-      return words.map((word) => word.toLowerCase()).join('-');
-    case 'flat':
-      return words.map((word) => word.toLowerCase()).join('');
-    case 'train':
-      return words.map(capitalize).join('-');
-  }
-}
-
-function getCaseWords(value: string): string[] {
-  return value
-    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
-    .split(/[^a-zA-Z0-9]+/)
-    .filter(Boolean);
-}
-
-function joinCamel(words: string[], pascal: boolean): string {
-  return words
-    .map((word, index) => {
-      const lower = word.toLowerCase();
-      return index === 0 && !pascal ? lower : capitalize(lower);
-    })
-    .join('');
-}
-
-function capitalize(value: string): string {
-  const lower = value.toLowerCase();
-  return lower.charAt(0).toUpperCase() + lower.slice(1);
 }

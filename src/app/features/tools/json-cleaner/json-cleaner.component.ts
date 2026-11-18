@@ -10,24 +10,25 @@ import {
   DEFAULT_JSON_CLEAN_OPTIONS,
 } from '../../json-workbench/utils/json-cleaner.utils';
 import type { JsonCleanOptions } from '../../json-workbench/utils/json-cleaner.utils';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-json-cleaner',
-  imports: [JsonWorkbenchComponent, ToolIntroComponent],
+  imports: [TranslatePipe, JsonWorkbenchComponent, ToolIntroComponent],
   template: `
     <div class="tool-page">
-      <app-tool-intro title="JSON Cleaner">
-        <span slot="subtitle">Remove null values, empty strings, empty arrays and empty objects
-          from your JSON recursively. Configure what to remove, paste your JSON and click Clean.</span>
+      <app-tool-intro [title]="'tools.cleaner.title' | t">
+        <span slot="subtitle">{{ 'tools.cleaner.subtitle' | t }}</span>
         <div slot="actions" class="tool-page__actions">
-          <fieldset class="cleaner-options" aria-label="Select which empty values to remove">
-            <legend class="cleaner-options__legend">Remove</legend>
+          <fieldset class="cleaner-options" [attr.aria-label]="'tools.cleaner.optionsAria' | t">
+            <legend class="cleaner-options__legend">{{ 'tools.cleaner.remove' | t }}</legend>
             <label class="cleaner-option">
               <input
                 type="checkbox"
                 [checked]="opts().removeNull"
                 (change)="toggleOpt('removeNull')"
-                aria-label="Remove null values"
+                [attr.aria-label]="'tools.cleaner.removeNull' | t"
               />
               <span aria-hidden="true">null</span>
             </label>
@@ -36,7 +37,7 @@ import type { JsonCleanOptions } from '../../json-workbench/utils/json-cleaner.u
                 type="checkbox"
                 [checked]="opts().removeEmptyStrings"
                 (change)="toggleOpt('removeEmptyStrings')"
-                aria-label="Remove empty strings"
+                [attr.aria-label]="'tools.cleaner.removeEmptyStrings' | t"
               />
               <span aria-hidden="true">""</span>
             </label>
@@ -45,7 +46,7 @@ import type { JsonCleanOptions } from '../../json-workbench/utils/json-cleaner.u
                 type="checkbox"
                 [checked]="opts().removeEmptyArrays"
                 (change)="toggleOpt('removeEmptyArrays')"
-                aria-label="Remove empty arrays"
+                [attr.aria-label]="'tools.cleaner.removeEmptyArrays' | t"
               />
               <span aria-hidden="true">[ ]</span>
             </label>
@@ -54,7 +55,7 @@ import type { JsonCleanOptions } from '../../json-workbench/utils/json-cleaner.u
                 type="checkbox"
                 [checked]="opts().removeEmptyObjects"
                 (change)="toggleOpt('removeEmptyObjects')"
-                aria-label="Remove empty objects"
+                [attr.aria-label]="'tools.cleaner.removeEmptyObjects' | t"
               />
               <span aria-hidden="true">&#123; &#125;</span>
             </label>
@@ -64,9 +65,9 @@ import type { JsonCleanOptions } from '../../json-workbench/utils/json-cleaner.u
             class="tool-page__action-btn"
             (click)="onClean()"
             [disabled]="!store.isValidJson()"
-            aria-label="Clean JSON — remove selected empty values"
+            [attr.aria-label]="'tools.cleaner.aria' | t"
           >
-            ✧ Clean JSON
+            {{ 'tools.cleaner.button' | t }}
           </button>
           @if (lastStatus()) {
             <span class="tool-page__action-status" aria-live="polite">{{ lastStatus() }}</span>
@@ -80,6 +81,7 @@ import type { JsonCleanOptions } from '../../json-workbench/utils/json-cleaner.u
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class JsonCleanerComponent {
+  protected readonly i18n = inject(I18nService);
   readonly store = inject(WorkbenchStore);
 
   readonly opts = signal<JsonCleanOptions>({ ...DEFAULT_JSON_CLEAN_OPTIONS });
@@ -129,8 +131,8 @@ export class JsonCleanerComponent {
     this.store.setRawText(JSON.stringify(result, null, 2));
     this.lastStatus.set(
       removed > 0
-        ? `Removed ${removed} empty ${removed === 1 ? 'value' : 'values'}.`
-        : 'Nothing to clean.',
+        ? this.i18n.t(removed === 1 ? 'tools.cleaner.removedOne' : 'tools.cleaner.removedMany', { n: removed })
+        : this.i18n.t('tools.cleaner.nothing'),
     );
   }
 }

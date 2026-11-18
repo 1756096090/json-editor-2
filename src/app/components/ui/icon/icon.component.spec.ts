@@ -1,6 +1,6 @@
 import { ComponentRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { IconComponent } from './icon.component';
+import { ICON_NAMES, IconComponent, IconName } from './icon.component';
 
 describe('IconComponent', () => {
   let fixture: ComponentFixture<IconComponent>;
@@ -37,4 +37,34 @@ describe('IconComponent', () => {
     expect(host.getAttribute('aria-label')).toBe('Done');
     expect(host.getAttribute('aria-hidden')).toBeNull();
   });
+
+  it.each(ICON_NAMES)('renders the %s icon with drawable paths', (name: IconName) => {
+    ref.setInput('name', name);
+    fixture.detectChanges();
+    const paths = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('path'));
+    expect(paths.length).toBeGreaterThan(0);
+    for (const path of paths) {
+      expect(path.getAttribute('d')).toMatch(/^M/);
+    }
+  });
+
+  it('gives every icon a distinct drawing', () => {
+    const drawings = ICON_NAMES.map((name) => {
+      ref.setInput('name', name);
+      fixture.detectChanges();
+      return Array.from(
+        (fixture.nativeElement as HTMLElement).querySelectorAll('path'),
+        (path) => path.getAttribute('d')
+      ).join('|');
+    });
+    expect(new Set(drawings).size).toBe(ICON_NAMES.length);
+  });
+
+  it('draws swap horizontally, matching the side-by-side panels', () => {
+    ref.setInput('name', 'swap');
+    fixture.detectChanges();
+    const first = (fixture.nativeElement as HTMLElement).querySelector('path')!.getAttribute('d')!;
+    expect(first).toMatch(/^M\d+ \d+h/);
+  });
 });
+

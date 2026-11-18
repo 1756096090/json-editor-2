@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { TooltipDirective } from '../tooltip/tooltip.directive';
 
 export type ButtonVariant = 'default' | 'accent' | 'ghost' | 'danger' | 'active';
 export type ButtonSize = 'sm' | 'md';
 
 @Component({
   selector: 'app-ui-button',
+  imports: [TooltipDirective],
   templateUrl: './button.component.html',
   styleUrl: './button.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

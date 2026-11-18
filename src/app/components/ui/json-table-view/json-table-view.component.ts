@@ -3,8 +3,9 @@ import {
   Component,
   ViewEncapsulation,
   computed,
-  input
-} from '@angular/core';
+  input, inject } from '@angular/core';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 export interface TableColumn {
   key: string;
@@ -17,12 +18,14 @@ export interface TableRow {
 
 @Component({
   selector: 'app-json-table-view',
+  imports: [TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   templateUrl: './json-table-view.component.html',
   styleUrl: './json-table-view.component.css'
 })
 export class JsonTableViewComponent {
+  protected readonly i18n = inject(I18nService);
   readonly jsonValue = input<unknown>(null);
 
   readonly isArray = computed(() => Array.isArray(this.jsonValue()));
@@ -41,7 +44,7 @@ export class JsonTableViewComponent {
     }
 
     if (keySet.size === 0) {
-      return [{ key: '__value__', label: 'Value' }];
+      return [{ key: '__value__', label: this.i18n.t('table.value') }];
     }
 
     return Array.from(keySet).map(key => ({ key, label: key }));
@@ -66,8 +69,8 @@ export class JsonTableViewComponent {
 
   readonly emptyMessage = computed(() => {
     const value = this.jsonValue();
-    if (value === null || value === undefined) return 'No data to display';
-    if (Array.isArray(value) && value.length === 0) return 'Empty array';
+    if (value === null || value === undefined) return this.i18n.t('table.noData');
+    if (Array.isArray(value) && value.length === 0) return this.i18n.t('table.emptyArray');
     return '';
   });
 
@@ -99,8 +102,8 @@ export class JsonTableViewComponent {
   private objectColumns(value: unknown): TableColumn[] {
     if (value === null || value === undefined || typeof value !== 'object') return [];
     return [
-      { key: '__key__', label: 'Key' },
-      { key: '__value__', label: 'Value' }
+      { key: '__key__', label: this.i18n.t('table.key') },
+      { key: '__value__', label: this.i18n.t('table.value') }
     ];
   }
 

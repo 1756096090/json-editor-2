@@ -19,6 +19,13 @@
   width: 100%;
 }
 
+:host ::ng-deep .monaco-editor .margin-view-overlays .codicon-folding-expanded,
+:host ::ng-deep .monaco-editor .margin-view-overlays .codicon-folding-collapsed,
+:host ::ng-deep .monaco-editor .margin-view-overlays .codicon-folding-manual-expanded,
+:host ::ng-deep .monaco-editor .margin-view-overlays .codicon-folding-manual-collapsed {
+  font-size: 10px;
+}
+
 .editor-text-selection-tools {
   align-items: center;
   background: var(--color-surface-overlay);

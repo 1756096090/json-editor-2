@@ -1,20 +1,21 @@
 .error-finder-panel {
-  background: var(--color-surface);
+  background: var(--color-panel-bg);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-4);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  margin: var(--space-2) var(--space-3) 0;
   overflow: hidden;
 }
 
 .error-finder-header {
-  background: linear-gradient(to right, var(--color-surface) 0%, var(--color-surface-alt) 100%);
-  padding: var(--space-3);
+  background: var(--color-surface);
+  padding: var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--color-border);
 }
 
 .error-finder-header h3 {
   margin: 0 0 var(--space-1) 0;
-  font-size: var(--text-lg);
+  font-size: var(--text-md);
   font-weight: var(--weight-semibold);
 }
 
@@ -37,7 +38,7 @@
 
 .error-item--warning {
   border-left-color: var(--color-warning);
-  background: rgba(255, 193, 7, 0.02);
+  background: var(--color-warning-subtle);
 }
 
 .error-item__header {
@@ -50,7 +51,7 @@
 .error-item__type {
   display: inline-block;
   background: var(--color-danger);
-  color: white;
+  color: var(--accent-on-primary);
   padding: 2px 6px;
   border-radius: 3px;
   font-size: var(--text-xs);
@@ -59,8 +60,8 @@
 }
 
 .error-item--warning .error-item__type {
-  background: var(--color-warning);
-  color: #333;
+  background: var(--color-warning-subtle);
+  color: var(--color-warning);
 }
 
 .error-item__location {
@@ -78,7 +79,7 @@
 
 .error-item__context {
   display: block;
-  background: var(--color-background);
+  background: var(--color-surface-sunken);
   padding: var(--space-2);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
@@ -91,7 +92,7 @@
 .error-item__suggestion {
   margin: 0;
   padding: var(--space-2);
-  background: rgba(76, 175, 80, 0.05);
+  background: var(--color-success-subtle);
   border-left: 2px solid var(--color-success);
   border-radius: var(--radius-sm);
   font-size: var(--text-sm);

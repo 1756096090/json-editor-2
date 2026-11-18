@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" width="200" height="48" role="img" aria-labelledby="t">
+  <title id="t">JSON Hunt</title>
+  <g transform="scale(0.75)">
+    <rect width="64" height="64" rx="14" fill="#2563EB"/>
+    <g fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M26 16H24Q19 16 19 21V27Q19 32 14 32Q19 32 19 37V43Q19 48 24 48H26"/>
+      <path d="M38 16H40Q45 16 45 21V27Q45 32 50 32Q45 32 45 37V43Q45 48 40 48H38"/>
+    </g>
+    <rect x="29.5" y="22" width="5" height="20" rx="2.5" fill="#DBEAFE"/>
+  </g>
+  <text x="60" y="32.5" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="24" font-weight="700" letter-spacing="-0.4" fill="#F8FAFC">JSON<tspan fill="#93C5FD" dx="6">Hunt</tspan></text>
+</svg>

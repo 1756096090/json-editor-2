@@ -18,11 +18,12 @@ export interface ToastMessage {
 const TOAST_DURATION_MS = 3500;
 let nextId = 0;
 
-import { MatIconModule } from '@angular/material/icon';
+import { IconComponent, IconName } from '../icon/icon.component';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-toast',
-  imports: [MatIconModule],
+  imports: [TranslatePipe, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   templateUrl: './toast.component.html',
@@ -58,10 +59,10 @@ export class ToastComponent {
     return `toast__item toast__item--${type}`;
   }
 
-  getIcon(type: ToastType): string {
+  getIcon(type: ToastType): IconName {
     switch (type) {
       case 'success':
-        return 'check_circle';
+        return 'check-circle';
       case 'error':
         return 'error';
       default:

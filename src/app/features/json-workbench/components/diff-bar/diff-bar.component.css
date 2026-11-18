@@ -31,6 +31,7 @@
 }
 
 .diff-bar__stat--added   { color: var(--color-success); }
+.diff-bar__legend { color: var(--color-text-muted); font-size: 10px; margin: 0 6px; }
 .diff-bar__stat--removed { color: var(--color-danger); }
 
 .diff-bar__computing {

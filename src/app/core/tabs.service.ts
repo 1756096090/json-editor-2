@@ -107,6 +107,12 @@ export class TabsService {
   }
 
   // ── Closing tabs ─────────────────────────────────────────────────────────
+  renameTab(panel: 'left' | 'right', id: string, label: string): void {
+    const name = label.trim();
+    if (!name) return;
+    const tabs = panel === 'left' ? this._leftTabs : this._rightTabs;
+    tabs.update(items => items.map(tab => tab.id === id ? { ...tab, label: name } : tab));
+  }
 
   /** Close a left tab. Returns the new active tab's content if the active tab was closed. */
   closeLeftTab(id: string, currentContent: string): string | null {

@@ -1,4 +1,5 @@
-﻿@import 'jsoneditor/dist/jsoneditor.min.css';
+@import '@angular/cdk/overlay-prebuilt.css';
+@import 'jsoneditor/dist/jsoneditor.min.css';
 
 /* ═══════════════════════════════════════════════════════════════════
    DESIGN TOKENS  —  json-we-format Design System
@@ -47,10 +48,10 @@
   --radius-full: 999px;
 
   /* ── Shadows — discreet by default; depth comes from borders ─── */
-  --shadow-xs: 0 1px 1px rgb(0 0 0 / 0.04);
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.06);
-  --shadow-md: 0 2px 6px rgb(0 0 0 / 0.08);
-  --shadow-lg: 0 8px 24px rgb(0 0 0 / 0.12);
+  --shadow-xs: 0 1px 1px rgb(15 23 42 / 0.04);
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.06);
+  --shadow-md: 0 4px 12px rgb(15 23 42 / 0.07);
+  --shadow-lg: 0 12px 32px rgb(15 23 42 / 0.12);
 
   /* ── Z-index scale ───────────────────────────────────────────── */
   --z-base: 0;
@@ -94,7 +95,7 @@
   --color-badge-popular-border: #fde047;
 
   --color-badge-recommended-bg: color-mix(in srgb, var(--color-accent) 12%, transparent);
-  --color-badge-recommended-text: var(--color-accent);
+  --color-badge-recommended-text: var(--accent-hover);
   --color-badge-recommended-border: color-mix(in srgb, var(--color-accent) 40%, transparent);
 
   --color-badge-soon-bg: var(--bg-hover);
@@ -120,6 +121,19 @@
   --header-bg: var(--color-panel-bg);
   --header-border: var(--color-border);
 
+  /* ── Brand (theme-independent: the logo looks the same everywhere) */
+  --brand-primary: #2563eb;
+  --brand-on-primary: #ffffff;
+  --brand-soft: #dbeafe;
+
+  /* ── Ad slots (reserved, fixed-size to avoid layout shift) ──── */
+  --ad-sidebar-width: 300px;
+  --ad-sidebar-height: 600px;
+  --ad-sidebar-height-compact: 250px;
+  --ad-banner-max-width: 728px;
+  --ad-banner-height: 90px;
+  --ad-banner-height-mobile: 100px;
+
   /* ── JSON type colors (semantic) ─────────────────────────────── */
   --color-json-key: var(--json-key);
   --color-json-string: var(--json-string);
@@ -129,45 +143,56 @@
   --color-json-punctuation: var(--json-punctuation);
 }
 
-/* ── Light theme ─────────────────────────────────────────────────── */
+/* ── Light theme — "Light Blue Professional" (default) ──────────── */
 :root,
-[data-theme='light'] {
+[data-theme='light'],
+[data-theme-preview='light'] {
   /* Three surface levels only: app → panel → editor/elevated */
-  --bg-app: #f6f8fa;
+  --bg-app: #f8fafc;
   --bg-topbar: #ffffff;
-  --bg-panel: #f6f8fa;
+  /* Secondary surface: a whisper of blue, lighter than the brief's #EEF4FF */
+  --bg-panel: #f5f8fe;
   --bg-editor: #ffffff;
   --bg-elevated: #ffffff;
-  --bg-hover: #eef2f7;
-  --bg-active: #e8f1ff;
+  --bg-hover: #e9f0fb;
+  --bg-active: #dbeafe;
   --bg-overlay: var(--bg-elevated);
 
-  --border-subtle: #d8dee7;
-  --border-strong: #b8c2cf;
+  --border-subtle: #d6e2f0;
+  --border-strong: #aebcd0;
 
-  --text-primary: #172033;
-  --text-secondary: #526077;
-  --text-dim: #7a8799;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  /* Darker than slate-500 so it still reaches 4.5:1 on the blue surfaces */
+  --text-dim: #5b6b80;
 
-  --accent-primary: #2563d9;
-  --accent-hover: #1f55bd;
+  --accent-primary: #2563eb;
+  --accent-hover: #1d4ed8;
   /* Legacy alias — same concept as --accent-hover */
   --accent-primary-strong: var(--accent-hover);
-  --accent-subtle: rgb(37 99 217 / 0.1);
+  --accent-subtle: #dbeafe;
   --accent-on-primary: #ffffff;
-  --success: #197f43;
-  --warning: #9a6200;
-  --danger: #c9333d;
 
-  --editor-selection: #d6e6ff;
-  --editor-active-line: #f6f8fa;
-  --editor-gutter-bg: #f1f4f8;
+  /* Brand status colors: fills, icons, borders, diff glyphs */
+  --success: #16a34a;
+  --warning: #ca8a04;
+  --danger: #dc2626;
+  /* Same hues, one step darker: the only ones that pass AA as text */
+  --success-text: #15803d;
+  --warning-text: #a16207;
+  --danger-text: #b91c1c;
 
-  --json-key: #0969a8;
-  --json-string: #9a4d12;
-  --json-number: #6f42c1;
-  --json-boolean: #a62d68;
-  --json-null: #cf222e;
+  --color-backdrop: rgb(15 23 42 / 0.45);
+
+  --editor-selection: #dbeafe;
+  --editor-active-line: #f8fafc;
+  --editor-gutter-bg: #f8fafc;
+
+  --json-key: #1d4ed8;
+  --json-string: #0f766e;
+  --json-number: #7c3aed;
+  --json-boolean: #b45309;
+  --json-null: #be123c;
   --json-punctuation: #64748b;
 
   --color-bg: var(--bg-app);
@@ -189,18 +214,18 @@
   --color-accent: var(--accent-primary);
   --color-accent-muted: color-mix(in srgb, var(--accent-primary) 45%, transparent);
   --color-accent-subtle: var(--accent-subtle);
-  --color-danger: var(--danger);
-  --color-error: var(--danger);
+  --color-danger: var(--danger-text);
+  --color-error: var(--danger-text);
   --color-error-border: color-mix(in srgb, var(--danger) 45%, var(--border-subtle));
-  --color-danger-subtle: color-mix(in srgb, var(--danger) 10%, var(--bg-editor));
-  --color-success: var(--success);
-  --color-success-subtle: color-mix(in srgb, var(--success) 10%, var(--bg-editor));
-  --color-warning: var(--warning);
-  --color-warning-subtle: color-mix(in srgb, var(--warning) 12%, var(--bg-editor));
+  --color-danger-subtle: color-mix(in srgb, var(--danger) 8%, var(--bg-editor));
+  --color-success: var(--success-text);
+  --color-success-subtle: color-mix(in srgb, var(--success) 8%, var(--bg-editor));
+  --color-warning: var(--warning-text);
+  --color-warning-subtle: color-mix(in srgb, var(--warning) 10%, var(--bg-editor));
   --color-focus-ring: var(--accent-primary);
   --color-diff-added-bg: color-mix(in srgb, var(--success) 12%, transparent);
   --color-diff-added-border: color-mix(in srgb, var(--success) 45%, transparent);
-  --color-diff-added-text: var(--success);
+  --color-diff-added-text: var(--success-text);
   --color-diff-removed-bg: color-mix(in srgb, var(--danger) 10%, transparent);
   --color-diff-removed-border: color-mix(in srgb, var(--danger) 45%, transparent);
   --color-json-key: var(--json-key);
@@ -214,45 +239,15 @@
   color-scheme: light;
 }
 
-/* ── Dark theme ──────────────────────────────────────────────────── */
+/* ── Dark themes: shared semantic mapping ─────────────────────────── */
+/* Raw palettes (--bg-*, --text-*, --accent-*, --json-*) live in the
+   DARK PALETTES section below, one block per dark theme. */
 [data-theme='dark'] {
-  /* Three surface levels only: app → panel → editor/elevated */
-  --bg-app: #0f141c;
-  --bg-topbar: #121923;
-  --bg-panel: #151d29;
-  --bg-editor: #18212e;
-  --bg-elevated: #1c2634;
-  --bg-hover: #222e3e;
-  --bg-active: rgb(74 137 255 / 0.12);
-  --bg-overlay: var(--bg-elevated);
+  --success-text: var(--success);
+  --warning-text: var(--warning);
+  --danger-text: var(--danger);
 
-  --border-subtle: #2a3545;
-  --border-strong: #3b4a5e;
-
-  --text-primary: #e6edf5;
-  --text-secondary: #a9b5c5;
-  --text-dim: #748196;
-
-  --accent-primary: #5794f7;
-  --accent-hover: #74a7f8;
-  /* Legacy alias — same concept as --accent-hover */
-  --accent-primary-strong: var(--accent-hover);
-  --accent-subtle: rgb(87 148 247 / 0.12);
-  --accent-on-primary: #0b1220;
-  --success: #4ac07a;
-  --warning: #d9a441;
-  --danger: #e5707a;
-
-  --editor-selection: #26405f;
-  --editor-active-line: #1d2735;
-  --editor-gutter-bg: #141c27;
-
-  --json-key: #79b8e8;
-  --json-string: #a8c97f;
-  --json-number: #c0a5df;
-  --json-boolean: #dca16d;
-  --json-null: #df7f87;
-  --json-punctuation: #9ba8b8;
+  --color-backdrop: rgb(0 0 0 / 0.6);
 
   /* Dark surfaces need deeper shadows to read as elevation */
   --shadow-xs: 0 1px 1px rgb(0 0 0 / 0.3);
@@ -323,6 +318,183 @@
   --color-badge-beta-bg: #2e1065;
   --color-badge-beta-text: #c4b5fd;
   --color-badge-beta-border: #4c1d95;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DARK PALETTES
+   One block of raw tokens per dark theme. <html> carries
+   data-theme="dark" + data-dark-theme="<id>"; the semantic --color-*
+   mapping above resolves against whichever palette is active.
+   `data-theme-preview` lets Settings render a swatch of any theme.
+   Monaco mirrors these values in src/app/core/themes/app-themes.ts.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Visual Studio Dark (default dark) ───────────────────────────── */
+[data-theme='dark'],
+[data-theme-preview='visual-studio-dark'] {
+  --bg-app: #1e1e1e;
+  --bg-topbar: #252526;
+  --bg-panel: #252526;
+  --bg-editor: #1e1e1e;
+  --bg-elevated: #2d2d30;
+  --bg-hover: #2a2d2e;
+  --bg-active: #37373d;
+  --bg-overlay: var(--bg-elevated);
+
+  --border-subtle: #3c3c3c;
+  --border-strong: #5a5a5a;
+
+  --text-primary: #d4d4d4;
+  --text-secondary: #b0b0b0;
+  --text-dim: #9d9d9d;
+
+  --accent-primary: #4da3ff;
+  --accent-hover: #6cb4ff;
+  --accent-primary-strong: var(--accent-hover);
+  --accent-subtle: rgb(77 163 255 / 0.16);
+  --accent-on-primary: #0b1220;
+
+  --success: #89d185;
+  --warning: #cca700;
+  --danger: #f48771;
+
+  --editor-selection: #264f78;
+  --editor-active-line: #2a2d2e;
+  --editor-gutter-bg: #1e1e1e;
+
+  --json-key: #9cdcfe;
+  --json-string: #ce9178;
+  --json-number: #b5cea8;
+  --json-boolean: #569cd6;
+  --json-null: #c586c0;
+  --json-punctuation: #d4d4d4;
+}
+
+/* ── One Dark Pro ────────────────────────────────────────────────── */
+[data-theme='dark'][data-dark-theme='one-dark-pro'],
+[data-theme-preview='one-dark-pro'] {
+  --bg-app: #1e2227;
+  --bg-topbar: #21252b;
+  --bg-panel: #21252b;
+  --bg-editor: #282c34;
+  --bg-elevated: #2c313a;
+  --bg-hover: #2c313a;
+  --bg-active: #323842;
+  --bg-overlay: var(--bg-elevated);
+
+  --border-subtle: #3a3f4b;
+  --border-strong: #4b5263;
+
+  --text-primary: #d7dae0;
+  --text-secondary: #abb2bf;
+  --text-dim: #9aa1ad;
+
+  --accent-primary: #61afef;
+  --accent-hover: #7cbef3;
+  --accent-primary-strong: var(--accent-hover);
+  --accent-subtle: rgb(97 175 239 / 0.16);
+  --accent-on-primary: #1b1f27;
+
+  --success: #98c379;
+  --warning: #e5c07b;
+  --danger: #e8838b;
+
+  --editor-selection: #3e4451;
+  --editor-active-line: #2c313c;
+  --editor-gutter-bg: #282c34;
+
+  --json-key: #e5797f;
+  --json-string: #98c379;
+  --json-number: #d19a66;
+  --json-boolean: #56b6c2;
+  --json-null: #c678dd;
+  --json-punctuation: #abb2bf;
+}
+
+/* ── Dracula ─────────────────────────────────────────────────────── */
+[data-theme='dark'][data-dark-theme='dracula'],
+[data-theme-preview='dracula'] {
+  --bg-app: #191a21;
+  --bg-topbar: #21222c;
+  --bg-panel: #21222c;
+  --bg-editor: #282a36;
+  --bg-elevated: #343746;
+  --bg-hover: #343746;
+  --bg-active: #44475a;
+  --bg-overlay: var(--bg-elevated);
+
+  --border-subtle: #3b3e51;
+  --border-strong: #6272a4;
+
+  --text-primary: #f8f8f2;
+  --text-secondary: #c6c8d6;
+  --text-dim: #9aa3cc;
+
+  --accent-primary: #bd93f9;
+  --accent-hover: #caa9fa;
+  --accent-primary-strong: var(--accent-hover);
+  --accent-subtle: rgb(189 147 249 / 0.18);
+  --accent-on-primary: #21222c;
+
+  --success: #50fa7b;
+  --warning: #f1fa8c;
+  --danger: #ff7f7f;
+
+  --editor-selection: #44475a;
+  --editor-active-line: #343746;
+  --editor-gutter-bg: #282a36;
+
+  --json-key: #8be9fd;
+  --json-string: #f1fa8c;
+  --json-number: #bd93f9;
+  --json-boolean: #ffb86c;
+  --json-null: #ff79c6;
+  --json-punctuation: #f8f8f2;
+}
+
+/* ── JetBrains Islands Dark ──────────────────────────────────────── */
+/* Islands: uniform panels floating on a near-black frame, rounder corners. */
+[data-theme='dark'][data-dark-theme='jetbrains-islands-dark'],
+[data-theme-preview='jetbrains-islands-dark'] {
+  --bg-app: #131314;
+  --bg-topbar: #131314;
+  --bg-panel: #1e1f22;
+  --bg-editor: #1e1f22;
+  --bg-elevated: #2b2d30;
+  --bg-hover: #2e3034;
+  --bg-active: #2e436e;
+  --bg-overlay: var(--bg-elevated);
+
+  --border-subtle: #2b2d30;
+  --border-strong: #4e5157;
+
+  --text-primary: #dfe1e5;
+  --text-secondary: #b4b8bf;
+  --text-dim: #9a9ea5;
+
+  --accent-primary: #6b9bf8;
+  --accent-hover: #85adf9;
+  --accent-primary-strong: var(--accent-hover);
+  --accent-subtle: rgb(107 155 248 / 0.18);
+  --accent-on-primary: #0b1220;
+
+  --success: #5fb865;
+  --warning: #f2c55c;
+  --danger: #ff7682;
+
+  --editor-selection: #214283;
+  --editor-active-line: #26282e;
+  --editor-gutter-bg: #1e1f22;
+
+  --json-key: #c77dbb;
+  --json-string: #6aab73;
+  --json-number: #2aacb8;
+  --json-boolean: #cf8e6d;
+  --json-null: #56a8f5;
+  --json-punctuation: #bcbec4;
+
+  --radius-md: 0.7rem;
+  --radius-lg: 1rem;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -413,38 +585,74 @@ select {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   THIRD-PARTY OVERRIDES  —  jsoneditor dark theme
+   THIRD-PARTY OVERRIDES  —  jsoneditor (both themes, token-driven)
    ═══════════════════════════════════════════════════════════════════ */
 
-[data-theme='dark'] .jsoneditor {
+.jsoneditor {
   border-color: var(--color-border);
 }
 
-[data-theme='dark'] .jsoneditor,
-[data-theme='dark'] .jsoneditor-tree,
-[data-theme='dark'] .jsoneditor textarea,
-[data-theme='dark'] .jsoneditor input {
+.jsoneditor,
+.jsoneditor-tree,
+.jsoneditor textarea,
+.jsoneditor input {
   background-color: var(--color-panel-bg);
   color: var(--color-text);
 }
 
-[data-theme='dark'] .jsoneditor-menu,
-[data-theme='dark'] .jsoneditor-navigation-bar {
+.jsoneditor-menu,
+.jsoneditor-navigation-bar {
   background-color: var(--color-surface);
   border-color: var(--color-border);
-}
-
-[data-theme='dark'] .jsoneditor-field,
-[data-theme='dark'] .jsoneditor-value,
-[data-theme='dark'] .jsoneditor-readonly,
-[data-theme='dark'] .jsoneditor-schema-error {
   color: var(--color-text);
 }
 
-[data-theme='dark'] .jsoneditor-statusbar {
+.jsoneditor-field,
+.jsoneditor-readonly,
+.jsoneditor-schema-error {
+  color: var(--color-text);
+}
+
+.jsoneditor-field {
+  color: var(--color-json-key);
+}
+
+.jsoneditor-value.jsoneditor-string {
+  color: var(--color-json-string);
+}
+
+.jsoneditor-value.jsoneditor-number {
+  color: var(--color-json-number);
+}
+
+.jsoneditor-value.jsoneditor-boolean {
+  color: var(--color-json-boolean);
+}
+
+.jsoneditor-value.jsoneditor-null {
+  color: var(--color-json-null);
+}
+
+.jsoneditor-statusbar {
   background-color: var(--color-surface);
   border-color: var(--color-border);
   color: var(--color-text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════════════════════════════ */
+.sr-only {
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -455,6 +663,16 @@ select {
 .diff-line--added {
   background: var(--color-diff-added-bg) !important;
   border-left: 3px solid var(--color-diff-added-border);
+}
+
+.diff-inline--added {
+  background: color-mix(in srgb, var(--success) 24%, transparent);
+  border-radius: 2px;
+}
+
+.diff-inline--removed {
+  background: color-mix(in srgb, var(--danger) 22%, transparent);
+  border-radius: 2px;
 }
 
 .diff-line--removed {

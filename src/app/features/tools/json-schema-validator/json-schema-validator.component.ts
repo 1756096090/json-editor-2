@@ -4,26 +4,26 @@ import { JsonWorkbenchComponent } from '../../json-workbench/json-workbench.comp
 import { WorkbenchStore } from '../../json-workbench/state/workbench.store';
 import { validateSchema, SchemaError } from './schema-validator';
 import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-json-schema-validator',
-  imports: [JsonWorkbenchComponent, ToolIntroComponent],
+  imports: [TranslatePipe, JsonWorkbenchComponent, ToolIntroComponent],
   template: `
     <div class="tool-page">
-      <app-tool-intro title="JSON Schema Validator">
-        <span slot="subtitle">Paste your JSON in the <strong>left panel</strong> and your JSON Schema
-          in the <strong>right panel</strong>, then click Validate. Supports
-          JSON Schema draft-07 (type, required, properties, enum, allOf/anyOf/oneOf,
-          string/number/array constraints).</span>
+      <app-tool-intro [title]="'tool.schemaValidator.name' | t">
+        <span slot="subtitle">{{ 'tools.schemaVal.s1' | t }} <strong>{{ 'tools.schemaVal.left' | t }}</strong>
+          {{ 'tools.schemaVal.s2' | t }} <strong>{{ 'tools.schemaVal.right' | t }}</strong>{{ 'tools.schemaVal.s3' | t }}</span>
         <div slot="actions" class="tool-page__actions">
           <button
             type="button"
             class="tool-page__action-btn"
             (click)="onValidate()"
             [disabled]="!canValidate()"
-            aria-label="Validate JSON against schema"
+            [attr.aria-label]="'tools.schemaVal.aria' | t"
           >
-            ⬡ Validate
+            {{ 'tools.schemaVal.button' | t }}
           </button>
           @if (lastStatus()) {
             <span class="tool-page__action-status" aria-live="polite">{{ lastStatus() }}</span>
@@ -37,19 +37,19 @@ import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
           [class.schema-result--valid]="errors().length === 0"
           [class.schema-result--invalid]="errors().length > 0"
           role="region"
-          aria-label="Validation result"
+          [attr.aria-label]="'tools.schemaVal.resultAria' | t"
         >
           @if (errors().length === 0) {
-            <p class="schema-result__title">✓ Valid — JSON conforms to the schema.</p>
+            <p class="schema-result__title">{{ 'tools.schemaVal.valid' | t }}</p>
           } @else {
             <p class="schema-result__title">
-              ✗ Invalid — {{ errors().length }} error{{ errors().length === 1 ? '' : 's' }} found.
+              {{ (errors().length === 1 ? 'tools.schemaVal.invalidOne' : 'tools.schemaVal.invalidMany') | t: { n: errors().length } }}
             </p>
-            <ul class="schema-result__errors" aria-label="Validation errors">
+            <ul class="schema-result__errors" [attr.aria-label]="'tools.schemaVal.errorsAria' | t">
               @for (err of errors(); track $index) {
                 <li class="schema-result__error">
                   <code class="schema-result__path">{{ err.path }}</code>
-                  <span class="schema-result__msg">{{ err.message }}</span>
+                  <span class="schema-result__msg">{{ err.messageKey | t: err.params }}</span>
                 </li>
               }
             </ul>
@@ -101,10 +101,11 @@ import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
     }
     .schema-result__msg { color: var(--color-text-muted); }
   `],
-  styleUrl: '../tool-page.css',
+  styleUrls: ['../tool-page.css', './json-schema-validator.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class JsonSchemaValidatorComponent {
+  protected readonly i18n = inject(I18nService);
   readonly store = inject(WorkbenchStore);
 
   readonly errors = signal<SchemaError[]>([]);
@@ -133,23 +134,24 @@ export class JsonSchemaValidatorComponent {
     try {
       json = JSON.parse(this.store.rawText());
     } catch {
-      this.lastStatus.set('Left panel is not valid JSON.');
+      this.lastStatus.set(this.i18n.t('tools.schemaVal.leftInvalid'));
       return;
     }
 
     try {
       schema = JSON.parse(this.store.baselineText());
     } catch {
-      this.lastStatus.set('Right panel (schema) is not valid JSON.');
+      this.lastStatus.set(this.i18n.t('tools.schemaVal.rightInvalid'));
       return;
     }
 
     const found = validateSchema(json, schema as Record<string, unknown>);
     this.errors.set(found);
     this.validated.set(true);
-    this.lastStatus.set(found.length === 0 ? '✓ Valid' : `✗ ${found.length} error(s)`);
+    const n = found.length;
+    this.lastStatus.set(this.i18n.t(n === 0 ? 'tools.schemaVal.statusValid' : 'tools.schemaVal.statusErrors', { n }));
     this.store.setStatusMessage(
-      found.length === 0 ? 'JSON is valid against the schema.' : `Schema validation failed — ${found.length} error(s).`
+      this.i18n.t(n === 0 ? 'tools.schemaVal.toastValid' : 'tools.schemaVal.toastInvalid', { n })
     );
   }
 }

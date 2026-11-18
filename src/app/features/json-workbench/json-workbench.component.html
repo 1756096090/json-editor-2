@@ -1,4 +1,4 @@
-﻿<section class="workbench">
+<section class="workbench">
   <ng-template #panelActions let-panel="panel">
     @if (isCsvConverter()) {
       @if (panel === 'left') {
@@ -14,20 +14,11 @@
         <app-ui-button
           size="sm"
           variant="ghost"
-          tooltipText="Import JSON from a URL"
-          (pressed)="onImportUrlPressed('left')"
-        >
-          <app-ui-icon name="url" [size]="14" />
-          URL
-        </app-ui-button>
-        <app-ui-button
-          size="sm"
-          variant="ghost"
           tooltipText="Format input JSON"
           (pressed)="onFormatPanel('left')"
         >
           <app-ui-icon name="format" [size]="14" />
-          Format
+          Beautify
         </app-ui-button>
         <app-ui-button
           size="sm"
@@ -39,152 +30,53 @@
           Convert to CSV
         </app-ui-button>
       } @else {
-        <app-ui-button
-          size="sm"
-          variant="default"
-          [disabled]="!hasCsvOutput()"
-          tooltipText="Copy CSV output"
-          (pressed)="onCopyCsvOutput()"
-        >
+        <app-ui-button size="sm" variant="default" [disabled]="!hasCsvOutput()" tooltipText="Copy CSV output" ariaLabel="Copy CSV output" (pressed)="onCopyCsvOutput()">
           <app-ui-icon name="copy" [size]="14" />
-          Copy CSV
         </app-ui-button>
-        <app-ui-button
-          size="sm"
-          variant="ghost"
-          [disabled]="!hasCsvOutput()"
-          tooltipText="Download CSV output"
-          (pressed)="onDownloadCsvOutput()"
-        >
-          <app-ui-icon name="download" [size]="14" />
-          Download CSV
+        <app-ui-button size="sm" variant="ghost" [disabled]="!hasCsvOutput()" tooltipText="Download CSV output" (pressed)="onDownloadCsvOutput()">
+          <app-ui-icon name="download" [size]="14" /> Download CSV
         </app-ui-button>
       }
     } @else {
-      <div class="toolbar-group">
-        <app-ui-button
-          size="sm"
-          variant="default"
-          tooltipText="Open a .json file from disk"
-          (pressed)="onOpenFilePressed(panel)"
-        >
-          <app-ui-icon name="open" [size]="14" />
-          Open
+      <app-ui-button size="sm" variant="accent" tooltipText="Format JSON (Ctrl+Shift+F)" (pressed)="onFormatPanel(panel)">
+        <app-ui-icon name="format" [size]="12" /> Beautify
+      </app-ui-button>
+      <app-ui-button size="sm" variant="ghost" tooltipText="Open a .json file from disk" (pressed)="onOpenFilePressed(panel)">
+        <app-ui-icon name="open" [size]="12" /> Open
+      </app-ui-button>
+      <app-ui-button size="sm" variant="ghost" tooltipText="Minify JSON (Ctrl+M)" (pressed)="onMinifyPanel(panel)">
+        <app-ui-icon name="minify" [size]="12" /> Minify
+      </app-ui-button>
+      <app-ui-button size="sm" variant="ghost" tooltipText="Clean JSON" (pressed)="onCleanPanel(panel)">
+        <app-ui-icon name="clean" [size]="12" /> Clean
+      </app-ui-button>
+      @if (isJsonPanel(panel)) {
+        <app-ui-button size="sm" variant="ghost" [disabled]="isMobileLayout()"
+          tooltipText="Generar JSON Schema en el panel contrario; si tiene contenido, crear una pestaña nueva"
+          (pressed)="onGenerateSchema(panel)">
+          <app-ui-icon name="wand" [size]="12" /> Schema
         </app-ui-button>
-        <app-ui-button
-          size="sm"
-          variant="ghost"
-          tooltipText="Import JSON from a URL"
-          (pressed)="onImportUrlPressed(panel)"
-        >
-          <app-ui-icon name="url" [size]="14" />
-          URL
-        </app-ui-button>
-      </div>
-
-      <span class="toolbar-divider" aria-hidden="true"></span>
-
-      <div class="toolbar-group">
-        <app-ui-button
-          size="sm"
-          variant="accent"
-          tooltipText="Format JSON (Ctrl+Shift+F)"
-          (pressed)="onFormatPanel(panel)"
-        >
-          <app-ui-icon name="format" [size]="14" />
-          Format
-        </app-ui-button>
-        <app-ui-button
-          size="sm"
-          variant="ghost"
-          tooltipText="Minify JSON (Ctrl+M)"
-          (pressed)="onMinifyPanel(panel)"
-        >
-          <app-ui-icon name="minify" [size]="14" />
-          Minify
-        </app-ui-button>
-        <app-ui-button
-          size="sm"
-          variant="ghost"
-          tooltipText="Clean JSON"
-          (pressed)="onCleanPanel(panel)"
-        >
-          <app-ui-icon name="clean" [size]="14" />
-          Clean
-        </app-ui-button>
-        @if (isJsonPanel(panel)) {
-          <app-ui-button
-            size="sm"
-            variant="ghost"
-            tooltipText="Sort object keys alphabetically"
-            (pressed)="onSortPanel(panel)"
-          >
-            <app-ui-icon name="sort" [size]="14" />
-            Sort
+        @if (panel === 'left' ? store.leftError() : store.rightError()) {
+          <app-ui-button size="sm" variant="ghost" tooltipText="Reparar JSON: revisar la corrección antes de aplicarla" (pressed)="onRepairPanel(panel)">
+            <app-ui-icon name="repair" [size]="12" /> Reparar
           </app-ui-button>
         }
-      </div>
-
-      <span class="toolbar-divider" aria-hidden="true"></span>
-
-      <app-ui-button
-        size="sm"
-        [variant]="store.showDiff() ? 'active' : 'ghost'"
-        [ariaPressed]="store.showDiff()"
-        [disabled]="!canComparePanels()"
-        [tooltipText]="compareTooltip()"
-        (pressed)="onToggleDiffPressed()"
-      >
-        <app-ui-icon name="compare" [size]="14" />
-        Compare
+      }
+      @if (isJsonPanel(panel)) {
+        <app-ui-button size="sm" variant="ghost" tooltipText="Sort object keys alphabetically" (pressed)="onSortPanel(panel)">
+          <app-ui-icon name="sort" [size]="12" /> Sort
+        </app-ui-button>
+      }
+      <app-ui-button size="sm" [variant]="store.showDiff() ? 'active' : 'ghost'"
+        [ariaPressed]="store.showDiff()" [disabled]="!canComparePanels()" [tooltipText]="compareTooltip()" (pressed)="onToggleDiffPressed()">
+        <app-ui-icon name="compare" [size]="12" /> Compare
+      </app-ui-button>
+      <app-ui-button size="sm" variant="ghost" tooltipText="Exportar el contenido del panel en el formato seleccionado"
+        (pressed)="onExportPanel(panel)">
+        <app-ui-icon name="download" [size]="12" /> Exportar
       </app-ui-button>
     }
   </ng-template>
-
-  @if (showUrlImport()) {
-    <div class="url-import-bar" role="search" aria-label="Import JSON from URL">
-      <label class="url-import-bar__label" for="url-import-input">URL</label>
-      @if (!isCsvConverter()) {
-        <div class="url-import-bar__target" role="group" aria-label="Target panel">
-          <button
-            class="url-import-bar__target-btn"
-            [class.url-import-bar__target-btn--active]="urlImportTarget() === 'left'"
-            (click)="urlImportTarget.set('left')"
-            aria-label="Load into editor A"
-          >A</button>
-          <button
-            class="url-import-bar__target-btn"
-            [class.url-import-bar__target-btn--active]="urlImportTarget() === 'right'"
-            (click)="urlImportTarget.set('right')"
-            aria-label="Load into editor B"
-          >B</button>
-        </div>
-      }
-      <input
-        id="url-import-input"
-        class="url-import-bar__input"
-        type="url"
-        placeholder="https://api.example.com/data.json"
-        [value]="urlImportValue()"
-        (input)="urlImportValue.set($any($event.target).value)"
-        (keydown.enter)="onUrlImportSubmit()"
-        (keydown.escape)="onUrlImportCancel()"
-        autocomplete="off"
-        aria-required="true"
-      />
-      <app-ui-button
-        size="sm"
-        variant="accent"
-        [disabled]="urlImportLoading()"
-        (pressed)="onUrlImportSubmit()"
-      >
-        {{ urlImportLoading() ? 'Loading…' : 'Load' }}
-      </app-ui-button>
-      <app-ui-button size="sm" variant="ghost" (pressed)="onUrlImportCancel()">
-        Cancel
-      </app-ui-button>
-    </div>
-  }
 
   @if (store.showDiff()) {
     <app-diff-bar
@@ -216,6 +108,7 @@
           [activeTabId]="tabs.leftActiveId()"
           (tabClicked)="onLeftTabSwitch($event)"
           (tabClosed)="onLeftTabClose($event)"
+          (tabRenamed)="tabs.renameTab('left', $event.id, $event.label)"
           (addTab)="onAddLeftTab()"
           (panelLabelChanged)="onLeftPanelLabelChanged($event)"
         />
@@ -228,6 +121,7 @@
             [activeTabId]="tabs.rightActiveId()"
             (tabClicked)="onRightTabSwitch($event)"
             (tabClosed)="onRightTabClose($event)"
+            (tabRenamed)="tabs.renameTab('right', $event.id, $event.label)"
             (addTab)="onAddRightTab()"
             (panelLabelChanged)="onRightPanelLabelChanged($event)"
           />
@@ -238,9 +132,10 @@
 
   <div class="workbench__panels">
     <!-- ── Side-by-side Editor Panels (always visible) ─────── -->
-    <app-split-pane direction="horizontal" storageKey="json-we-format:split-ratio" [hideEnd]="!isCsvConverter() && isMobileLayout()" (ratioChange)="splitRatio.set($event)">
+    <app-split-pane direction="horizontal" storageKey="json-we-format:split-ratio" [gutterSize]="!isCsvConverter() && !isMobileLayout() ? 42 : 6" [hideEnd]="!isCsvConverter() && isMobileLayout()" (ratioChange)="splitRatio.set($event)">
       <app-editor-panel
         #leftPanel
+        [documentName]="leftDocumentName()"
         split-start
         [rawText]="store.rawText()"
         [panelTitle]="leftPanelTitle()"
@@ -270,6 +165,7 @@
 
       <app-editor-panel
         #rightPanel
+        [documentName]="rightDocumentName()"
         split-end
         [rawText]="store.baselineText()"
         [panelTitle]="rightPanelTitle()"
@@ -301,31 +197,41 @@
           />
         </div>
       </app-editor-panel>
+    </app-split-pane>
       @if (!isCsvConverter() && !isMobileLayout()) {
-        <div split-gutter class="workbench__transfer" role="group" aria-label="Transfer actions">
+        <div class="workbench__transfer" [style.left.%]="splitRatio()" role="toolbar" aria-label="Transfer actions">
+          <button
+            class="workbench__transfer-toggle"
+            type="button"
+            [attr.aria-expanded]="transferActionsVisible()"
+            [attr.aria-label]="transferActionsVisible() ? 'Ocultar acciones' : 'Mostrar acciones'"
+            [appTooltip]="transferActionsVisible() ? 'Ocultar acciones' : 'Mostrar acciones'"
+            (click)="transferActionsVisible.set(!transferActionsVisible())"
+          >{{ transferActionsVisible() ? '×' : '⋮' }}</button>
+          @if (transferActionsVisible()) {
           <app-ui-button
             size="sm"
             variant="ghost"
             ariaLabel="Copy editor A to editor B"
-            tooltipText="Copy A → B"
+            tooltipText="Copiar el contenido de A a B"
             (pressed)="onCopyLeftToRight()"
-          ><app-ui-icon name="arrow-right" [size]="14" /></app-ui-button>
+          ><app-ui-icon name="arrow-right" [size]="14" /><span class="workbench__transfer-label">A→B</span></app-ui-button>
 
           <app-ui-button
             size="sm"
             variant="ghost"
             ariaLabel="Copy editor B to editor A"
-            tooltipText="Copy B → A"
+            tooltipText="Copiar el contenido de B a A"
             (pressed)="onCopyRightToLeft()"
-          ><app-ui-icon name="arrow-left" [size]="14" /></app-ui-button>
+          ><app-ui-icon name="arrow-left" [size]="14" /><span class="workbench__transfer-label">B→A</span></app-ui-button>
 
           <app-ui-button
             size="sm"
             variant="ghost"
             ariaLabel="Swap editor panels"
-            tooltipText="Swap panels"
+            tooltipText="Intercambiar el contenido de los paneles"
             (pressed)="onSwapPanels()"
-          ><app-ui-icon name="swap" [size]="14" /></app-ui-button>
+          ><app-ui-icon name="swap" [size]="14" /><span class="workbench__transfer-label">Swap</span></app-ui-button>
 
           <app-ui-button
             size="sm"
@@ -333,13 +239,20 @@
             [ariaPressed]="store.showDiff()"
             [disabled]="!canComparePanels()"
             ariaLabel="Compare (toggle diff)"
-            [tooltipText]="compareTooltip()"
+            tooltipText="Activar o desactivar la comparación entre paneles"
             (pressed)="onToggleDiffPressed()"
-          ><app-ui-icon name="compare" [size]="14" /></app-ui-button>
+          ><app-ui-icon name="compare" [size]="14" /><span class="workbench__transfer-label">Diff</span></app-ui-button>
+          }
         </div>
       }
-    </app-split-pane>
+
+
   </div>
+  @if (!isCsvConverter()) {
+    <div class="workbench__help">
+      <app-workbench-guide />
+    </div>
+  }
 </section>
 
 @if (showConfirmPanelTransfer()) {

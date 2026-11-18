@@ -1,0 +1,73 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+}
+
+:host(.ad-slot--off) {
+  display: none;
+}
+
+/* Always visible: ads are identified as such, quietly. */
+.ad-slot__label {
+  color: var(--color-text-dim);
+  font-size: 0.6875rem;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Fixed footprint → no layout shift when an ad fills it later. */
+.ad-slot__frame {
+  background: var(--color-surface-sunken);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+/* ── Sidebar: 300×600 (300×250 on short screens) ─────────────────── */
+:host(.ad-slot--sidebar) {
+  flex-shrink: 0;
+  width: var(--ad-sidebar-width);
+}
+
+:host(.ad-slot--sidebar) .ad-slot__frame {
+  height: var(--ad-sidebar-height);
+  width: var(--ad-sidebar-width);
+}
+
+@media (max-height: 820px) {
+  :host(.ad-slot--sidebar) .ad-slot__frame {
+    height: var(--ad-sidebar-height-compact);
+  }
+}
+
+/* Only when there is room next to the tool: never squeeze the editor. */
+@media (max-width: 1439.98px) {
+  :host(.ad-slot--sidebar) {
+    display: none;
+  }
+}
+
+/* ── Banner: 728×90 leaderboard (320×100 on phones) ──────────────── */
+:host(.ad-slot--banner) {
+  align-items: center;
+  margin: 0 auto;
+  max-width: var(--ad-banner-max-width);
+  width: 100%;
+}
+
+:host(.ad-slot--banner) .ad-slot__frame {
+  height: var(--ad-banner-height);
+  width: 100%;
+}
+
+@media (max-width: 760px) {
+  :host(.ad-slot--banner) {
+    max-width: 320px;
+  }
+
+  :host(.ad-slot--banner) .ad-slot__frame {
+    height: var(--ad-banner-height-mobile);
+  }
+}

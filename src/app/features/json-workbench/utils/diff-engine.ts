@@ -6,11 +6,11 @@
  *
  * Strategy:
  *  1) Line-level diff via `diffLines` (Myers O(ND) — fast for few changes).
- *  2) No word-level diff — only line-level kind (added/removed/modified).
+ *  2) Character-level refinement for replacement blocks.
  *  3) Early exit for identical or empty texts.
  */
 
-import { diffLines } from 'diff';
+import { diffChars, diffLines } from 'diff';
 import type { Change } from 'diff';
 import type { DiffResult, DiffHunk, DiffLineDecoration } from './diff-engine.types';
 
@@ -50,6 +50,41 @@ export function computeDiff(left: string, right: string): DiffResult {
   while (i < changes.length) {
     const change = changes[i];
 
+    // Refine replacement blocks so an inserted comma/field does not paint
+    // unchanged text as a deletion and an addition.
+    if (change.removed && changes[i + 1]?.added) {
+      const next = changes[i + 1];
+      const refined = diffChars(change.value, next.value, { maxEditLength: 2000, timeout: 30 });
+      if (refined) {
+        if (!inHunk) {
+          inHunk = true;
+          hunkLeftStart = leftLine;
+          hunkRightStart = rightLine;
+        }
+        const leftInline: DiffLineDecoration[] = [];
+        const rightInline: DiffLineDecoration[] = [];
+        let oldOffset = 0;
+        let newOffset = 0;
+        for (const part of refined) {
+          if (part.removed) {
+            addInlineRanges(change.value, oldOffset, part.value.length, leftLine, 'removed', leftInline);
+          } else if (part.added) {
+            addInlineRanges(next.value, newOffset, part.value.length, rightLine, 'added', rightInline);
+          }
+          if (!part.added) oldOffset += part.value.length;
+          if (!part.removed) newOffset += part.value.length;
+        }
+        leftDeco.push(...leftInline);
+        rightDeco.push(...rightInline);
+        removedCount += new Set(leftInline.map(d => d.lineNumber)).size;
+        addedCount += new Set(rightInline.map(d => d.lineNumber)).size;
+        leftLine += countLines(change);
+        rightLine += countLines(next);
+        i += 2;
+        continue;
+      }
+    }
+
     if (change.added) {
       // ── Added block → decorations on the right panel ──
       const lines = splitLines(change);
@@ -59,7 +94,7 @@ export function computeDiff(left: string, right: string): DiffResult {
         hunkRightStart = rightLine;
       }
       for (let j = 0; j < lines.length; j++) {
-        rightDeco.push({ lineNumber: rightLine++, kind: 'added' });
+        rightDeco.push({ lineNumber: rightLine++, kind: 'added', startColumn: 1, endColumn: lines[j].length + 1 });
       }
       addedCount += lines.length;
       i++;
@@ -75,7 +110,7 @@ export function computeDiff(left: string, right: string): DiffResult {
         hunkRightStart = rightLine;
       }
       for (let j = 0; j < lines.length; j++) {
-        leftDeco.push({ lineNumber: leftLine++, kind: 'removed' });
+        leftDeco.push({ lineNumber: leftLine++, kind: 'removed', startColumn: 1, endColumn: lines[j].length + 1 });
       }
       removedCount += lines.length;
       i++;
@@ -109,6 +144,20 @@ export function computeDiff(left: string, right: string): DiffResult {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+function addInlineRanges(
+  text: string, offset: number, length: number, firstLine: number,
+  kind: 'added' | 'removed', decorations: DiffLineDecoration[]
+): void {
+  const prefix = text.slice(0, offset).split('\n');
+  let lineNumber = firstLine + prefix.length - 1;
+  let column = prefix[prefix.length - 1].length + 1;
+  for (const part of text.slice(offset, offset + length).split('\n')) {
+    if (part.length) decorations.push({ lineNumber, kind, startColumn: column, endColumn: column + part.length });
+    lineNumber++;
+    column = 1;
+  }
+}
 
 function empty(t0: number): DiffResult {
   return {

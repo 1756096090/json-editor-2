@@ -9,13 +9,13 @@
       (blur)="onLabelEditFinish()"
       (keydown.enter)="onLabelEditFinish()"
       (keydown.escape)="isEditingLabel.set(false)"
-      aria-label="Edit panel label"
+      [attr.aria-label]="'tabs.editPanelLabel' | t"
     />
   } @else {
     <span
       class="tab-bar__panel-label"
       (click)="onLabelClick()"
-      title="Double-click to rename"
+      [title]="'tabs.renameHint' | t"
       role="button"
       tabindex="0"
       (keydown.enter)="startEditingLabel()"
@@ -23,14 +23,28 @@
     >{{ panelLabel() }}</span>
   }
 }
-<div class="tab-bar" role="tablist" [attr.aria-label]="(panelLabel() || 'Document') + ' tabs'">
+<div class="tab-bar" role="tablist" [attr.aria-label]="'tabs.listAria' | t: { name: panelLabel() || ('tabs.document' | t) }">
   @for (tab of tabs(); track tab.id) {
+    @if (editingTabId() === tab.id) {
+      <input
+        #tabNameInput
+        class="tab-bar__rename"
+        [attr.aria-label]="'tabs.nameAria' | t"
+        [value]="editingTabValue()"
+        (input)="editingTabValue.set($any($event.target).value)"
+        (blur)="finishRenamingTab()"
+        (keydown.enter)="$event.preventDefault(); finishRenamingTab()"
+        (keydown.escape)="$event.preventDefault(); editingTabId.set(null)"
+      />
+    } @else {
     <button
       role="tab"
       class="tab-bar__tab"
       [class.tab-bar__tab--active]="tab.id === activeTabId()"
       [attr.aria-selected]="tab.id === activeTabId()"
-      [title]="tab.label"
+      [title]="'tabs.tabTitle' | t: { name: tab.label }"
+      (dblclick)="startRenamingTab(tab)"
+      (keydown.f2)="$event.preventDefault(); startRenamingTab(tab)"
       (click)="tabClicked.emit(tab.id)"
     >
       <span class="tab-bar__label">{{ tab.label }}</span>
@@ -39,18 +53,19 @@
           class="tab-bar__close"
           role="button"
           tabindex="0"
-          [attr.aria-label]="'Close ' + tab.label"
+          [attr.aria-label]="'tabs.closeAria' | t: { name: tab.label }"
           (click)="$event.stopPropagation(); tabClosed.emit(tab.id)"
           (keydown.enter)="$event.stopPropagation(); tabClosed.emit(tab.id)"
           (keydown.space)="$event.stopPropagation(); $event.preventDefault(); tabClosed.emit(tab.id)"
         >×</span>
       }
     </button>
+    }
   }
   <button
     class="tab-bar__add"
-    aria-label="New document tab"
-    title="New tab"
+    [attr.aria-label]="'tabs.newAria' | t"
+    [title]="'tabs.newTitle' | t"
     (click)="addTab.emit()"
   >＋</button>
 </div>

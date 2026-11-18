@@ -14,6 +14,9 @@ export const WORKER_THRESHOLD = 50_000;
 export interface DiffLineDecoration {
   lineNumber: number;
   kind: 'added' | 'removed' | 'modified';
+  /** Present for an inline change; columns are 1-based, end is exclusive. */
+  startColumn?: number;
+  endColumn?: number;
 }
 
 /** Navigation target for a diff hunk. */

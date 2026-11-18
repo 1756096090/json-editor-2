@@ -27,8 +27,8 @@ import type { JsonErrorPosition } from '../../../../core/json-error.utils';
 import type { DiffLineDecoration } from '../../utils/diff-engine.types';
 import { jsonToYaml, yamlToJsonValue } from '../../../tools/json-to-yaml/json-yaml.utils';
 import { jsonToCsv, jsonToXml, type XmlEncoding } from '../../utils/convert.utils';
-import { downloadTextFile } from '../../utils/file-utils';
-import { MatIconModule } from '@angular/material/icon';
+import { copyTextToClipboard, documentFileName, downloadTextFile } from '../../utils/file-utils';
+import type { AppThemeId } from '../../../../core/themes/app-themes';
 
 const XML_ENCODING_OPTIONS: XmlEncoding[] = [
   'UTF-8',
@@ -51,7 +51,6 @@ const XML_ENCODING_OPTIONS: XmlEncoding[] = [
     ConvertedViewComponent,
     JsonPathBarComponent,
     IconComponent,
-    MatIconModule,
   ],
   templateUrl: './editor-panel.component.html',
   styleUrl: './editor-panel.component.css',
@@ -62,9 +61,10 @@ export class EditorPanelComponent {
   // ── Inputs ─────────────────────────────────────────────────────────────────
   readonly rawText = input<string>('');
   readonly panelTitle = input<string>('Editor');
+  readonly documentName = input<string>('document');
   readonly leftMode = input<LeftPanelMode>('text');
   readonly jsonValue = input<unknown>(null);
-  readonly theme = input<'dark' | 'light'>('dark');
+  readonly theme = input<AppThemeId>('light');
   readonly isActive = input<boolean>(false);
   readonly readOnly = input<boolean>(false);
   readonly allowFileDrop = input<boolean>(true);
@@ -179,6 +179,27 @@ export class EditorPanelComponent {
   private textBeforePaste = '';
 
   // ── Handlers ───────────────────────────────────────────────────────────────
+
+  readonly copyText = computed(() => {
+    switch (this.leftMode()) {
+      case 'yaml': return this.yamlText();
+      case 'csv': return this.csvText();
+      case 'xml': return this.xmlText();
+      default: return this.rawText();
+    }
+  });
+
+  async onCopy(): Promise<void> {
+    const text = this.copyText();
+    if (!text) return;
+
+    try {
+      await copyTextToClipboard(text);
+      this.statusMessage.emit('Content copied to clipboard.');
+    } catch {
+      this.statusMessage.emit('Copy failed. Please try again.');
+    }
+  }
 
   onValueChange(value: string): void {
     this.rawTextChange.emit(value);
@@ -323,20 +344,20 @@ export class EditorPanelComponent {
     const mode = this.leftMode();
     if (mode === 'yaml') {
       const config = this.exportConfig.yaml;
-      downloadTextFile(config.fileName, this.yamlText(), config.mimeType);
+      downloadTextFile(documentFileName(this.documentName(), 'yaml'), this.yamlText(), config.mimeType);
       return;
     }
     if (mode === 'csv') {
       const config = this.exportConfig.csv;
-      downloadTextFile(config.fileName, this.csvText(), config.mimeType);
+      downloadTextFile(documentFileName(this.documentName(), 'csv'), this.csvText(), config.mimeType);
       return;
     }
     if (mode === 'xml') {
       const config = this.exportConfig.xml;
-      downloadTextFile(config.fileName, this.xmlText(), config.mimeType, this.xmlEncoding());
+      downloadTextFile(documentFileName(this.documentName(), 'xml'), this.xmlText(), config.mimeType, this.xmlEncoding());
       return;
     }
-    downloadTextFile('output.json', this.rawText(), 'application/json');
+    downloadTextFile(documentFileName(this.documentName(), 'json'), this.rawText(), 'application/json');
   }
 }
 

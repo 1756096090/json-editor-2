@@ -1,15 +1,19 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   ViewEncapsulation,
   computed,
   effect,
   input,
+  inject,
   output,
   signal,
   viewChild
 } from '@angular/core';
+import { TooltipDirective } from '../tooltip/tooltip.directive';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 const MIN_PERCENT = 20;
 const MAX_PERCENT = 80;
@@ -17,6 +21,7 @@ const STORAGE_KEY = 'json-we-format:split-ratio';
 
 @Component({
   selector: 'app-split-pane',
+  imports: [TranslatePipe, TooltipDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
   templateUrl: './split-pane.component.html',
@@ -46,8 +51,8 @@ export class SplitPaneComponent {
   /** Left/top panel size as percentage */
   readonly ratio = signal(50);
 
-  /** Gutter width in px — must match CSS `.split-pane__gutter { width }` */
-  private readonly gutterPx = 6;
+  /** Space reserved between panels, in pixels. */
+  readonly gutterSize = input<number>(6);
 
   readonly leftStyle = computed(() => {
     if (this.hideEnd()) {
@@ -56,7 +61,7 @@ export class SplitPaneComponent {
         : 'height: 100%; width: 100%';
     }
     const r = this.ratio();
-    const g = this.gutterPx;
+    const g = this.gutterSize();
     return this.direction() === 'horizontal'
       ? `width: calc(${r}% - ${g / 2}px); height: 100%`
       : `height: calc(${r}% - ${g / 2}px); width: 100%`;
@@ -64,7 +69,7 @@ export class SplitPaneComponent {
 
   readonly rightStyle = computed(() => {
     const r = this.ratio();
-    const g = this.gutterPx;
+    const g = this.gutterSize();
     return this.direction() === 'horizontal'
       ? `width: calc(${100 - r}% - ${g / 2}px); height: 100%`
       : `height: calc(${100 - r}% - ${g / 2}px); width: 100%`;
@@ -75,30 +80,37 @@ export class SplitPaneComponent {
   );
 
   private dragging = false;
+  private dragRect: DOMRect | null = null;
+  private resizeFrame: number | null = null;
+  private pendingRatio = 50;
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => {
+      if (this.resizeFrame !== null) cancelAnimationFrame(this.resizeFrame);
+    });
     this.restoreRatio();
 
     effect(() => {
       const key = this.storageKey();
       const r = this.ratio();
-      this.saveRatio(key, r);
+      if (!this.dragging) this.saveRatio(key, r);
       this.ratioChange.emit(r);
     });
   }
 
   onGutterPointerDown(event: PointerEvent): void {
+    if (event.button !== 0) return;
     event.preventDefault();
-    const gutter = event.target as HTMLElement;
+    const gutter = event.currentTarget as HTMLElement;
     gutter.setPointerCapture(event.pointerId);
     this.dragging = true;
+    this.dragRect = this.container().nativeElement.getBoundingClientRect();
   }
 
   onGutterPointerMove(event: PointerEvent): void {
     if (!this.dragging) return;
 
-    const containerEl = this.container().nativeElement;
-    const rect = containerEl.getBoundingClientRect();
+    const rect = this.dragRect!;
 
     let percent: number;
     if (this.direction() === 'horizontal') {
@@ -107,13 +119,27 @@ export class SplitPaneComponent {
       percent = ((event.clientY - rect.top) / rect.height) * 100;
     }
 
-    this.ratio.set(Math.min(MAX_PERCENT, Math.max(MIN_PERCENT, percent)));
+    this.pendingRatio = Math.min(MAX_PERCENT, Math.max(MIN_PERCENT, percent));
+    if (this.resizeFrame === null) {
+      this.resizeFrame = requestAnimationFrame(() => {
+        this.resizeFrame = null;
+        this.ratio.set(this.pendingRatio);
+      });
+    }
   }
 
   onGutterPointerUp(event: PointerEvent): void {
+    if (!this.dragging) return;
+    if (this.resizeFrame !== null) {
+      cancelAnimationFrame(this.resizeFrame);
+      this.resizeFrame = null;
+      this.ratio.set(this.pendingRatio);
+    }
     this.dragging = false;
-    const gutter = event.target as HTMLElement;
-    gutter.releasePointerCapture(event.pointerId);
+    this.dragRect = null;
+    this.saveRatio(this.storageKey(), this.ratio());
+    const gutter = event.currentTarget as HTMLElement;
+    if (gutter.hasPointerCapture(event.pointerId)) gutter.releasePointerCapture(event.pointerId);
   }
 
   resetRatio(): void {

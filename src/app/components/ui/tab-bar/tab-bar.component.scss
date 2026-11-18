@@ -84,6 +84,22 @@
   color: var(--color-text);
 }
 
+.tab-bar__rename {
+  flex: 0 0 150px;
+  width: 150px;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background: var(--bg-editor);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  outline: var(--focus-ring);
+  outline-offset: -2px;
+}
+
 .tab-bar__tab--active {
   background: var(--bg-editor, var(--color-surface-raised));
   border-color: var(--color-border);

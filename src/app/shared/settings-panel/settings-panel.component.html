@@ -1,0 +1,141 @@
+<dialog
+  #dialogRef
+  class="settings"
+  aria-labelledby="settings-title"
+  (cancel)="onCancel($event)"
+  (click)="onBackdropClick($event)"
+>
+  <div class="settings__panel">
+    <header class="settings__header">
+      <h2 id="settings-title" class="settings__title">{{ 'settings.title' | t }}</h2>
+      <button
+        type="button"
+        class="settings__close"
+        [attr.aria-label]="'settings.closeAria' | t"
+        (click)="close()"
+      >
+        <app-ui-icon name="close" [size]="18" />
+      </button>
+    </header>
+
+    <div class="settings__body">
+      <section class="settings__section" aria-labelledby="settings-language">
+        <h3 id="settings-language" class="settings__section-title">{{ 'settings.language' | t }}</h3>
+
+        <fieldset class="settings__group">
+          <legend class="settings__legend">{{ 'settings.languageLegend' | t }}</legend>
+          <div class="settings__langs">
+            @for (option of languageOptions; track option.value) {
+              <label
+                class="settings__lang"
+                [class.settings__lang--selected]="settings.language() === option.value"
+              >
+                <input
+                  type="radio"
+                  name="language"
+                  [value]="option.value"
+                  [checked]="settings.language() === option.value"
+                  (change)="selectLanguage(option.value)"
+                />
+                {{ option.labelKey | t }}
+              </label>
+            }
+          </div>
+          <p class="settings__hint settings__hint--after">
+            {{ 'settings.languageAutoDesc' | t: { detected: (detectedLangKey | t) } }}
+          </p>
+        </fieldset>
+      </section>
+
+      <section class="settings__section" aria-labelledby="settings-appearance">
+        <h3 id="settings-appearance" class="settings__section-title">{{ 'settings.appearance' | t }}</h3>
+
+        <!-- Dark palette: remembered while in light mode -->
+        <fieldset class="settings__group">
+          <legend class="settings__legend">{{ 'settings.darkTheme' | t }}</legend>
+          <p class="settings__hint">
+            {{ (settings.themeMode() === 'dark' ? 'settings.darkHintActive' : 'settings.darkHintInactive') | t }}
+          </p>
+          <div class="settings__options">
+            @for (theme of darkThemes; track theme.id) {
+              <label
+                class="theme-option"
+                [class.theme-option--selected]="settings.darkTheme() === theme.id"
+              >
+                <input
+                  type="radio"
+                  name="dark-theme"
+                  class="theme-option__input"
+                  [value]="theme.id"
+                  [checked]="settings.darkTheme() === theme.id"
+                  (change)="selectDarkTheme(theme.id)"
+                />
+                <span class="theme-swatch" [attr.data-theme-preview]="theme.id" aria-hidden="true">
+                  <span class="theme-swatch__bar"><span class="theme-swatch__dot"></span></span>
+                  <span class="theme-swatch__editor">
+                    <span class="theme-swatch__line theme-swatch__line--key"></span>
+                    <span class="theme-swatch__line theme-swatch__line--string"></span>
+                    <span class="theme-swatch__line theme-swatch__line--number"></span>
+                    <span class="theme-swatch__line theme-swatch__line--boolean"></span>
+                  </span>
+                </span>
+                <span class="theme-option__text">
+                  <span class="theme-option__name">{{ theme.label }}</span>
+                  <span class="theme-option__desc">{{ themeDescriptionKey(theme.id) | t }}</span>
+                </span>
+              </label>
+            }
+          </div>
+        </fieldset>
+      </section>
+
+      <section class="settings__section" aria-labelledby="settings-editor">
+        <fieldset class="settings__group">
+          <legend class="settings__legend">{{ 'settings.explainTitle' | t }}</legend>
+          <label class="settings__toggle">
+            <input type="checkbox" [checked]="explainMode.enabled()"
+              (change)="explainMode.enabled.set($any($event.target).checked)" />
+            {{ 'settings.explainToggle' | t }}
+          </label>
+          <p class="settings__hint settings__hint--after">{{ 'settings.explainHint' | t }}</p>
+        </fieldset>
+        <h3 id="settings-editor" class="settings__section-title">{{ 'settings.editor' | t }}</h3>
+
+        <fieldset class="settings__group">
+          <legend class="settings__legend">{{ 'settings.caseTitle' | t }}</legend>
+          <p class="settings__hint">{{ 'settings.caseHint' | t }}</p>
+
+          <label class="settings__check settings__check--primary">
+            <input
+              type="checkbox"
+              name="case-tool"
+              [checked]="settings.caseToolbarEnabled()"
+              (change)="setCaseToolEnabled($any($event.target).checked)"
+            />
+            {{ 'settings.caseToggle' | t }}
+          </label>
+
+          <div class="settings__checks" role="group" [attr.aria-label]="'settings.caseFormatsAria' | t">
+            @for (format of caseTransforms; track format.id) {
+              <label class="settings__check" [class.settings__check--disabled]="!settings.caseToolbarEnabled()">
+                <input
+                  type="checkbox"
+                  name="case-format"
+                  [value]="format.id"
+                  [checked]="settings.caseFormats().includes(format.id)"
+                  [disabled]="!settings.caseToolbarEnabled()"
+                  (change)="setCaseFormat(format.id, $any($event.target).checked)"
+                />
+                <code class="settings__check-code">{{ format.label }}</code>
+              </label>
+            }
+          </div>
+        </fieldset>
+      </section>
+    </div>
+
+    <footer class="settings__footer">
+      <button type="button" class="settings__done" (click)="close()">{{ 'common.done' | t }}</button>
+    </footer>
+  </div>
+</dialog>

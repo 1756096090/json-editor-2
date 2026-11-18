@@ -1,42 +1,44 @@
-<div class="diff-bar" role="toolbar" aria-label="Diff controls">
+<div class="diff-bar" role="toolbar" [attr.aria-label]="'diff.aria' | t">
 
   <!-- Stats -->
   <div class="diff-bar__stats" aria-live="polite" aria-atomic="true">
     @if (computing()) {
-      <span class="diff-bar__computing" aria-label="Computing diff…">…</span>
+      <span class="diff-bar__computing" [attr.aria-label]="'diff.computing' | t">…</span>
     } @else {
       <span class="diff-bar__stat diff-bar__stat--added"
-            aria-label="{{ addedCount() }} lines added">
-        +{{ addedCount() }}
+            [attr.aria-label]="'diff.addedAria' | t: { n: addedCount() }">
+        {{ 'diff.added' | t: { n: addedCount() } }}
       </span>
       <span class="diff-bar__stat diff-bar__stat--removed"
-            aria-label="{{ removedCount() }} lines removed">
-        −{{ removedCount() }}
+            [attr.aria-label]="'diff.removedAria' | t: { n: removedCount() }">
+        {{ 'diff.removed' | t: { n: removedCount() } }}
       </span>
     }
   </div>
 
+  <span class="diff-bar__legend">{{ 'diff.legend' | t }}</span>
+
   <span class="diff-bar__sep" aria-hidden="true"></span>
 
   <!-- Navigation -->
-  <div class="diff-bar__nav" role="group" aria-label="Navigate differences">
+  <div class="diff-bar__nav" role="group" [attr.aria-label]="'diff.navAria' | t">
     <app-ui-button
       size="sm"
       variant="ghost"
-      ariaLabel="Previous difference (Alt+↑)"
-      tooltipText="Previous difference (Alt+↑)"
+      [ariaLabel]="'diff.prevAria' | t"
+      [tooltipText]="'diff.prevAria' | t"
       (pressed)="prevHunk.emit()"
-    >▲ Prev</app-ui-button>
+    >{{ 'diff.prev' | t }}</app-ui-button>
 
     <span class="diff-bar__counter" aria-live="polite">{{ navLabel() }}</span>
 
     <app-ui-button
       size="sm"
       variant="ghost"
-      ariaLabel="Next difference (Alt+↓)"
-      tooltipText="Next difference (Alt+↓)"
+      [ariaLabel]="'diff.nextAria' | t"
+      [tooltipText]="'diff.nextAria' | t"
       (pressed)="nextHunk.emit()"
-    >Next ▼</app-ui-button>
+    >{{ 'diff.next' | t }}</app-ui-button>
   </div>
 
   <span class="diff-bar__sep" aria-hidden="true"></span>
@@ -45,9 +47,9 @@
   <app-ui-button
     size="sm"
     variant="ghost"
-    ariaLabel="Close diff view"
-    tooltipText="Close comparison"
+    [ariaLabel]="'diff.closeAria' | t"
+    [tooltipText]="'diff.closeTooltip' | t"
     (pressed)="closeDiff.emit()"
-  >✕ Close</app-ui-button>
+  >{{ 'diff.close' | t }}</app-ui-button>
 
 </div>

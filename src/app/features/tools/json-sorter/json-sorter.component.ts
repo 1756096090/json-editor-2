@@ -4,24 +4,25 @@ import { JsonWorkbenchComponent } from '../../json-workbench/json-workbench.comp
 import { WorkbenchStore } from '../../json-workbench/state/workbench.store';
 import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
 import { sortJsonKeys } from '../../json-workbench/utils/json-sort.utils';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-json-sorter',
-  imports: [JsonWorkbenchComponent, ToolIntroComponent],
+  imports: [TranslatePipe, JsonWorkbenchComponent, ToolIntroComponent],
   template: `
     <div class="tool-page">
-      <app-tool-intro title="JSON Sorter">
-        <span slot="subtitle">Sort all object keys alphabetically across the entire JSON tree.
-          Nested objects are sorted recursively. Paste your JSON on the left panel, then click Sort.</span>
+      <app-tool-intro [title]="'tools.sorter.title' | t">
+        <span slot="subtitle">{{ 'tools.sorter.subtitle' | t }}</span>
         <div slot="actions" class="tool-page__actions">
           <button
             type="button"
             class="tool-page__action-btn"
             (click)="onSort()"
             [disabled]="!canSort()"
-            aria-label="Sort JSON keys alphabetically"
+            [attr.aria-label]="'tools.sorter.aria' | t"
           >
-            ⇅ Sort Keys
+            {{ 'tools.sorter.button' | t }}
           </button>
           @if (lastStatus()) {
             <span class="tool-page__action-status" aria-live="polite">{{ lastStatus() }}</span>
@@ -35,6 +36,7 @@ import { sortJsonKeys } from '../../json-workbench/utils/json-sort.utils';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class JsonSorterComponent {
+  protected readonly i18n = inject(I18nService);
   readonly store = inject(WorkbenchStore);
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
@@ -61,6 +63,6 @@ export class JsonSorterComponent {
     const formatted = JSON.stringify(sorted, null, 2);
     this.store.setRawText(formatted);
 
-    this.lastStatus.set('Keys sorted alphabetically.');
+    this.lastStatus.set(this.i18n.t('tools.sorter.done'));
   }
 }

@@ -1,0 +1,42 @@
+<details class="guide">
+  <summary>
+    <app-ui-icon name="bolt" [size]="14" />
+    <span>Menos tareas manuales. Más tiempo para desarrollar.</span>
+    <span class="guide__prompt">Explora lo que puedes hacer <span aria-hidden="true">⌄</span></span>
+  </summary>
+  <div class="guide__resize" role="separator" tabindex="0" aria-orientation="horizontal"
+    aria-label="Cambiar altura de la ayuda: arrastra o usa las flechas arriba y abajo"
+    aria-valuemin="80" [attr.aria-valuenow]="panelHeight()"
+    title="Arrastra hacia arriba para ampliar y hacia abajo para reducir. Doble clic para restablecer."
+    (pointerdown)="startResize($event)" (pointermove)="resize($event)"
+    (pointerup)="stopResize($event)" (pointercancel)="stopResize($event)"
+    (lostpointercapture)="stopResize($event)" (keydown)="resizeWithKeyboard($event)"
+    (dblclick)="panelHeight.set(180)">
+    <span aria-hidden="true"></span>
+  </div>
+  <div #guideContent class="guide__content" [style.height.px]="panelHeight()">
+    <div class="guide__intro">
+      <div>
+        <span class="guide__eyebrow">TU FLUJO DE TRABAJO, EN UN LUGAR</span>
+        <h2>Del dato al código, con menos pasos.</h2>
+        <p>Inspecciona una respuesta, prepara un payload o compara configuraciones sin salir del editor.</p>
+      </div>
+      <div class="guide__shortcuts" aria-label="Atajos del editor">
+        <span><kbd>Ctrl Shift F</kbd> Formatear</span>
+        <span><kbd>Ctrl M</kbd> Compactar</span>
+        <span><kbd>Ctrl F</kbd> Buscar</span>
+      </div>
+    </div>
+    <div class="guide__grid">
+      @for (feature of features; track feature.title) {
+        <article>
+          <app-ui-icon [name]="feature.icon" [size]="16" />
+          <h3>{{ feature.title }}</h3>
+          <span class="guide__tools">{{ feature.tools }}</span>
+          <p>{{ feature.benefit }}</p>
+        </article>
+      }
+    </div>
+    <p class="guide__example"><strong>Un flujo práctico:</strong> importa una respuesta → dale formato → limpia los datos → compara el resultado → copia a tu proyecto.</p>
+  </div>
+</details>

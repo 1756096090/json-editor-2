@@ -37,19 +37,13 @@
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
   display: grid;
-  grid-template-columns: auto auto 1fr auto;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 4px;
+  padding: 4px 6px;
   height: auto;
-  min-height: 46px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  /* Keep horizontal scroll but hide the gray scrollbar track */
-  scrollbar-width: none;
-}
-
-.editor-panel__header::-webkit-scrollbar {
-  display: none;
+  min-height: 38px;
+  min-width: 0;
+  flex-shrink: 0;
 }
 
 .editor-panel__body {
@@ -93,19 +87,43 @@
   flex-wrap: nowrap;
   gap: var(--space-1);
   min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: var(--space-1) 0;
-  scrollbar-width: none;
+  overflow: visible;
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
 }
 
 .editor-panel__actions::-webkit-scrollbar {
-  display: none;
+  height: 3px;
+}
+
+.editor-panel__actions::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 3px;
+}
+
+.editor-panel__header .ui-btn--sm {
+  font-size: 10px;
+  min-height: 26px;
+  padding: 0 5px;
+  gap: 4px;
+}
+
+.editor-panel__header app-ui-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.editor-panel__header .toolbar-group {
+  gap: 2px;
+}
+
+.editor-panel__header .toolbar-divider {
+  margin: 0 4px;
 }
 
 .editor-panel__header-spacer {
-  flex: 1;
-  min-width: 0;
+  display: none;
 }
 
 .editor-panel__header-end {
@@ -135,15 +153,15 @@
   color: var(--text-secondary);
   cursor: pointer;
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  font-size: 10px;
   font-weight: var(--weight-semibold);
-  height: var(--control-height-sm);
+  height: 26px;
   letter-spacing: 0.4px;
   margin: 0;
   padding: 0 24px 0 var(--space-2);
   text-transform: uppercase;
   transition: var(--transition-colors);
-  min-width: 82px;
+  min-width: 68px;
 }
 
 .editor-panel__encoding-select {

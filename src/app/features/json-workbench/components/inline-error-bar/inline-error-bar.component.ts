@@ -6,12 +6,14 @@
  */
 
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
+import { IconComponent } from '../../../../components/ui/icon/icon.component';
+import { TooltipDirective } from '../../../../components/ui/tooltip/tooltip.directive';
 import type { JsonErrorPosition } from '../../../../core/json-error.utils';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-inline-error-bar',
-  imports: [MatIconModule],
+  imports: [TranslatePipe, IconComponent, TooltipDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './inline-error-bar.component.html',
   styleUrl: './inline-error-bar.component.css',

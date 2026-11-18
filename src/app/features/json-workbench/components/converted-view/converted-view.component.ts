@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { EditorTextComponent } from '../editor-text/editor-text.component';
+import type { AppThemeId } from '../../../../core/themes/app-themes';
 import { EmptyStateComponent } from '../../../../components/ui/empty-state/empty-state.component';
 
 @Component({
@@ -13,7 +14,7 @@ export class ConvertedViewComponent {
   readonly content = input<string>('');
   readonly hasValidInput = input<boolean>(false);
   readonly language = input<string>('plaintext');
-  readonly theme = input<'dark' | 'light'>('dark');
+  readonly theme = input<AppThemeId>('light');
   readonly readOnly = input<boolean>(true);
   readonly ariaLabel = input<string>('Converted output (read-only)');
   readonly emptyTitle = input<string>('No valid JSON to convert');

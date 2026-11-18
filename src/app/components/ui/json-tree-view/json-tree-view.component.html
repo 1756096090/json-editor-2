@@ -1,10 +1,10 @@
 <div class="tree-view">
   <div class="tree-view__toolbar">
-    <button type="button" class="tree-view__action" (click)="expandAll()" aria-label="Expand all nodes">
-      Expand all
+    <button type="button" class="tree-view__action" (click)="expandAll()" [attr.aria-label]="'tree.expandAllAria' | t">
+      {{ 'tree.expandAll' | t }}
     </button>
-    <button type="button" class="tree-view__action" (click)="collapseAll()" aria-label="Collapse all nodes">
-      Collapse all
+    <button type="button" class="tree-view__action" (click)="collapseAll()" [attr.aria-label]="'tree.collapseAllAria' | t">
+      {{ 'tree.collapseAll' | t }}
     </button>
   </div>
 
@@ -27,7 +27,7 @@
         type="button"
         class="tree-node__toggle"
         (click)="toggleNode(node.path)"
-        [attr.aria-label]="isCollapsed(node.path) ? 'Expand ' + node.key : 'Collapse ' + node.key"
+        [attr.aria-label]="(isCollapsed(node.path) ? 'tree.expandNode' : 'tree.collapseNode') | t: { name: node.key }"
       >
         <span class="tree-node__arrow" [class.tree-node__arrow--collapsed]="isCollapsed(node.path)">&#9660;</span>
       </button>

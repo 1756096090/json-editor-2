@@ -2,24 +2,24 @@
   #dialogRef
   class="cdlg"
   aria-modal="true"
-  [attr.aria-label]="title()"
+  [attr.aria-label]="title() ?? ('confirm.defaultTitle' | t)"
   (click)="onBackdropClick($event)"
 >
   <div class="cdlg__panel" role="document">
     <!-- Header -->
     <header class="cdlg__header">
-      <h2 class="cdlg__title" id="cdlg-title">{{ title() }}</h2>
+      <h2 class="cdlg__title" id="cdlg-title">{{ title() ?? ('confirm.defaultTitle' | t) }}</h2>
       <button
         type="button"
         class="cdlg__close"
-        aria-label="Cerrar diálogo"
+        [attr.aria-label]="'confirm.closeAria' | t"
         (click)="cancel()"
       >✕</button>
     </header>
 
     <!-- Body -->
     <div class="cdlg__body">
-      <p class="cdlg__message">{{ message() }}</p>
+      <p class="cdlg__message">{{ message() ?? ('confirm.defaultMessage' | t) }}</p>
 
       @if (warningText()) {
         <p class="cdlg__warning" role="alert">
@@ -34,7 +34,7 @@
             [checked]="dontAskAgain()"
             (change)="toggleDontAsk()"
           />
-          No volver a preguntar
+          {{ 'confirm.dontAsk' | t }}
         </label>
       }
     </div>
@@ -45,7 +45,7 @@
         type="button"
         class="cdlg__btn cdlg__btn--cancel"
         (click)="cancel()"
-      >{{ cancelText() }}</button>
+      >{{ cancelText() ?? ('common.cancel' | t) }}</button>
 
       <button
         #confirmBtnRef
@@ -54,7 +54,7 @@
         [disabled]="confirmDisabled()"
         [attr.aria-disabled]="confirmDisabled()"
         (click)="confirm()"
-      >{{ confirmText() }}</button>
+      >{{ confirmText() ?? ('confirm.defaultTitle' | t) }}</button>
     </footer>
   </div>
 </dialog>

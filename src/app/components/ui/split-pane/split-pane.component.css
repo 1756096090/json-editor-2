@@ -69,7 +69,7 @@
 
 .split-pane__gutter:hover,
 .split-pane__gutter:active {
-  background: var(--accent-primary);
+  background: var(--color-accent-subtle);
 }
 
 .split-pane__gutter:focus-visible {

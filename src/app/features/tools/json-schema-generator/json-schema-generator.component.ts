@@ -4,39 +4,19 @@ import { JsonWorkbenchComponent } from '../../json-workbench/json-workbench.comp
 import { WorkbenchStore } from '../../json-workbench/state/workbench.store';
 import { generateSchema } from './schema-generator';
 import { ToolIntroComponent } from '../tool-intro/tool-intro.component';
+import { IconComponent } from '../../../components/ui/icon/icon.component';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-json-schema-generator',
-  imports: [JsonWorkbenchComponent, ToolIntroComponent],
-  template: `
-    <div class="tool-page">
-      <app-tool-intro title="Auto Schema Generator">
-        <span slot="subtitle">Paste any JSON in the left panel and click Generate — a JSON Schema
-          (draft-07) that reflects your data structure will appear in the
-          right panel. All properties are inferred as required and typed accurately.</span>
-        <div slot="actions" class="tool-page__actions">
-          <button
-            type="button"
-            class="tool-page__action-btn"
-            (click)="onGenerate()"
-            [disabled]="!store.isValidJson()"
-            aria-label="Generate JSON Schema from the current JSON"
-          >
-            ⬡ Generate Schema
-          </button>
-          @if (lastStatus()) {
-            <span class="tool-page__action-status" aria-live="polite">{{ lastStatus() }}</span>
-          }
-        </div>
-      </app-tool-intro>
-
-      <app-json-workbench />
-    </div>
-  `,
+  imports: [TranslatePipe, JsonWorkbenchComponent, ToolIntroComponent, IconComponent],
+  templateUrl: './json-schema-generator.component.html',
   styleUrl: '../tool-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class JsonSchemaGeneratorComponent {
+  protected readonly i18n = inject(I18nService);
   readonly store = inject(WorkbenchStore);
   readonly lastStatus = signal('');
 
@@ -57,10 +37,10 @@ export class JsonSchemaGeneratorComponent {
       const schema = generateSchema(json);
       const text = JSON.stringify(schema, null, 2);
       this.store.setBaselineText(text);
-      this.lastStatus.set('Schema generated in right panel.');
-      this.store.setStatusMessage('JSON Schema generated from current JSON.');
+      this.lastStatus.set(this.i18n.t('tools.schemaGen.done'));
+      this.store.setStatusMessage(this.i18n.t('tools.schemaGen.doneStatus'));
     } catch {
-      this.lastStatus.set('Failed to generate schema.');
+      this.lastStatus.set(this.i18n.t('tools.schemaGen.failed'));
     }
   }
 }

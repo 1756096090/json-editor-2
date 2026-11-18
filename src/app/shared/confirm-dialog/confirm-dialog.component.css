@@ -10,7 +10,7 @@
 }
 
 .cdlg::backdrop {
-  background: rgb(15 17 23 / 0.62);
+  background: var(--color-backdrop);
   backdrop-filter: blur(2px);
 }
 
@@ -19,7 +19,7 @@
   background: var(--color-surface-overlay);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg, 0 16px 40px rgba(0, 0, 0, 0.35));
+  box-shadow: var(--shadow-lg);
   color: var(--color-text);
   display: flex;
   flex-direction: column;
@@ -74,10 +74,10 @@
 
 .cdlg__warning {
   align-items: flex-start;
-  background: color-mix(in srgb, var(--color-warning, #f59e0b) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-warning, #f59e0b) 40%, transparent);
+  background: var(--color-warning-subtle);
+  border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
   border-radius: var(--radius-md);
-  color: var(--color-warning, #f59e0b);
+  color: var(--color-warning);
   display: flex;
   font-size: var(--text-sm, 0.875rem);
   gap: var(--space-2);
@@ -95,7 +95,7 @@
 }
 
 .cdlg__dontask input[type='checkbox'] {
-  accent-color: var(--color-accent, #569cd6);
+  accent-color: var(--color-accent);
   height: 1rem;
   width: 1rem;
 }

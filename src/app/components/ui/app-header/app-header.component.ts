@@ -7,29 +7,34 @@ import {
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { SettingsStore } from '../../../features/settings/settings.store';
+import { LogoMarkComponent } from '../logo-mark/logo-mark.component';
+import { IconComponent } from '../icon/icon.component';
+import { SettingsPanelComponent } from '../../../shared/settings-panel/settings-panel.component';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import type { TranslationKey } from '../../../core/i18n/en';
 
 interface NavTool {
-  label: string;
+  labelKey: TranslationKey;
   route: string;
-  badge?: string;
+  badge?: 'new';
 }
 
 const TOOLS_NAV: NavTool[] = [
-  { label: 'JSON Formatter', route: '/tools/json-formatter', badge: 'most used' },
-  { label: 'JSON Validator', route: '/tools/json-validator', badge: 'most used' },
-  { label: 'JSON Viewer', route: '/tools/json-viewer' },
-  { label: 'JSON Compare', route: '/tools/json-compare', badge: 'new' },
-  { label: 'JSON Minifier', route: '/tools/json-minifier' },
-  { label: 'JSON to YAML', route: '/tools/json-to-yaml' },
-  { label: 'JSON to CSV', route: '/tools/json-to-csv' },
-  { label: 'JSON to XML', route: '/tools/json-to-xml' },
-  { label: 'JSON Cleaner', route: '/tools/json-cleaner', badge: 'new' },
-  { label: 'JSON Sorter', route: '/tools/json-sorter', badge: 'new' },
+  { labelKey: 'tool.editor.name', route: '/workbench' },
+  { labelKey: 'tool.pathTester.name', route: '/tools/json-path-tester', badge: 'new' },
+  { labelKey: 'tool.schemaValidator.name', route: '/tools/json-schema-validator' },
 ];
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [
+    RouterLink,
+    RouterLinkActive,
+    LogoMarkComponent,
+    IconComponent,
+    SettingsPanelComponent,
+    TranslatePipe,
+  ],
   templateUrl: './app-header.component.html',
   styleUrl: './app-header.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,6 +49,7 @@ export class AppHeaderComponent {
 
   readonly tools = TOOLS_NAV;
   readonly toolsOpen = signal(false);
+  readonly settingsOpen = signal(false);
   readonly isDark = computed(() => this.settings.themeMode() === 'dark');
 
   toggleTools(): void {
@@ -56,6 +62,15 @@ export class AppHeaderComponent {
 
   toggleTheme(): void {
     this.settings.toggleThemeMode();
+  }
+
+  openSettings(): void {
+    this.closeTools();
+    this.settingsOpen.set(true);
+  }
+
+  closeSettings(): void {
+    this.settingsOpen.set(false);
   }
 
   onDocumentClick(event: MouseEvent): void {

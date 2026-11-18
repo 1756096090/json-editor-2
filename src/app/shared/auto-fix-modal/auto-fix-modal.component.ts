@@ -10,6 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { FixLabel } from '../../features/json-workbench/utils/auto-fix-json';
+import type { TranslationKey } from '../../core/i18n/en';
 
 export type AutoFixModalMode = 'accept' | 'failure';
 export interface AutoFixModalResult {
@@ -17,27 +18,17 @@ export interface AutoFixModalResult {
   action: 'accept' | 'keep' | 'revert';
 }
 
-const FIX_LABELS: Record<FixLabel, string> = {
-  'trim':            'Espacios extra',
-  'bom':             'Caracteres ocultos',
-  'code-fence':      'Bloque de código Markdown',
-  'smart-quotes':    'Comillas tipográficas',
-  'comments':        'Comentarios eliminados',
-  'fix-quotes':      'Comillas sin cerrar',
-  'trailing-commas': 'Comas extra',
-  'single-quotes':   'Comillas simples',
-  'unquoted-keys':   'Claves sin comillas',
-  'insert-commas':   'Comas faltantes',
-  'close-brackets':  'Corchetes sin cerrar',
-  'extract-block':   'Bloque JSON extraído',
-  'combined':        'Correcciones combinadas',
-};
+/** Translation key for each applied fix. */
+function fixLabelKey(label: FixLabel): TranslationKey {
+  return `fix.${label}`;
+}
 
-import { MatIconModule } from '@angular/material/icon';
+import { IconComponent } from '../../components/ui/icon/icon.component';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-auto-fix-modal',
-  imports: [MatIconModule],
+  imports: [TranslatePipe, IconComponent],
   templateUrl: './auto-fix-modal.component.html',
   styleUrl: './auto-fix-modal.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -59,7 +50,7 @@ export class AutoFixModalComponent implements OnInit, OnDestroy {
 
   private readonly dialogRef = viewChild.required<ElementRef<HTMLDialogElement>>('dialogRef');
 
-  protected readonly fixLabelNames = FIX_LABELS;
+  protected readonly fixLabelKey = fixLabelKey;
 
   // ── Lifecycle ───────────────────────────────────────────────────────────────
 

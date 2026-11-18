@@ -1,58 +1,77 @@
-<dialog #dialogRef class="clean-panel" aria-labelledby="clean-panel-title" (cancel)="close()">
+<dialog #dialogRef class="clean-panel" aria-labelledby="clean-panel-title" aria-describedby="clean-panel-note" (cancel)="close()">
   <div class="clean-panel__inner">
     <header class="clean-panel__header">
       <h2 id="clean-panel-title" class="clean-panel__title">
         <app-ui-icon name="clean" [size]="18" />
-        Clean JSON
+        {{ 'clean.title' | t }}
       </h2>
       <button
         class="clean-panel__close"
         type="button"
-        aria-label="Close clean panel"
+        [attr.aria-label]="'clean.closeAria' | t"
         (click)="close()"
       >
         <app-ui-icon name="close" [size]="16" />
       </button>
     </header>
 
-    <p class="clean-panel__note">Choose what to strip. Cleaning runs deeply through nested objects and arrays.</p>
+    <p id="clean-panel-note" class="clean-panel__note">{{ 'clean.note' | t }}</p>
+    <div class="clean-panel__workspace">
+    <aside class="clean-panel__settings" [attr.aria-label]="'clean.optionsAria' | t">
+    <div class="clean-panel__selection">
+      <span>{{ 'clean.remove' | t }}</span>
+      <button type="button" (click)="selectAll(true)">{{ 'clean.selectAll' | t }}</button>
+      <button type="button" (click)="selectAll(false)">{{ 'clean.clear' | t }}</button>
+    </div>
 
     <fieldset class="clean-panel__options">
-      <legend class="sr-only">Cleaning options</legend>
+      <legend class="sr-only">{{ 'clean.optionsAria' | t }}</legend>
       @for (opt of toggles; track opt.key) {
-        <label class="clean-panel__option">
+        <label class="clean-panel__option" [class.clean-panel__option--selected]="isChecked(opt.key)">
           <input
             type="checkbox"
             [checked]="isChecked(opt.key)"
             (change)="toggle(opt.key)"
           />
           <span class="clean-panel__option-text">
-            <span class="clean-panel__option-label">{{ opt.label }}</span>
-            <span class="clean-panel__option-hint">{{ opt.hint }}</span>
+            <span class="clean-panel__option-label">{{ opt.labelKey | t }}</span>
+            <span class="clean-panel__option-hint">{{ opt.hintKey | t }}</span>
           </span>
+          <code class="clean-panel__sample">{{ opt.sample }}</code>
         </label>
       }
     </fieldset>
 
-    <p class="clean-panel__preview" role="status">
+    <p class="clean-panel__preview" [class.clean-panel__preview--changes]="hasChanges()" role="status">
       @if (!anySelected()) {
         <app-ui-icon name="warning" [size]="14" />
-        Select at least one option.
+        {{ 'clean.selectOne' | t }}
       } @else if (previewRemoved() > 0) {
         <app-ui-icon name="check" [size]="14" />
-        {{ previewRemoved() }} {{ previewRemoved() === 1 ? 'value' : 'values' }} will be removed.
+        {{ (previewRemoved() === 1 ? 'clean.willRemoveOne' : 'clean.willRemoveMany') | t: { n: previewRemoved() } }}
       } @else {
         <app-ui-icon name="check" [size]="14" />
-        Nothing to remove with these options.
+        {{ 'clean.alreadyClean' | t }}
       }
     </p>
+    <p class="clean-panel__note">{{ 'clean.keepsPrefix' | t }} <code>0</code>, <code>false</code> {{ 'clean.keepsSuffix' | t }}</p>
+    </aside>
+    <section class="clean-panel__result" [attr.aria-label]="'clean.resultAria' | t">
+      <header class="clean-panel__result-header">
+        <strong>{{ 'clean.resultTitle' | t }}</strong>
+        <span>{{ 'clean.resultHint' | t }}</span>
+      </header>
+      <app-editor-text [value]="previewText()" [readOnly]="true" [theme]="settings.activeTheme()"
+        [ariaLabel]="'clean.resultAria' | t" />
+    </section>
+    </div>
 
     <footer class="clean-panel__footer">
-      <app-ui-button variant="ghost" (pressed)="close()">Cancel</app-ui-button>
+      <app-ui-button variant="ghost" (pressed)="close()">{{ 'common.cancel' | t }}</app-ui-button>
       <span class="clean-panel__footer-spacer"></span>
-      <app-ui-button variant="accent" [disabled]="!anySelected()" (pressed)="apply()">
+      <app-ui-button variant="accent" [disabled]="!anySelected() || !hasChanges()" (pressed)="apply()">
         <app-ui-icon name="clean" [size]="14" />
-        Clean
+        {{ 'clean.apply' | t }}
       </app-ui-button>
     </footer>
   </div>

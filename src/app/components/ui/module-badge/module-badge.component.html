@@ -1,5 +1,3 @@
-@if (label()) {
-  <span class="module-badge" [class]="badgeClass()" [attr.aria-label]="label()">
-    {{ label() }}
-  </span>
+@if (labelKey(); as key) {
+  <span class="module-badge" [class]="badgeClass()">{{ key | t }}</span>
 }

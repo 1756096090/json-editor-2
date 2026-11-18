@@ -185,3 +185,9 @@ function pickJsonFile(): Promise<File> {
     input.click();
   });
 }
+/** Use a document label as a filename with the selected format's extension. */
+export function documentFileName(label: string, extension: string): string {
+  const base = label.trim().replace(/\.(json|ya?ml|csv|xml)$/i, '')
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_').replace(/[. ]+$/g, '') || 'document';
+  return `${base}.${extension}`;
+}

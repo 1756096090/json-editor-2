@@ -1,7 +1,11 @@
+:host { display: block; flex-shrink: 0; }
+
 .error-bar {
   align-items: center;
   background: color-mix(in srgb, var(--color-danger) 12%, var(--color-panel-bg));
-  border-top: 2px solid var(--color-danger);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-danger) 35%, transparent);
+  border-left: 3px solid var(--color-danger);
+  flex-wrap: wrap;
   box-sizing: border-box;
   display: flex;
   font-size: var(--text-sm, 0.78rem);
@@ -21,10 +25,12 @@
   flex: 1;
   font-family: var(--font-mono, monospace);
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  font-size: 11px;
 }
+
+.error-bar__message strong { display: block; font-family: var(--font-sans); margin-bottom: 3px; }
 
 .error-bar__pos {
   color: var(--color-text-muted);
@@ -64,9 +70,9 @@
 }
 
 .error-bar__btn--repair {
-  background: var(--color-warning-subtle, rgba(244, 185, 66, 0.12));
-  border-color: var(--color-warning, #f4b942);
-  color: var(--color-warning, #f4b942);
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .error-bar__btn--repair:hover {

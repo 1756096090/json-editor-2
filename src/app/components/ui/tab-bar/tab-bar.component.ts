@@ -10,11 +10,12 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Tab } from '../../../core/tabs.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-tab-bar',
   standalone: true,
-  imports: [FormsModule],
+  imports: [TranslatePipe, FormsModule],
   templateUrl: './tab-bar.component.html',
   styleUrl: './tab-bar.component.scss',
   changeDetection: ChangeDetectionStrategy.Default,
@@ -25,6 +26,25 @@ export class TabBarComponent {
   readonly panelLabel = input<string>('');
   readonly tabClicked = output<string>();
   readonly tabClosed = output<string>();
+  readonly tabRenamed = output<{ id: string; label: string }>();
+  readonly editingTabId = signal<string | null>(null);
+  readonly editingTabValue = signal('');
+  private readonly tabNameInput = viewChild<ElementRef<HTMLInputElement>>('tabNameInput');
+
+  startRenamingTab(tab: Tab): void {
+    this.editingTabValue.set(tab.label);
+    this.editingTabId.set(tab.id);
+    this.cdr.detectChanges();
+    this.tabNameInput()?.nativeElement.focus();
+    this.tabNameInput()?.nativeElement.select();
+  }
+
+  finishRenamingTab(): void {
+    const id = this.editingTabId();
+    const label = this.editingTabValue().trim();
+    this.editingTabId.set(null);
+    if (id && label) this.tabRenamed.emit({ id, label });
+  }
   readonly addTab = output<void>();
   readonly panelLabelChanged = output<string>();
 

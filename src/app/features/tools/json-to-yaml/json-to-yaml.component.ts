@@ -10,15 +10,18 @@ import { EditorTextComponent } from '../../json-workbench/components/editor-text
 import { ButtonComponent } from '../../../components/ui/button/button.component';
 import { SettingsStore } from '../../settings/settings.store';
 import { convertJsonToYaml } from './json-yaml.utils';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-json-to-yaml',
-  imports: [EditorTextComponent, ButtonComponent],
+  imports: [TranslatePipe, EditorTextComponent, ButtonComponent],
   templateUrl: './json-to-yaml.component.html',
   styleUrls: ['../tool-page.css', './json-to-yaml.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class JsonToYamlComponent {
+  protected readonly i18n = inject(I18nService);
   private readonly settings = inject(SettingsStore);
 
   readonly jsonInput = signal('{\n  "name": "json-we-format-angular",\n  "version": 1,\n  "active": true\n}');
@@ -26,9 +29,7 @@ export class JsonToYamlComponent {
   readonly errorMsg = signal('');
   readonly status = signal('');
 
-  readonly monacoTheme = computed(() =>
-    this.settings.themeMode() === 'dark' ? 'dark' : 'light'
-  );
+  readonly monacoTheme = computed(() => this.settings.activeTheme());
 
   constructor() {
     inject(Title).setTitle('JSON to YAML Converter — Free Online Tool | JSON Hunt');
@@ -50,12 +51,12 @@ export class JsonToYamlComponent {
   convert(): void {
     const { yaml, error } = convertJsonToYaml(this.jsonInput());
     if (error) {
-      this.errorMsg.set(`Invalid JSON: ${error}`);
+      this.errorMsg.set(this.i18n.t('yaml.invalid', { error }));
       this.yamlOutput.set('');
     } else {
       this.yamlOutput.set(yaml);
       this.errorMsg.set('');
-      this.status.set(yaml ? 'Converted successfully' : '');
+      this.status.set(yaml ? this.i18n.t('yaml.converted') : '');
     }
   }
 
@@ -63,7 +64,7 @@ export class JsonToYamlComponent {
     const yaml = this.yamlOutput();
     if (!yaml) return;
     navigator.clipboard.writeText(yaml).then(() => {
-      this.status.set('YAML copied!');
+      this.status.set(this.i18n.t('yaml.copied'));
       setTimeout(() => this.status.set(''), 2000);
     });
   }

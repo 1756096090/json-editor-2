@@ -1,15 +1,15 @@
 <div class="tool-page">
-  <app-tool-intro title="JSON Compare">
+  <app-tool-intro [title]="'tools.compare.title' | t">
     <span slot="subtitle">
-      Paste the <strong>original</strong> JSON in the left panel and the
-      <strong>modified</strong> JSON in the right panel. Press
-      <kbd>⇄</kbd> (or <kbd>Ctrl+Shift+D</kbd>) to enable diff — every
-      addition, deletion and change is highlighted line&#8209;by&#8209;line.
-      Use <kbd>Alt+↑</kbd>&#8202;/&#8202;<kbd>Alt+↓</kbd> to jump between hunks.
-      <ul class="tool-page__legend" aria-label="Diff legend">
-        <li><span class="legend-dot legend-dot--added"></span> Added</li>
-        <li><span class="legend-dot legend-dot--removed"></span> Removed</li>
-        <li><span class="legend-dot legend-dot--changed"></span> Changed</li>
+      {{ 'tools.compare.s1' | t }} <strong>{{ 'tools.compare.original' | t }}</strong>
+      {{ 'tools.compare.s2' | t }} <strong>{{ 'tools.compare.modified' | t }}</strong>
+      {{ 'tools.compare.s3' | t }} <kbd>⇄</kbd> {{ 'tools.compare.s4' | t }}
+      <kbd>Ctrl+Shift+D</kbd>{{ 'tools.compare.s5' | t }}
+      <kbd>Alt+↑</kbd>&#8202;/&#8202;<kbd>Alt+↓</kbd> {{ 'tools.compare.s6' | t }}
+      <ul class="tool-page__legend" [attr.aria-label]="'tools.compare.legendAria' | t">
+        <li><span class="legend-dot legend-dot--added"></span> {{ 'tools.compare.added' | t }}</li>
+        <li><span class="legend-dot legend-dot--removed"></span> {{ 'tools.compare.removed' | t }}</li>
+        <li><span class="legend-dot legend-dot--changed"></span> {{ 'tools.compare.changed' | t }}</li>
       </ul>
     </span>
   </app-tool-intro>

@@ -3,14 +3,22 @@
  * Comprehensive JSON error analysis and location reporting
  */
 
+import type { TranslationKey } from '../../../core/i18n/en';
+
+type TextParams = Record<string, string | number>;
+
 export interface JsonErrorInfo {
   line: number;
   column: number;
   charIndex: number;
   errorType: string;
+  /** English text; `messageKey` (when set) translates it. Parser messages have no key. */
   message: string;
+  messageKey?: TranslationKey;
   context: string; // surrounding code snippet
   suggestion: string;
+  suggestionKey: TranslationKey;
+  suggestionParams?: TextParams;
   severity: 'error' | 'warning';
 }
 
@@ -18,6 +26,8 @@ export interface ErrorFinderResult {
   isValid: boolean;
   errors: JsonErrorInfo[];
   summary: string;
+  summaryKey: TranslationKey;
+  summaryParams?: TextParams;
 }
 
 /**
@@ -36,11 +46,14 @@ export function findJsonErrors(input: string): ErrorFinderResult {
         charIndex: 0,
         errorType: 'EMPTY',
         message: 'JSON input is empty',
+        messageKey: 'errfind.empty.msg',
         context: '',
         suggestion: 'Paste valid JSON to analyze',
+        suggestionKey: 'errfind.empty.fix',
         severity: 'error'
       }],
-      summary: '1 error found: Empty input'
+      summary: '1 error found: Empty input',
+      summaryKey: 'errfind.summary.empty'
     };
   }
 
@@ -50,7 +63,8 @@ export function findJsonErrors(input: string): ErrorFinderResult {
     return {
       isValid: true,
       errors: [],
-      summary: 'Valid JSON ✓'
+      summary: 'Valid JSON ✓',
+      summaryKey: 'errfind.summary.valid'
     };
   } catch (e) {
     const error = e as SyntaxError;
@@ -68,7 +82,7 @@ export function findJsonErrors(input: string): ErrorFinderResult {
       errorType: categorizeError(trimmed, position, error.message),
       message: error.message,
       context,
-      suggestion: suggestFix(trimmed, position, error.message),
+      ...suggestFix(trimmed, position, error.message),
       severity: 'error'
     };
 
@@ -79,12 +93,16 @@ export function findJsonErrors(input: string): ErrorFinderResult {
   const warnings = performJsonLinting(trimmed);
   errors.push(...warnings);
 
-  const summary = `${errors.filter(e => e.severity === 'error').length} error(s), ${errors.filter(e => e.severity === 'warning').length} warning(s)`;
+  const errorCount = errors.filter(e => e.severity === 'error').length;
+  const warningCount = errors.filter(e => e.severity === 'warning').length;
+  const summary = `${errorCount} error(s), ${warningCount} warning(s)`;
 
   return {
-    isValid: errors.filter(e => e.severity === 'error').length === 0,
+    isValid: errorCount === 0,
     errors,
-    summary
+    summary,
+    summaryKey: 'errfind.summary.counts',
+    summaryParams: { errors: errorCount, warnings: warningCount }
   };
 }
 
@@ -142,30 +160,38 @@ function categorizeError(text: string, position: number, message: string): strin
 /**
  * Suggest fixes for common errors
  */
-function suggestFix(text: string, position: number, message: string): string {
+function suggestFix(
+  text: string,
+  position: number,
+  message: string
+): Pick<JsonErrorInfo, 'suggestion' | 'suggestionKey' | 'suggestionParams'> {
   const char = text[position] || 'EOF';
 
   if (message.includes('Trailing comma')) {
-    return 'Remove the comma before the closing bracket/brace';
+    return { suggestion: 'Remove the comma before the closing bracket/brace', suggestionKey: 'errfind.fix.trailingComma' };
   }
 
   if (char === ',') {
-    return 'Unexpected comma. Check for: trailing commas, missing values, or syntax errors nearby';
+    return { suggestion: 'Unexpected comma. Check for: trailing commas, missing values, or syntax errors nearby', suggestionKey: 'errfind.fix.comma' };
   }
 
   if (message.includes('Unexpected end of JSON input')) {
-    return 'JSON is incomplete. Check for: unclosed braces, brackets, or strings';
+    return { suggestion: 'JSON is incomplete. Check for: unclosed braces, brackets, or strings', suggestionKey: 'errfind.fix.incomplete' };
   }
 
   if (char === undefined && message.includes('Unexpected end')) {
-    return 'JSON ends prematurely. Add closing brackets: ] or }';
+    return { suggestion: 'JSON ends prematurely. Add closing brackets: ] or }', suggestionKey: 'errfind.fix.premature' };
   }
 
   if (message.includes('Unexpected token')) {
-    return `Unexpected character: '${char}'. Check JSON syntax around this position`;
+    return {
+      suggestion: `Unexpected character: '${char}'. Check JSON syntax around this position`,
+      suggestionKey: 'errfind.fix.unexpectedChar',
+      suggestionParams: { char },
+    };
   }
 
-  return 'Check the JSON syntax at the error position. Ensure all brackets, braces, and quotes are properly paired.';
+  return { suggestion: 'Check the JSON syntax at the error position. Ensure all brackets, braces, and quotes are properly paired.', suggestionKey: 'errfind.fix.generic' };
 }
 
 /**
@@ -186,8 +212,10 @@ function performJsonLinting(text: string): JsonErrorInfo[] {
         charIndex: pos,
         errorType: 'LARGE_NUMBER',
         message: 'Very large number that may lose precision in JavaScript',
+        messageKey: 'errfind.largeNumber.msg',
         context: extractContext(text, pos),
         suggestion: 'Convert large numbers to strings to preserve precision',
+        suggestionKey: 'errfind.largeNumber.fix',
         severity: 'warning'
       });
     });
