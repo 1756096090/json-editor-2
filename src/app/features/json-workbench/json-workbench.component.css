@@ -38,11 +38,12 @@
 .workbench__input-actions {
   align-items: center;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   flex: 1;
   gap: 2px;
   min-width: 0;
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: hidden;
   /* Keep horizontal scroll but hide the gray scrollbar track */
   scrollbar-width: none;
 }
